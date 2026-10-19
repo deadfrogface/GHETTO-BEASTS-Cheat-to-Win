@@ -108,7 +108,7 @@ function update(){
 }
 function strike(target){hitTarget=target;hitAt=performance.now();}
 function nextOpponent(){const roster={kanalviertel:['golem','ratking'],schrottplatz:['scrapper','pigeon'],rathaus:['enforcer','boss']}[world.district]||['golem'];return roster[world.wins%roster.length];}
-function awardVictory(){if(state.phase!=='over'||state.enemyHp!==0||lastWorldWin||state.rewardClaimed)return;const opponent=getOpponent(state.opponentId);world=recordWin(world,opponent.reward);state={...state,rewardClaimed:true};saveWorld(world);lastWorldWin=true;}
+function awardVictory(){if(state.phase!=='over'||state.enemyHp!==0||lastWorldWin||state.rewardClaimed)return;const opponent=getOpponent(state.opponentId);const rewarded=recordWin(world,opponent.reward);if(rewarded===world)return;world=rewarded;state={...state,rewardClaimed:true};saveWorld(world);lastWorldWin=true;}
 function enemyAction(){
  if(state.phase!=='enemy')return;
  state=enemyTurn(state);strike(player);awardVictory();persist();busy=false;update();
@@ -152,7 +152,7 @@ document.querySelectorAll('[data-walk]').forEach(button=>button.addEventListener
 $('world-interact').addEventListener('click',()=>{
  const npc=district.nearest(world.position);
  if(!npc){$('world-status').textContent='Kein NPC in Reichweite.';return;}
- if(npc.role==='arena'){toggleExplore(false);if(state.phase==='over'||state.round===1&&state.opponentId!==nextOpponent()){$('restart').click();}}
+ if(npc.role==='arena'){toggleExplore(false);if(state.phase==='over'||(state.round===1&&state.opponentId!==nextOpponent())){$('restart').click();}}
  else{$('world-status').textContent=npc.name+': '+({shop:'Willkommen im Schrottladen!',lab:'Zwei Schrottteile pro Mutation.',quest:'Schau nach deinen Aufträgen.'}[npc.role]||'Hallo!');}
 });
 $('world-panel').open=true;
