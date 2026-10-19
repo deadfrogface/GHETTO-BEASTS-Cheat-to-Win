@@ -18,7 +18,12 @@ export function validWorld(s){return Boolean(s&&s.version===1&&s.district===DIST
 export function buy(s,id){const item=SHOP.find(i=>i.id===id);if(!validWorld(s)||!item||s.coins<item.price)return s;return {...s,coins:s.coins-item.price,inventory:{...s.inventory,[id]:s.inventory[id]+1},events:[...s.events,'Gekauft: '+item.name].slice(-10)};}
 export function unlockPart(s,id){if(!validWorld(s)||!PARTS.some(p=>p.id===id)||s.unlocked.includes(id)||s.inventory.scrap<2)return s;return {...s,inventory:{...s.inventory,scrap:s.inventory.scrap-2},unlocked:[...s.unlocked,id],events:[...s.events,'Erforscht: '+id].slice(-10)};}
 export function equip(s,slot,id){if(!validWorld(s)||!s.unlocked.includes(id))return s;const next=mutate(s.loadout,slot,id);return next===s.loadout?s:{...s,loadout:next,mutations:s.mutations+1};}
-export function recordWin(s){if(!validWorld(s))return s;return {...s,wins:s.wins+1,coins:s.coins+8,events:[...s.events,'Arenasieg! +8 $'].slice(-10)};}
+export function recordWin(s,reward=8){if(!validWorld(s)||!Number.isSafeInteger(reward)||reward<0||reward>100)return s;return {...s,wins:s.wins+1,coins:Math.min(1000000,s.coins+reward),events:[...s.events,'Arenasieg! +'+reward+' 
+export function claimQuest(s,id){const q=QUESTS.find(q=>q.id===id);if(!validWorld(s)||!q||s.completed.includes(id)||s[q.goal]<q.target)return s;return {...s,coins:s.coins+q.reward,completed:[...s.completed,id],events:[...s.events,'Quest geschafft: '+q.name].slice(-10)};}
+export function move(s,x,z){if(!validWorld(s)||!Number.isFinite(x)||!Number.isFinite(z))return s;return {...s,position:{x:Math.max(-9,Math.min(9,x)),z:Math.max(-9,Math.min(9,z))}};}
+export function saveWorld(s,storage=localStorage){if(!validWorld(s))return false;try{storage.setItem(WORLD_KEY,JSON.stringify(s));return true;}catch{return false;}}
+export function loadWorld(storage=localStorage){try{const s=JSON.parse(storage.getItem(WORLD_KEY));return validWorld(s)?{...s,loadout:{...BASE_LOADOUT,...s.loadout}}:newWorld();}catch{return newWorld();}}
+].slice(-10)};}
 export function claimQuest(s,id){const q=QUESTS.find(q=>q.id===id);if(!validWorld(s)||!q||s.completed.includes(id)||s[q.goal]<q.target)return s;return {...s,coins:s.coins+q.reward,completed:[...s.completed,id],events:[...s.events,'Quest geschafft: '+q.name].slice(-10)};}
 export function move(s,x,z){if(!validWorld(s)||!Number.isFinite(x)||!Number.isFinite(z))return s;return {...s,position:{x:Math.max(-9,Math.min(9,x)),z:Math.max(-9,Math.min(9,z))}};}
 export function saveWorld(s,storage=localStorage){if(!validWorld(s))return false;try{storage.setItem(WORLD_KEY,JSON.stringify(s));return true;}catch{return false;}}
