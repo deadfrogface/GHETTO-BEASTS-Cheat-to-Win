@@ -101,7 +101,7 @@ function update(){
  const unavailable=selected&&(state.cash<selected.cost||(state.cooldowns[selected.id]||0)>state.round);
  const cheatButton=document.querySelector('[data-action="cheat"]');
  cheatButton.textContent=selected?'🎭 '+selected.name+' ('+selected.cost+' $)':'🎭 Betrug';
- cheatButton.disabled=busy||state.phase!=='player'||Boolean(unavailable);
+ cheatButton.disabled=exploring||busy||state.phase!=='player'||Boolean(unavailable);
  const stats=deriveStats(state.loadout);
  $('player-hp').textContent=state.playerHp+' / '+stats.maxHp+' HP';
  $('mutation-stats').textContent='Max. HP '+stats.maxHp+' · Angriff +'+stats.attack+' · Verteidigung +'+stats.defense;
