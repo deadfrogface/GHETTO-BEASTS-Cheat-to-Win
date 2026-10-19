@@ -160,7 +160,7 @@ document.querySelectorAll('[data-walk]').forEach(button=>button.addEventListener
 }));
 $('world-interact').addEventListener('click',()=>{
  const npc=district.nearest(world.position);
- if(!npc){$('world-status').textContent='Kein NPC in Reichweite.';return;}
+ if(!exploring||!npc){$('world-status').textContent='Kein NPC in Reichweite.';return;}
  if(npc.role==='arena'){
   // Entering a district arena always starts its own encounter; no stale opponent.
   if(state.phase==='enemy'||busy)return;
