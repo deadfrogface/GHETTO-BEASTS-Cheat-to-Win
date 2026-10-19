@@ -24,14 +24,14 @@ export function playerTurn(s,action){
  if(action==='attack'){const damage=12+Math.floor(rng[1]*9)+deriveStats(s.loadout).attack;t.enemyHp=clamp(t.enemyHp-Math.max(1,damage-getOpponent(s.opponentId).defense),0,getOpponent(s.opponentId).maxHp);t=record(t,'Kanalratte trifft für '+damage+' Schaden.');}
  if(action==='guard'){t.playerGuard=true;t=record(t,'Kanalratte geht in Deckung.');}
 
- if(t.enemyHp===0){t.phase='over';t=record(t,'Sieg! Der Beton-Golem ist besiegt.');}
+ if(t.enemyHp===0){t.phase='over';t=record(t,'Sieg! '+getOpponent(t.opponentId).name+' ist besiegt.');}
  else if(t.suspicion>=100){t.phase='over';t=record(t,'Polizeirazzia! Du wurdest enttarnt.');}
  else if(t.playerHp===0){t.phase='over';t=record(t,'Niederlage durch gescheiterten Betrug.');}
  return t;
 }
 export function enemyTurn(s){
  if(s.phase!=='enemy')return s;
- if(s.skipEnemy){return record({...s,skipEnemy:false,enemyWeaken:0,phase:'player',round:s.round+1},'Beton-Golem ist abgelenkt und setzt aus.');}
+ if(s.skipEnemy){return record({...s,skipEnemy:false,enemyWeaken:0,phase:'player',round:s.round+1},getOpponent(s.opponentId).name+' ist abgelenkt und setzt aus.');}
  let t={...s},rng;[t.seed,rng]=roll(t.seed);
  const response=chooseCounter(t,getOpponent(t.opponentId),rng);
  const base=Math.max(1,Math.round(response.damage*(t.difficulty||1))-(t.enemyWeaken||0)-deriveStats(s.loadout).defense),damage=t.playerGuard?Math.ceil(base*0.35):base;
@@ -39,7 +39,8 @@ export function enemyTurn(s){
  t.playerHp=clamp(t.playerHp-damage,0,deriveStats(t.loadout).maxHp);
  t=record(t,response.message+' '+damage+' Schaden'+(s.playerGuard?' (Deckung)':'')+'.');
  t.playerGuard=false;t.enemyWeaken=0;
- if(t.playerHp===0){t.phase='over';t=record(t,'Niederlage! Kanalratte ist kampfunfähig.');}
+ if(t.suspicion>=100){t.phase='over';t=record(t,'Razzia! Der Betrug wurde aufgedeckt.');}
+ else if(t.playerHp===0){t.phase='over';t=record(t,'Niederlage! Kanalratte ist kampfunfähig.');}
  else {t.phase='player';t.round+=1;}
  return t;
 }
