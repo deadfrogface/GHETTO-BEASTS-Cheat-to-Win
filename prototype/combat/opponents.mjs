@@ -1,11 +1,11 @@
 // Data-driven opponents and deterministic responses. No paid services.
 export const OPPONENTS=[
- {id:'golem',name:'Beton-Golem',maxHp:110,attack:12,defense:2,cheatSense:.1,reward:8,style:'bruiser'},
- {id:'ratking',name:'Rattenkönig',maxHp:85,attack:10,defense:1,cheatSense:.35,reward:12,style:'trickster'},
- {id:'enforcer',name:'Inkasso-Igor',maxHp:120,attack:13,defense:3,cheatSense:.5,reward:19,style:'enforcer'},
- {id:'pigeon',name:'Tauben-Toni',maxHp:76,attack:9,defense:0,cheatSense:.42,reward:11,style:'trickster'},
- {id:'scrapper',name:'Schrott-Sabine',maxHp:105,attack:13,defense:3,cheatSense:.3,reward:16,style:'bruiser'},
- {id:'boss',name:'Bürgermeister Beton',maxHp:145,attack:15,defense:4,cheatSense:.58,reward:28,style:'enforcer'}
+ {id:'golem',name:'Beton-Golem',maxHp:98,attack:10,defense:2,cheatSense:.1,reward:12,style:'bruiser'},
+ {id:'ratking',name:'Rattenkönig',maxHp:82,attack:10,defense:1,cheatSense:.35,reward:14,style:'trickster'},
+ {id:'enforcer',name:'Inkasso-Igor',maxHp:112,attack:12,defense:3,cheatSense:.5,reward:22,style:'enforcer'},
+ {id:'pigeon',name:'Tauben-Toni',maxHp:78,attack:9,defense:0,cheatSense:.42,reward:15,style:'trickster'},
+ {id:'scrapper',name:'Schrott-Sabine',maxHp:100,attack:12,defense:3,cheatSense:.3,reward:19,style:'bruiser'},
+ {id:'boss',name:'Bürgermeister Beton',maxHp:132,attack:14,defense:4,cheatSense:.58,reward:32,style:'enforcer'}
 ];
 export const getOpponent=id=>OPPONENTS.find(o=>o.id===id)||OPPONENTS[0];
 export function chooseCounter(state,opponent,random){
