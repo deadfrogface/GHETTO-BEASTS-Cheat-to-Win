@@ -1,0 +1,60 @@
+name: Spielbare Vorschau (aktueller Stand)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feat/p6-enemies-balance
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: playable-preview
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+      - name: Node.js einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Abhaengigkeiten installieren
+        run: npm ci
+      - name: Spiel bauen
+        run: npm run build
+      - name: Spiel als Download bereitstellen
+        uses: actions/upload-artifact@v4
+        with:
+          name: ghetto-beasts-spielbar
+          path: dist/
+          if-no-files-found: error
+          retention-days: 30
+      - name: GitHub Pages konfigurieren
+        id: pages
+        continue-on-error: true
+        uses: actions/configure-pages@v5
+      - name: Pages-Paket vorbereiten
+        if: steps.pages.outcome == 'success'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/
+      - name: Spiel online veroeffentlichen
+        if: steps.pages.outcome == 'success'
+        id: deployment
+        continue-on-error: true
+        uses: actions/deploy-pages@v4
+      - name: Link zur spielbaren Version
+        if: steps.deployment.outcome == 'success'
+        run: echo "Spiel starten: ${{ steps.deployment.outputs.page_url }}prototype/combat/" >> "$GITHUB_STEP_SUMMARY"
+      - name: Hinweis, falls Pages noch nicht aktiviert ist
+        if: steps.deployment.outcome != 'success'
+        run: echo "Download unter Actions > dieser Lauf > Artifacts > ghetto-beasts-spielbar. Fuer einen direkten Browser-Link: Settings > Pages > Build and deployment > Source = GitHub Actions." >> "$GITHUB_STEP_SUMMARY"
