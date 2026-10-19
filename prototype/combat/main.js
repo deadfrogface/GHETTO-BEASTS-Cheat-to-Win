@@ -50,11 +50,11 @@ for(const slot of SLOT_TYPES){
  for(const part of PARTS.filter(p=>p.slot===slot)){const option=document.createElement('option');option.value=part.id;option.textContent=part.name;select.appendChild(option);}
  label.appendChild(select);mutationPanel.appendChild(label);
  select.addEventListener('change',()=>{
-  if(state.phase!=='player'){select.value=state.loadout[slot];return;}
+  if(busy){select.value=state.loadout[slot];return;}
   if(!exploring||district.nearest(world.position)?.role!=='lab'){select.value=state.loadout[slot];return;}
   const next=mutate(state.loadout,slot,select.value);
   if(!world.unlocked.includes(select.value)){select.value=state.loadout[slot];return;}
-  if(next===state.loadout)return;
+  if(next===state.loadout||next[slot]===state.loadout[slot])return;
   const oldMax=deriveStats(state.loadout).maxHp,newMax=deriveStats(next).maxHp;
   state={...state,loadout:next,playerHp:Math.max(1,Math.min(newMax,state.playerHp+newMax-oldMax))};
   world=equip(world,slot,select.value);saveWorld(world);rebuildPlayer();persist();update();
@@ -96,7 +96,7 @@ function update(){
  const stats=deriveStats(state.loadout);
  $('player-hp').textContent=state.playerHp+' / '+stats.maxHp+' HP';
  $('mutation-stats').textContent='Max. HP '+stats.maxHp+' · Angriff +'+stats.attack+' · Verteidigung +'+stats.defense;
- mutationPanel.querySelectorAll('select').forEach(select=>{select.value=state.loadout[select.dataset.slot];select.disabled=busy||state.phase!=='player'||!exploring||district.nearest(world.position)?.role!=='lab';});
+ mutationPanel.querySelectorAll('select').forEach(select=>{select.value=state.loadout[select.dataset.slot];select.disabled=busy||!exploring||district.nearest(world.position)?.role!=='lab';});
  $('enemy-hp').textContent=state.enemyHp+' / '+getOpponent(state.opponentId).maxHp+' HP';
  $('player-bar').style.width=state.playerHp/stats.maxHp*100+'%';
  $('enemy-bar').style.width=state.enemyHp/getOpponent(state.opponentId).maxHp*100+'%';
@@ -131,7 +131,7 @@ function renderWorld(){
  for(const npc of DISTRICT.npcs){const b=document.createElement('button');b.textContent=npc.name+' · '+npc.role;b.addEventListener('click',()=>{if(!exploring)return;world=move(world,npc.x,npc.z);saveWorld(world);renderWorld();});map.appendChild(b);}
  const actions=$('world-actions');actions.replaceChildren();
  const heading=document.createElement('p');heading.textContent='Shop · Labor · Arena';actions.appendChild(heading);
- if(world.inventory.medkit>0){const heal=document.createElement('button');heal.textContent='🩹 Verband verwenden (+20 HP)';heal.disabled=state.playerHp>=deriveStats(state.loadout).maxHp;heal.addEventListener('click',()=>{if(world.inventory.medkit<=0)return;world={...world,inventory:{...world.inventory,medkit:world.inventory.medkit-1}};state={...state,playerHp:Math.min(deriveStats(state.loadout).maxHp,state.playerHp+20)};saveWorld(world);persist();update();});actions.appendChild(heal);}
+ if(world.inventory.medkit>0){const heal=document.createElement('button');heal.textContent='🩹 Verband verwenden (+20 HP)';heal.disabled=!exploring||state.playerHp>=deriveStats(state.loadout).maxHp;heal.addEventListener('click',()=>{if(!exploring||world.inventory.medkit<=0)return;world={...world,inventory:{...world.inventory,medkit:world.inventory.medkit-1}};state={...state,playerHp:Math.min(deriveStats(state.loadout).maxHp,state.playerHp+20)};saveWorld(world);persist();update();});actions.appendChild(heal);}
  for(const item of SHOP){const b=document.createElement('button');b.textContent='Kaufen: '+item.name+' ('+item.price+' $)';b.disabled=!exploring||world.coins<item.price||district.nearest(world.position)?.role!=='shop';b.addEventListener('click',()=>{world=buy(world,item.id);saveWorld(world);renderWorld();});actions.appendChild(b);}
  for(const part of PARTS.filter(p=>!world.unlocked.includes(p.id))){const b=document.createElement('button');b.textContent='🔬 '+part.name+' (2 Schrott)';b.disabled=!exploring||world.inventory.scrap<2||district.nearest(world.position)?.role!=='lab';b.addEventListener('click',()=>{world=unlockPart(world,part.id);saveWorld(world);renderWorld();update();});actions.appendChild(b);}
  const quests=$('world-quests');quests.replaceChildren();
