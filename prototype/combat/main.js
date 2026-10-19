@@ -132,7 +132,7 @@ const cheatSelect=$('cheat-select');
 ALL_CHEATS.forEach(d=>{const option=document.createElement('option');option.value=d.id;option.textContent=d.name+' ('+Math.round(d.chance*100)+'% Erfolg)';cheatSelect.appendChild(option);});
 cheatSelect.addEventListener('change',update);
 document.querySelectorAll('[data-action]').forEach(b=>b.addEventListener('click',()=>take(b.dataset.action==='cheat'?cheatSelect.value:b.dataset.action)));
-$('restart').addEventListener('click',()=>{if(enemyTimeout!==null)clearTimeout(enemyTimeout);enemyTimeout=null;busy=false;state=newGame(nextOpponent(),world.wins);state.loadout={...world.loadout};state.playerHp=deriveStats(state.loadout).maxHp;lastWorldWin=false;rebuildPlayer();rebuildEnemy();persist();update();});
+$('restart').addEventListener('click',()=>{if(exploring||state.phase==='enemy')return;const previousHp=state.playerHp,defeated=state.phase==='over'&&state.playerHp===0;if(enemyTimeout!==null)clearTimeout(enemyTimeout);enemyTimeout=null;busy=false;state=newGame(nextOpponent(),world.wins);state.loadout={...world.loadout};state.playerHp=defeated?deriveStats(state.loadout).maxHp:Math.max(1,Math.min(previousHp,deriveStats(state.loadout).maxHp));lastWorldWin=false;rebuildPlayer();rebuildEnemy();persist();update();});
 function renderWorld(){
  $('world-status').textContent='🪙 '+world.coins+' $ · 🧰 Schrott '+world.inventory.scrap+' · 🩹 Verbände '+world.inventory.medkit+' · 🏆 Siege '+world.wins;
  const map=$('world-map');map.replaceChildren();
@@ -153,7 +153,7 @@ function toggleExplore(on){
  if(!on){camera.position.set(9,8,13);camera.lookAt(0,1.1,0);}
  renderWorld();
 }
-$('world-toggle').addEventListener('click',()=>toggleExplore(!exploring));
+$('world-toggle').addEventListener('click',()=>{if(busy||state.phase==='enemy')return;toggleExplore(!exploring);});
 document.querySelectorAll('[data-walk]').forEach(button=>button.addEventListener('click',()=>{
  if(!exploring)return;const [dx,dz]=button.dataset.walk.split(',').map(Number);
  world=move(world,world.position.x+dx,world.position.z+dz);saveWorld(world);renderWorld();
