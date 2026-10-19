@@ -1,3 +1,5 @@
+import {createCreatureRig} from './creature-rig.js';
+import {PARTS,SLOT_TYPES,mutate,deriveStats} from './mutations.mjs';
 import * as THREE from 'three';
 import {SAVE_KEY,LEGACY_SAVE_KEY,newGame,migrateSave,playerTurn,enemyTurn,ALL_CHEATS} from './rules.mjs';
 const $=id=>document.getElementById(id);
@@ -27,8 +29,32 @@ function actor(color,accent,x,monster=false){
  }
  group.position.x=x;scene.add(group);return group;
 }
-const player=actor('#a4eb75','#4d7444',-2.7),enemy=actor('#dc9678','#73566a',2.7,true);
+let playerRig=createCreatureRig(state.loadout,'rat'),player=playerRig.root,enemyRig=createCreatureRig({head:'stone-head',arms:'steel-arms',legs:'base-legs',skin:'armor',tail:'none-tail',horns:'none-horns',extraArms:'none-extra',wings:'none-wings'},'golem'),enemy=enemyRig.root;
+player.position.x=-2.7;enemy.position.x=2.7;scene.add(player,enemy);
 player.rotation.y=0.4;enemy.rotation.y=-0.4;
+
+const mutationPanel=$('mutation-slots');
+const slotLabels={head:'Kopf',arms:'Arme',legs:'Beine',skin:'Haut',tail:'Schwanz',horns:'Hörner',extraArms:'Zusatzarme',wings:'Flügel'};
+for(const slot of SLOT_TYPES){
+ const label=document.createElement('label');label.textContent=slotLabels[slot];
+ const select=document.createElement('select');select.dataset.slot=slot;
+ for(const part of PARTS.filter(p=>p.slot===slot)){const option=document.createElement('option');option.value=part.id;option.textContent=part.name;select.appendChild(option);}
+ label.appendChild(select);mutationPanel.appendChild(label);
+ select.addEventListener('change',()=>{
+  if(state.phase!=='player'){select.value=state.loadout[slot];return;}
+  const next=mutate(state.loadout,slot,select.value);
+  if(next===state.loadout)return;
+  const oldMax=deriveStats(state.loadout).maxHp,newMax=deriveStats(next).maxHp;
+  state={...state,loadout:next,playerHp:Math.max(1,Math.min(newMax,state.playerHp+newMax-oldMax))};
+  rebuildPlayer();persist();update();
+ });
+}
+function rebuildPlayer(){
+ scene.remove(player);playerRig.dispose();
+ playerRig=createCreatureRig(state.loadout,'rat');player=playerRig.root;
+ player.position.x=-2.7;player.rotation.y=.4;scene.add(player);
+}
+
 let busy=false,hitAt=0,hitTarget=null,enemyTimeout=null;
 function persist(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(state));}catch{$('result').textContent='Speichern nicht verfügbar; Kampf läuft nur in dieser Sitzung.';}}
 function update(){
@@ -38,9 +64,12 @@ function update(){
  const cheatButton=document.querySelector('[data-action="cheat"]');
  cheatButton.textContent=selected?'🎭 '+selected.name+' ('+selected.cost+' $)':'🎭 Betrug';
  cheatButton.disabled=busy||state.phase!=='player'||Boolean(unavailable);
- $('player-hp').textContent=state.playerHp+' / 90 HP';
+ const stats=deriveStats(state.loadout);
+ $('player-hp').textContent=state.playerHp+' / '+stats.maxHp+' HP';
+ $('mutation-stats').textContent='Max. HP '+stats.maxHp+' · Angriff +'+stats.attack+' · Verteidigung +'+stats.defense;
+ mutationPanel.querySelectorAll('select').forEach(select=>{select.value=state.loadout[select.dataset.slot];select.disabled=busy||state.phase!=='player';});
  $('enemy-hp').textContent=state.enemyHp+' / 110 HP';
- $('player-bar').style.width=state.playerHp/90*100+'%';
+ $('player-bar').style.width=state.playerHp/stats.maxHp*100+'%';
  $('enemy-bar').style.width=state.enemyHp/110*100+'%';
  $('turn').textContent='Runde '+state.round+' · '+(state.phase==='over'?'Ende':state.phase==='player'?'Dein Zug':'Gegnerzug');
  $('result').textContent=state.history.at(-1)||'Kampfbereit.';
@@ -63,13 +92,13 @@ const cheatSelect=$('cheat-select');
 ALL_CHEATS.forEach(d=>{const option=document.createElement('option');option.value=d.id;option.textContent=d.name+' ('+Math.round(d.chance*100)+'% Erfolg)';cheatSelect.appendChild(option);});
 cheatSelect.addEventListener('change',update);
 document.querySelectorAll('[data-action]').forEach(b=>b.addEventListener('click',()=>take(b.dataset.action==='cheat'?cheatSelect.value:b.dataset.action)));
-$('restart').addEventListener('click',()=>{if(enemyTimeout!==null)clearTimeout(enemyTimeout);enemyTimeout=null;busy=false;state=newGame();persist();update();});
+$('restart').addEventListener('click',()=>{if(enemyTimeout!==null)clearTimeout(enemyTimeout);enemyTimeout=null;busy=false;state=newGame();rebuildPlayer();persist();update();});
 function resize(){const w=innerWidth,h=innerHeight;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));renderer.setSize(w,h,false);}
 window.addEventListener('resize',resize);
 let last=0,frames=0,acc=0,raf=0;
 function loop(now){raf=requestAnimationFrame(loop);if(last){const dt=now-last;if(dt>0&&dt<250){frames++;acc+=dt;if(acc>=1000){$('fps').textContent='FPS '+Math.round(frames*1000/acc);frames=0;acc=0;}}}last=now;
- const t=now/1000;player.position.y=Math.sin(t*2)*0.07;enemy.position.y=Math.sin(t*1.8+2)*0.08;
+ const t=now/1000;player.position.y=Math.sin(t*2)*0.07;enemy.position.y=Math.sin(t*1.8+2)*0.08;playerRig.animate(t);enemyRig.animate(t+.8);
  if(hitTarget){hitTarget.rotation.z=Math.sin((now-hitAt)/170*Math.PI)*0.15;if(now-hitAt>170){hitTarget.rotation.z=0;hitTarget=null;}}
  renderer.render(scene,camera);}
 window.addEventListener('pagehide',()=>cancelAnimationFrame(raf),{once:true});
-resize();if(state.phase==='enemy'){busy=true;enemyTimeout=setTimeout(()=>{enemyTimeout=null;enemyAction();},650);}update();raf=requestAnimationFrame(loop);
+rebuildPlayer();resize();if(state.phase==='enemy'){busy=true;enemyTimeout=setTimeout(()=>{enemyTimeout=null;enemyAction();},650);}update();raf=requestAnimationFrame(loop);
