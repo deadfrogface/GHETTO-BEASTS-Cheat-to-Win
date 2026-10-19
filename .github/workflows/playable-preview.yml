@@ -25,10 +25,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
-          cache-dependency-path: package-lock.json
       - name: Abhaengigkeiten installieren
-        run: npm ci
+        run: npm install --no-audit --no-fund
       - name: Spiel bauen
         run: npm run build
       - name: Spiel als Download bereitstellen
