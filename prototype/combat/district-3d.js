@@ -19,7 +19,7 @@ export function createDistrict(scene){
  const avatar=new THREE.Group();root.add(avatar);
  const body=new THREE.Mesh(new THREE.IcosahedronGeometry(.46,1),new THREE.MeshLambertMaterial({color:0x9bea66,flatShading:true}));body.position.y=.58;avatar.add(body);
  const cameraPosition=new THREE.Vector3();
- return {root,avatar,markers,update(position,camera){
+ return {root,avatar,markers,setTheme(id){const palette={kanalviertel:[0x344c56,0x8392a6],schrottplatz:[0x62513c,0x9c7149],rathaus:[0x4c516b,0xb2a8bf]}[id]||[0x344c56,0x8392a6];ground.material.color.setHex(palette[0]);buildingMaterial.color.setHex(palette[1]);},update(position,camera){
   avatar.position.set(position.x,0,position.z);
   cameraPosition.set(position.x+9,9,position.z+11);
   camera.position.lerp(cameraPosition,.14);camera.lookAt(position.x,0,position.z);
