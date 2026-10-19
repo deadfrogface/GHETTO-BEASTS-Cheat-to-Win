@@ -161,7 +161,12 @@ document.querySelectorAll('[data-walk]').forEach(button=>button.addEventListener
 $('world-interact').addEventListener('click',()=>{
  const npc=district.nearest(world.position);
  if(!npc){$('world-status').textContent='Kein NPC in Reichweite.';return;}
- if(npc.role==='arena'){toggleExplore(false);if(state.phase==='over'||state.round===1&&state.opponentId!==nextOpponent()){$('restart').click();}}
+ if(npc.role==='arena'){
+  // Entering a district arena always starts its own encounter; no stale opponent.
+  if(state.phase==='enemy'||busy)return;
+  toggleExplore(false);
+  if(state.phase==='over'||state.opponentId!==nextOpponent())$('restart').click();
+ }
  else{$('world-status').textContent=npc.name+': '+({shop:'Willkommen im Schrottladen!',lab:'Zwei Schrottteile pro Mutation.',quest:'Schau nach deinen Aufträgen.'}[npc.role]||'Hallo!');}
 });
 $('world-panel').open=true;
