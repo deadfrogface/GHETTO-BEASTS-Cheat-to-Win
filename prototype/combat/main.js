@@ -1,3 +1,4 @@
+import {createCreatureRig} from './creature-rig.js';
 import {PARTS,SLOT_TYPES,mutate,deriveStats} from './mutations.mjs';
 import * as THREE from 'three';
 import {SAVE_KEY,LEGACY_SAVE_KEY,newGame,migrateSave,playerTurn,enemyTurn,ALL_CHEATS} from './rules.mjs';
@@ -28,11 +29,12 @@ function actor(color,accent,x,monster=false){
  }
  group.position.x=x;scene.add(group);return group;
 }
-let player=actor('#a4eb75','#4d7444',-2.7),enemy=actor('#dc9678','#73566a',2.7,true);
+let playerRig=createCreatureRig(state.loadout,'rat'),player=playerRig.root,enemyRig=createCreatureRig({head:'stone-head',arms:'steel-arms',legs:'base-legs',skin:'armor',tail:'none-tail',horns:'none-horns',extraArms:'none-extra',wings:'none-wings'},'golem'),enemy=enemyRig.root;
+player.position.x=-2.7;enemy.position.x=2.7;scene.add(player,enemy);
 player.rotation.y=0.4;enemy.rotation.y=-0.4;
 
 const mutationPanel=$('mutation-slots');
-const slotLabels={head:'Kopf',arms:'Arme',legs:'Beine',skin:'Haut',tail:'Schwanz',horns:'Hörner'};
+const slotLabels={head:'Kopf',arms:'Arme',legs:'Beine',skin:'Haut',tail:'Schwanz',horns:'Hörner',extraArms:'Zusatzarme',wings:'Flügel'};
 for(const slot of SLOT_TYPES){
  const label=document.createElement('label');label.textContent=slotLabels[slot];
  const select=document.createElement('select');select.dataset.slot=slot;
@@ -48,19 +50,9 @@ for(const slot of SLOT_TYPES){
  });
 }
 function rebuildPlayer(){
- scene.remove(player);
- const loadout=state.loadout;
- const stone=loadout.skin==='armor'||loadout.head==='stone-head';
- const beast=loadout.arms==='claws'||loadout.head==='rat-head';
- player=actor(stone?'#a3a9b5':beast?'#91d96c':'#a4eb75',stone?'#4f6577':'#4d7444',-2.7);
- player.rotation.y=0.4;
- const trim=material(stone?'#576879':'#cfce78');
- if(loadout.horns==='horns'){add(cone,trim,player,-0.45,3.1,0,0.2,0.55,0.2);add(cone,trim,player,0.45,3.1,0,0.2,0.55,0.2);}
- if(loadout.tail==='rat-tail'){const tail=add(cyl,trim,player,0,0.9,-0.85,0.14,1.3,0.14);tail.rotation.x=1.0;}
- if(loadout.arms==='steel-arms'){for(const x of [-0.85,0.85])add(box,material('#899cae'),player,x,1.3,0,0.33,0.8,0.4);}
- if(loadout.arms==='claws'){for(const x of [-0.85,0.85])add(cone,trim,player,x,0.75,0.22,0.18,0.45,0.18);}
- if(loadout.legs==='spring-legs'){for(const x of [-0.32,0.32])add(cyl,trim,player,x,0.45,0,0.16,0.65,0.16);}
- if(loadout.skin==='spikes'){for(const x of [-0.35,0,0.35])add(cone,trim,player,x,1.95,-0.4,0.18,0.5,0.18);}
+ scene.remove(player);playerRig.dispose();
+ playerRig=createCreatureRig(state.loadout,'rat');player=playerRig.root;
+ player.position.x=-2.7;player.rotation.y=.4;scene.add(player);
 }
 
 let busy=false,hitAt=0,hitTarget=null,enemyTimeout=null;
@@ -105,7 +97,7 @@ function resize(){const w=innerWidth,h=innerHeight;camera.aspect=w/h;camera.upda
 window.addEventListener('resize',resize);
 let last=0,frames=0,acc=0,raf=0;
 function loop(now){raf=requestAnimationFrame(loop);if(last){const dt=now-last;if(dt>0&&dt<250){frames++;acc+=dt;if(acc>=1000){$('fps').textContent='FPS '+Math.round(frames*1000/acc);frames=0;acc=0;}}}last=now;
- const t=now/1000;player.position.y=Math.sin(t*2)*0.07;enemy.position.y=Math.sin(t*1.8+2)*0.08;
+ const t=now/1000;player.position.y=Math.sin(t*2)*0.07;enemy.position.y=Math.sin(t*1.8+2)*0.08;playerRig.animate(t);enemyRig.animate(t+.8);
  if(hitTarget){hitTarget.rotation.z=Math.sin((now-hitAt)/170*Math.PI)*0.15;if(now-hitAt>170){hitTarget.rotation.z=0;hitTarget=null;}}
  renderer.render(scene,camera);}
 window.addEventListener('pagehide',()=>cancelAnimationFrame(raf),{once:true});
