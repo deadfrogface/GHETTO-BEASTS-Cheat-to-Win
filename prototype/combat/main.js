@@ -82,7 +82,7 @@ async function loadPackagedModels(){
 
 function persist(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(state));}catch{$('result').textContent='Speichern nicht verfügbar; Kampf läuft nur in dieser Sitzung.';}}
 function update(){
- document.querySelector('.fighters>div+div strong').textContent=getOpponent(state.opponentId).name.toUpperCase();
+ document.querySelector('.fighters>div+div strong').textContent=getOpponent(state.opponentId).name.toUpperCase()+' · '+getOpponent(state.opponentId).style;
  renderWorld();
  $('resources').textContent='Bargeld: '+state.cash+' $ · Verdacht: '+state.suspicion+'/100';
  const selected=ALL_CHEATS.find(d=>d.id===cheatSelect.value);
