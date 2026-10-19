@@ -62,8 +62,11 @@ for(const slot of SLOT_TYPES){
   if(!world.unlocked.includes(select.value)){select.value=state.loadout[slot];return;}
   if(next===state.loadout||next[slot]===state.loadout[slot])return;
   const oldMax=deriveStats(state.loadout).maxHp,newMax=deriveStats(next).maxHp;
-  state={...state,loadout:next,playerHp:state.playerHp===0?0:Math.max(1,Math.min(newMax,state.playerHp+newMax-oldMax))};
-  world=equip(world,slot,select.value);saveWorld(world);rebuildPlayer();persist();update();
+  const equipped=equip(world,slot,select.value);
+  if(equipped===world){select.value=state.loadout[slot];return;}
+  world=equipped;
+  state={...state,loadout:next,playerHp:Math.min(state.playerHp,newMax)};
+  saveWorld(world);rebuildPlayer();persist();update();
  });
 }
 let modularController=null,modularAbort=null;
