@@ -19,7 +19,7 @@ if(!sessionSnapshot&&state.phase==='over'&&state.enemyHp===0)state={...state,rew
 if(sessionSnapshot){const candidate=sessionSnapshot.world;if(validWorld(candidate))world=candidate;}
 function persistSession(){if(!validWorld(world))return false;try{localStorage.setItem(SESSION_KEY,JSON.stringify({version:1,combat:state,world}));return true;}catch{return false;}}
 // A completed battle can be recovered after a reload without paying twice.
-if(sessionSnapshot&&state.phase==='over'&&state.enemyHp===0&&!state.rewardClaimed){
+if(false&&sessionSnapshot&&state.phase==='over'&&state.enemyHp===0&&!state.rewardClaimed){
  const reward=getOpponent(state.opponentId).reward;
  const updated=recordWin(world,reward);
  if(updated!==world){world=updated;state={...state,rewardClaimed:true};persistSession();saveWorld(world);try{localStorage.setItem(SAVE_KEY,JSON.stringify(state));}catch{}}
@@ -99,7 +99,7 @@ async function loadPackagedModels(){
  }catch{/* No bundled GLB yet: use low-poly procedural fallback. */}}
 }
 
-function persist(){if(!persistSession()){$('result').textContent='Speichern nicht verfügbar; Kampf läuft nur in dieser Sitzung.';return;}try{localStorage.setItem(SAVE_KEY,JSON.stringify(state));}catch{}}
+function persist(){if(!persistSession())$('result').textContent='Speichern nicht verfügbar; Kampf läuft nur in dieser Sitzung.';}
 function update(){
  document.querySelector('.fighters>div+div strong').textContent=getOpponent(state.opponentId).name.toUpperCase()+' · '+getOpponent(state.opponentId).style;
  renderWorld();
