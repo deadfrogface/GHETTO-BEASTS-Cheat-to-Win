@@ -1,9 +1,9 @@
-import {getOpponent,chooseCounter,difficulty} from './opponents.mjs';
+import {OPPONENTS,getOpponent,chooseCounter,difficulty} from './opponents.mjs';
 import {BASE_LOADOUT,validateLoadout,deriveStats,normalizeLoadout} from './mutations.mjs';
 // Pure deterministic rules. No browser or renderer dependency.
 import {findCheat,ALL_CHEATS,applyCheat,START_CASH} from './cheats.mjs';
 export {ALL_CHEATS};
-const OPPONENT_IDS=new Set(['golem','ratking','enforcer']);
+const OPPONENT_IDS=new Set(OPPONENTS.map(o=>o.id));
 export const SAVE_KEY = 'ghetto-beasts-p3-combat-v1';
 export const LEGACY_SAVE_KEY = 'ghetto-beasts-p2-combat-v1';
 export const INITIAL = Object.freeze({round:1,phase:'player',cash:START_CASH,suspicion:0,cooldowns:{},loadout:BASE_LOADOUT,playerHp:90,enemyHp:110,opponentId:'golem',difficulty:1,playerGuard:false,enemyGuard:false,enemyWeaken:0,skipEnemy:false,seed:17389,history:[]});
@@ -36,7 +36,7 @@ export function enemyTurn(s){
  let t={...s},rng;[t.seed,rng]=roll(t.seed);
  const response=chooseCounter(t,getOpponent(t.opponentId),rng);
  const base=Math.max(1,Math.round(response.damage*(t.difficulty||1))-(t.enemyWeaken||0)-deriveStats(s.loadout).defense),damage=t.playerGuard?Math.ceil(base*0.35):base;
- if(response.type==='expose')t.suspicion=clamp(t.suspicion+response.heat,0,100);
+ if(response.heat)t.suspicion=clamp(t.suspicion+response.heat,0,100);
  t.playerHp=clamp(t.playerHp-damage,0,deriveStats(t.loadout).maxHp);
  t=record(t,response.message+' '+damage+' Schaden'+(s.playerGuard?' (Deckung)':'')+'.');
  t.playerGuard=false;t.enemyWeaken=0;
