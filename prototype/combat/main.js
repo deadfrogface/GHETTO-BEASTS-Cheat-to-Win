@@ -1,8 +1,8 @@
 import * as THREE from 'three';
-import {SAVE_KEY,newGame,validSave,playerTurn,enemyTurn,ALL_CHEATS} from './rules.mjs';
+import {SAVE_KEY,LEGACY_SAVE_KEY,newGame,migrateSave,playerTurn,enemyTurn,ALL_CHEATS} from './rules.mjs';
 const $=id=>document.getElementById(id);
 let state;
-try{const raw=localStorage.getItem(SAVE_KEY);const parsed=raw?JSON.parse(raw):null;state=validSave(parsed)?parsed:newGame();}catch{state=newGame();}
+try{const raw=localStorage.getItem(SAVE_KEY)||localStorage.getItem(LEGACY_SAVE_KEY);const parsed=raw?JSON.parse(raw):null;state=migrateSave(parsed)||newGame();}catch{state=newGame();}
 const scene=new THREE.Scene();scene.background=new THREE.Color('#91b9cf');
 const camera=new THREE.PerspectiveCamera(43,1,0.1,60);camera.position.set(9,8,13);camera.lookAt(0,1.1,0);
 const renderer=new THREE.WebGLRenderer({canvas:$('scene'),antialias:false,powerPreference:'high-performance'});
@@ -32,6 +32,12 @@ player.rotation.y=0.4;enemy.rotation.y=-0.4;
 let busy=false,hitAt=0,hitTarget=null,enemyTimeout=null;
 function persist(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(state));}catch{$('result').textContent='Speichern nicht verfügbar; Kampf läuft nur in dieser Sitzung.';}}
 function update(){
+ $('resources').textContent='Bargeld: '+state.cash+' $ · Verdacht: '+state.suspicion+'/100';
+ const selected=ALL_CHEATS.find(d=>d.id===cheatSelect.value);
+ const unavailable=selected&&(state.cash<selected.cost||(state.cooldowns[selected.id]||0)>state.round);
+ const cheatButton=document.querySelector('[data-action="cheat"]');
+ cheatButton.textContent=selected?'🎭 '+selected.name+' ('+selected.cost+' $)':'🎭 Betrug';
+ cheatButton.disabled=busy||state.phase!=='player'||Boolean(unavailable);
  $('player-hp').textContent=state.playerHp+' / 90 HP';
  $('enemy-hp').textContent=state.enemyHp+' / 110 HP';
  $('player-bar').style.width=state.playerHp/90*100+'%';
@@ -39,7 +45,8 @@ function update(){
  $('turn').textContent='Runde '+state.round+' · '+(state.phase==='over'?'Ende':state.phase==='player'?'Dein Zug':'Gegnerzug');
  $('result').textContent=state.history.at(-1)||'Kampfbereit.';
  $('log').textContent=state.history.slice(-5).join('  •  ');
- document.querySelectorAll('[data-action]').forEach(b=>b.disabled=busy||state.phase!=='player');
+ document.querySelectorAll('[data-action]').forEach(b=>b.disabled=busy||state.phase!=='player'||(b.dataset.action==='cheat'&&Boolean(unavailable)));
+ cheatSelect.disabled=busy||state.phase!=='player';
 }
 function strike(target){hitTarget=target;hitAt=performance.now();}
 function enemyAction(){
@@ -54,6 +61,7 @@ function take(action){
 }
 const cheatSelect=$('cheat-select');
 ALL_CHEATS.forEach(d=>{const option=document.createElement('option');option.value=d.id;option.textContent=d.name+' ('+Math.round(d.chance*100)+'% Erfolg)';cheatSelect.appendChild(option);});
+cheatSelect.addEventListener('change',update);
 document.querySelectorAll('[data-action]').forEach(b=>b.addEventListener('click',()=>take(b.dataset.action==='cheat'?cheatSelect.value:b.dataset.action)));
 $('restart').addEventListener('click',()=>{if(enemyTimeout!==null)clearTimeout(enemyTimeout);enemyTimeout=null;busy=false;state=newGame();persist();update();});
 function resize(){const w=innerWidth,h=innerHeight;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));renderer.setSize(w,h,false);}
