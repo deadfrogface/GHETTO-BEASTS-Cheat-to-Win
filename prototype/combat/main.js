@@ -1,3 +1,4 @@
+import {OPPONENTS,getOpponent} from './opponents.mjs';
 import {createDistrict} from './district-3d.js';
 import {DISTRICT,QUESTS,SHOP,loadWorld,saveWorld,buy,unlockPart,equip,recordWin,claimQuest,move} from './world.mjs';
 import {attachModularParts} from './modular-assets.js';
@@ -81,6 +82,7 @@ async function loadPackagedModels(){
 
 function persist(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(state));}catch{$('result').textContent='Speichern nicht verfügbar; Kampf läuft nur in dieser Sitzung.';}}
 function update(){
+ document.querySelector('.fighters>div+div strong').textContent=getOpponent(state.opponentId).name.toUpperCase();
  renderWorld();
  $('resources').textContent='Bargeld: '+state.cash+' $ · Verdacht: '+state.suspicion+'/100';
  const selected=ALL_CHEATS.find(d=>d.id===cheatSelect.value);
@@ -92,9 +94,9 @@ function update(){
  $('player-hp').textContent=state.playerHp+' / '+stats.maxHp+' HP';
  $('mutation-stats').textContent='Max. HP '+stats.maxHp+' · Angriff +'+stats.attack+' · Verteidigung +'+stats.defense;
  mutationPanel.querySelectorAll('select').forEach(select=>{select.value=state.loadout[select.dataset.slot];select.disabled=busy||state.phase!=='player'||!exploring||district.nearest(world.position)?.role!=='lab';});
- $('enemy-hp').textContent=state.enemyHp+' / 110 HP';
+ $('enemy-hp').textContent=state.enemyHp+' / '+getOpponent(state.opponentId).maxHp+' HP';
  $('player-bar').style.width=state.playerHp/stats.maxHp*100+'%';
- $('enemy-bar').style.width=state.enemyHp/110*100+'%';
+ $('enemy-bar').style.width=state.enemyHp/getOpponent(state.opponentId).maxHp*100+'%';
  $('turn').textContent='Runde '+state.round+' · '+(state.phase==='over'?'Ende':state.phase==='player'?'Dein Zug':'Gegnerzug');
  $('result').textContent=state.history.at(-1)||'Kampfbereit.';
  $('log').textContent=state.history.slice(-5).join('  •  ');
@@ -116,7 +118,7 @@ const cheatSelect=$('cheat-select');
 ALL_CHEATS.forEach(d=>{const option=document.createElement('option');option.value=d.id;option.textContent=d.name+' ('+Math.round(d.chance*100)+'% Erfolg)';cheatSelect.appendChild(option);});
 cheatSelect.addEventListener('change',update);
 document.querySelectorAll('[data-action]').forEach(b=>b.addEventListener('click',()=>take(b.dataset.action==='cheat'?cheatSelect.value:b.dataset.action)));
-$('restart').addEventListener('click',()=>{if(enemyTimeout!==null)clearTimeout(enemyTimeout);enemyTimeout=null;busy=false;state=newGame();lastWorldWin=false;rebuildPlayer();persist();update();});
+$('restart').addEventListener('click',()=>{if(enemyTimeout!==null)clearTimeout(enemyTimeout);enemyTimeout=null;busy=false;state=newGame(OPPONENTS[Math.min(OPPONENTS.length-1,Math.floor(world.wins/2))].id,world.wins);lastWorldWin=false;rebuildPlayer();persist();update();});
 function renderWorld(){
  $('world-status').textContent='🪙 '+world.coins+' $ · 🧰 Schrott '+world.inventory.scrap+' · 🩹 Verbände '+world.inventory.medkit+' · 🏆 Siege '+world.wins;
  const map=$('world-map');map.replaceChildren();
