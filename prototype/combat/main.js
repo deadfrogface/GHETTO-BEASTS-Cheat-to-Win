@@ -51,7 +51,7 @@ for(const slot of SLOT_TYPES){
  });
 }
 function rebuildPlayer(){
- if(playerModel){playerModel.dispose();playerModel=null;}
+ if(playerModel){playerModel=null;}
  scene.remove(player);playerRig.dispose();
  playerRig=createCreatureRig(state.loadout,'rat');player=playerRig.root;
  player.position.x=-2.7;player.rotation.y=.4;scene.add(player);
