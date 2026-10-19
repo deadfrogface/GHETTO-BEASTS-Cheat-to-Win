@@ -79,7 +79,7 @@ async function loadPackagedModels(){
  const models=[['./assets/characters/golem.glb','enemy']];
  for(const [url,who] of models){try{
   const rig=await createPackagedCharacter(url,{scale:1});if(state.opponentId!=='golem'){rig.dispose();continue;}
-  {scene.remove(enemy);enemyRig.dispose();enemyRig=rig;enemy=rig.root;enemy.position.x=2.7;enemy.rotation.y=-.4;scene.add(enemy);enemyModel=rig;}
+  {scene.remove(enemy);enemyRig.dispose();enemyRig=rig;enemy=rig.root;enemy.position.x=2.7;enemy.rotation.y=-.4;enemy.visible=!exploring;scene.add(enemy);enemyModel=rig;}
  }catch{/* No bundled GLB yet: use low-poly procedural fallback. */}}
 }
 
