@@ -1,6 +1,6 @@
 import {OPPONENTS,getOpponent} from './opponents.mjs';
 import {createDistrict} from './district-3d.js';
-import {DISTRICT,QUESTS,SHOP,loadWorld,saveWorld,buy,unlockPart,equip,recordWin,claimQuest,move} from './world.mjs';
+import {DISTRICT,QUESTS,SHOP,availableDistricts,travel,loadWorld,saveWorld,buy,unlockPart,equip,recordWin,claimQuest,move} from './world.mjs';
 import {attachModularParts} from './modular-assets.js';
 import {createPackagedCharacter} from './oss-character.js';
 import {createCreatureRig} from './creature-rig.js';
@@ -15,7 +15,7 @@ const scene=new THREE.Scene();scene.background=new THREE.Color('#91b9cf');
 const camera=new THREE.PerspectiveCamera(43,1,0.1,60);camera.position.set(9,8,13);camera.lookAt(0,1.1,0);
 const renderer=new THREE.WebGLRenderer({canvas:$('scene'),antialias:false,powerPreference:'high-performance'});
 renderer.outputColorSpace=THREE.SRGBColorSpace;
-const district=createDistrict(scene);
+const district=createDistrict(scene);district.setTheme(world.district);
 scene.add(new THREE.HemisphereLight(0xffffff,0x354153,2.3));
 const sun=new THREE.DirectionalLight(0xffdfb1,2);sun.position.set(-4,9,7);scene.add(sun);
 const box=new THREE.BoxGeometry(1,1,1),ball=new THREE.IcosahedronGeometry(1,1),cone=new THREE.ConeGeometry(1,1,5),cyl=new THREE.CylinderGeometry(1,1,1,16);
@@ -123,6 +123,7 @@ $('restart').addEventListener('click',()=>{if(enemyTimeout!==null)clearTimeout(e
 function renderWorld(){
  $('world-status').textContent='🪙 '+world.coins+' $ · 🧰 Schrott '+world.inventory.scrap+' · 🩹 Verbände '+world.inventory.medkit+' · 🏆 Siege '+world.wins;
  const map=$('world-map');map.replaceChildren();
+ for(const area of availableDistricts(world.wins)){const button=document.createElement('button');button.textContent=(world.district===area.id?'📍 ':'🗺️ ')+area.name;button.disabled=!exploring||world.district===area.id;button.addEventListener('click',()=>{world=travel(world,area.id);district.setTheme(world.district);saveWorld(world);renderWorld();});map.appendChild(button);}
  for(const npc of DISTRICT.npcs){const b=document.createElement('button');b.textContent=npc.name+' · '+npc.role;b.addEventListener('click',()=>{if(!exploring)return;world=move(world,npc.x,npc.z);saveWorld(world);renderWorld();});map.appendChild(b);}
  const actions=$('world-actions');actions.replaceChildren();
  const heading=document.createElement('p');heading.textContent='Shop · Labor · Arena';actions.appendChild(heading);
