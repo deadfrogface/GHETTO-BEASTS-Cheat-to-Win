@@ -50,7 +50,7 @@ for(const slot of SLOT_TYPES){
  for(const part of PARTS.filter(p=>p.slot===slot)){const option=document.createElement('option');option.value=part.id;option.textContent=part.name;select.appendChild(option);}
  label.appendChild(select);mutationPanel.appendChild(label);
  select.addEventListener('change',()=>{
-  if(busy){select.value=state.loadout[slot];return;}
+  if(busy||state.phase==='enemy'){select.value=state.loadout[slot];return;}
   if(!exploring||district.nearest(world.position)?.role!=='lab'){select.value=state.loadout[slot];return;}
   const next=mutate(state.loadout,slot,select.value);
   if(!world.unlocked.includes(select.value)){select.value=state.loadout[slot];return;}
@@ -96,7 +96,7 @@ function update(){
  const stats=deriveStats(state.loadout);
  $('player-hp').textContent=state.playerHp+' / '+stats.maxHp+' HP';
  $('mutation-stats').textContent='Max. HP '+stats.maxHp+' · Angriff +'+stats.attack+' · Verteidigung +'+stats.defense;
- mutationPanel.querySelectorAll('select').forEach(select=>{select.value=state.loadout[select.dataset.slot];select.disabled=busy||!exploring||district.nearest(world.position)?.role!=='lab';});
+ mutationPanel.querySelectorAll('select').forEach(select=>{select.value=state.loadout[select.dataset.slot];select.disabled=busy||state.phase==='enemy'||!exploring||district.nearest(world.position)?.role!=='lab';});
  $('enemy-hp').textContent=state.enemyHp+' / '+getOpponent(state.opponentId).maxHp+' HP';
  $('player-bar').style.width=state.playerHp/stats.maxHp*100+'%';
  $('enemy-bar').style.width=state.enemyHp/getOpponent(state.opponentId).maxHp*100+'%';
@@ -152,7 +152,7 @@ document.querySelectorAll('[data-walk]').forEach(button=>button.addEventListener
 $('world-interact').addEventListener('click',()=>{
  const npc=district.nearest(world.position);
  if(!npc){$('world-status').textContent='Kein NPC in Reichweite.';return;}
- if(npc.role==='arena'){toggleExplore(false);if(state.phase==='over'||(state.round===1&&state.opponentId!==nextOpponent())){$('restart').click();}}
+ if(npc.role==='arena'){toggleExplore(false);if(state.phase==='over'||state.round===1&&state.opponentId!==nextOpponent()){$('restart').click();}}
  else{$('world-status').textContent=npc.name+': '+({shop:'Willkommen im Schrottladen!',lab:'Zwei Schrottteile pro Mutation.',quest:'Schau nach deinen Aufträgen.'}[npc.role]||'Hallo!');}
 });
 $('world-panel').open=true;
