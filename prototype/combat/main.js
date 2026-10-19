@@ -1,6 +1,6 @@
 import {OPPONENTS,getOpponent,opponentForDistrict} from './opponents.mjs';
 import {createDistrict} from './district-3d.js';
-import {DISTRICT,QUESTS,SHOP,itemPrice,districtNpcs,availableDistricts,travel,loadWorld,saveWorld,buy,unlockPart,equip,recordWin,claimQuest,move} from './world.mjs';
+import {DISTRICT,QUESTS,SHOP,itemPrice,districtNpcs,availableDistricts,travel,validWorld,loadWorld,saveWorld,buy,unlockPart,equip,recordWin,claimQuest,move} from './world.mjs';
 import {attachModularParts} from './modular-assets.js';
 import {createPackagedCharacter} from './oss-character.js';
 import {createCreatureRig} from './creature-rig.js';
@@ -8,14 +8,19 @@ import {PARTS,SLOT_TYPES,mutate,deriveStats} from './mutations.mjs';
 import * as THREE from 'three';
 import {SAVE_KEY,LEGACY_SAVE_KEY,newGame,migrateSave,playerTurn,enemyTurn,ALL_CHEATS} from './rules.mjs';
 const $=id=>document.getElementById(id);
+const SESSION_KEY='ghetto-beasts-p6-session-v1';
+let sessionSnapshot=null;
+try{const saved=JSON.parse(localStorage.getItem(SESSION_KEY));if(saved?.version===1&&saved.world&&saved.combat)sessionSnapshot=saved;}catch{}
 let state;
-try{const raw=localStorage.getItem(SAVE_KEY)||localStorage.getItem(LEGACY_SAVE_KEY);const parsed=raw?JSON.parse(raw):null;state=migrateSave(parsed)||newGame();}catch{state=newGame();}
+try{const raw=localStorage.getItem(SAVE_KEY)||localStorage.getItem(LEGACY_SAVE_KEY);const parsed=raw?JSON.parse(raw):null;state=migrateSave(sessionSnapshot?.combat)||migrateSave(parsed)||newGame();}catch{state=newGame();}
 let world=loadWorld(),lastWorldWin=false,exploring=false;
+if(sessionSnapshot){const candidate=sessionSnapshot.world;if(validWorld(candidate))world=candidate;}
+function persistSession(){try{localStorage.setItem(SESSION_KEY,JSON.stringify({version:1,combat:state,world}));return true;}catch{return false;}}
 // A completed battle can be recovered after a reload without paying twice.
 if(state.phase==='over'&&state.enemyHp===0&&!state.rewardClaimed){
  const reward=getOpponent(state.opponentId).reward;
  const updated=recordWin(world,reward);
- if(updated!==world){world=updated;state={...state,rewardClaimed:true};saveWorld(world);try{localStorage.setItem(SAVE_KEY,JSON.stringify(state));}catch{}}
+ if(updated!==world){world=updated;state={...state,rewardClaimed:true};persistSession();saveWorld(world);try{localStorage.setItem(SAVE_KEY,JSON.stringify(state));}catch{}}
 }
 const scene=new THREE.Scene();scene.background=new THREE.Color('#91b9cf');
 const camera=new THREE.PerspectiveCamera(43,1,0.1,60);camera.position.set(9,8,13);camera.lookAt(0,1.1,0);
@@ -66,7 +71,7 @@ for(const slot of SLOT_TYPES){
   if(equipped===world){select.value=state.loadout[slot];return;}
   world=equipped;
   state={...state,loadout:next,playerHp:Math.min(state.playerHp,newMax)};
-  saveWorld(world);rebuildPlayer();persist();update();
+  persist();saveWorld(world);rebuildPlayer();update();
  });
 }
 let modularController=null,modularAbort=null;
@@ -92,7 +97,7 @@ async function loadPackagedModels(){
  }catch{/* No bundled GLB yet: use low-poly procedural fallback. */}}
 }
 
-function persist(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(state));}catch{$('result').textContent='Speichern nicht verfügbar; Kampf läuft nur in dieser Sitzung.';}}
+function persist(){if(!persistSession()){$('result').textContent='Speichern nicht verfügbar; Kampf läuft nur in dieser Sitzung.';}try{localStorage.setItem(SAVE_KEY,JSON.stringify(state));}catch{}}
 function update(){
  document.querySelector('.fighters>div+div strong').textContent=getOpponent(state.opponentId).name.toUpperCase()+' · '+getOpponent(state.opponentId).style;
  renderWorld();
@@ -136,15 +141,15 @@ $('restart').addEventListener('click',()=>{if(exploring||state.phase==='enemy')r
 function renderWorld(){
  $('world-status').textContent='🪙 '+world.coins+' $ · 🧰 Schrott '+world.inventory.scrap+' · 🩹 Verbände '+world.inventory.medkit+' · 🏆 Siege '+world.wins;
  const map=$('world-map');map.replaceChildren();
- for(const area of availableDistricts(world.wins)){const button=document.createElement('button');button.textContent=(world.district===area.id?'📍 ':'🗺️ ')+area.name;button.disabled=!exploring||world.district===area.id;button.addEventListener('click',()=>{world=travel(world,area.id);district.setTheme(world.district);saveWorld(world);renderWorld();});map.appendChild(button);}
- for(const npc of districtNpcs(world.district)){const b=document.createElement('button');b.textContent=npc.name+' · '+npc.role;b.addEventListener('click',()=>{if(!exploring)return;world=move(world,npc.x,npc.z);saveWorld(world);renderWorld();});map.appendChild(b);}
+ for(const area of availableDistricts(world.wins)){const button=document.createElement('button');button.textContent=(world.district===area.id?'📍 ':'🗺️ ')+area.name;button.disabled=!exploring||world.district===area.id;button.addEventListener('click',()=>{world=travel(world,area.id);district.setTheme(world.district);persistSession();saveWorld(world);renderWorld();});map.appendChild(button);}
+ for(const npc of districtNpcs(world.district)){const b=document.createElement('button');b.textContent=npc.name+' · '+npc.role;b.addEventListener('click',()=>{if(!exploring)return;world=move(world,npc.x,npc.z);persistSession();saveWorld(world);renderWorld();});map.appendChild(b);}
  const actions=$('world-actions');actions.replaceChildren();
  const heading=document.createElement('p');heading.textContent='Shop · Labor · Arena';actions.appendChild(heading);
- if(world.inventory.medkit>0){const heal=document.createElement('button');heal.textContent='🩹 Verband verwenden (+20 HP)';heal.disabled=!exploring||state.phase==='enemy'||state.playerHp>=deriveStats(state.loadout).maxHp;heal.addEventListener('click',()=>{if(!exploring||state.phase==='enemy'||world.inventory.medkit<=0||state.playerHp>=deriveStats(state.loadout).maxHp)return;world={...world,inventory:{...world.inventory,medkit:world.inventory.medkit-1}};state={...state,playerHp:Math.min(deriveStats(state.loadout).maxHp,state.playerHp+20)};saveWorld(world);persist();update();});actions.appendChild(heal);}
- for(const item of SHOP){const b=document.createElement('button');b.textContent='Kaufen: '+item.name+' ('+itemPrice(world.district,item.id)+' $)';b.disabled=!exploring||world.coins<itemPrice(world.district,item.id)||district.nearest(world.position)?.role!=='shop';b.addEventListener('click',()=>{world=buy(world,item.id);saveWorld(world);renderWorld();});actions.appendChild(b);}
- for(const part of PARTS.filter(p=>!world.unlocked.includes(p.id))){const b=document.createElement('button');b.textContent='🔬 '+part.name+' (2 Schrott)';b.disabled=!exploring||world.inventory.scrap<2||district.nearest(world.position)?.role!=='lab';b.addEventListener('click',()=>{world=unlockPart(world,part.id);saveWorld(world);renderWorld();update();});actions.appendChild(b);}
+ if(world.inventory.medkit>0){const heal=document.createElement('button');heal.textContent='🩹 Verband verwenden (+20 HP)';heal.disabled=!exploring||state.phase==='enemy'||state.playerHp>=deriveStats(state.loadout).maxHp;heal.addEventListener('click',()=>{if(!exploring||state.phase==='enemy'||world.inventory.medkit<=0||state.playerHp>=deriveStats(state.loadout).maxHp)return;world={...world,inventory:{...world.inventory,medkit:world.inventory.medkit-1}};state={...state,playerHp:Math.min(deriveStats(state.loadout).maxHp,state.playerHp+20)};persist();saveWorld(world);update();});actions.appendChild(heal);}
+ for(const item of SHOP){const b=document.createElement('button');b.textContent='Kaufen: '+item.name+' ('+itemPrice(world.district,item.id)+' $)';b.disabled=!exploring||world.coins<itemPrice(world.district,item.id)||district.nearest(world.position)?.role!=='shop';b.addEventListener('click',()=>{world=buy(world,item.id);persistSession();saveWorld(world);renderWorld();});actions.appendChild(b);}
+ for(const part of PARTS.filter(p=>!world.unlocked.includes(p.id))){const b=document.createElement('button');b.textContent='🔬 '+part.name+' (2 Schrott)';b.disabled=!exploring||world.inventory.scrap<2||district.nearest(world.position)?.role!=='lab';b.addEventListener('click',()=>{world=unlockPart(world,part.id);persistSession();persistSession();saveWorld(world);renderWorld();update();});actions.appendChild(b);}
  const quests=$('world-quests');quests.replaceChildren();
- for(const q of QUESTS){const b=document.createElement('button');b.textContent=(world.completed.includes(q.id)?'✓ ':world[q.goal]>=q.target?'🎁 ':'🔒 ')+q.name+' ('+world[q.goal]+'/'+q.target+')';b.disabled=!exploring||world.completed.includes(q.id)||world[q.goal]<q.target||district.nearest(world.position)?.role!=='quest';b.addEventListener('click',()=>{world=claimQuest(world,q.id);saveWorld(world);renderWorld();});quests.appendChild(b);}
+ for(const q of QUESTS){const b=document.createElement('button');b.textContent=(world.completed.includes(q.id)?'✓ ':world[q.goal]>=q.target?'🎁 ':'🔒 ')+q.name+' ('+world[q.goal]+'/'+q.target+')';b.disabled=!exploring||world.completed.includes(q.id)||world[q.goal]<q.target||district.nearest(world.position)?.role!=='quest';b.addEventListener('click',()=>{world=claimQuest(world,q.id);persistSession();saveWorld(world);renderWorld();});quests.appendChild(b);}
  mutationPanel.querySelectorAll('select').forEach(select=>select.querySelectorAll('option').forEach(opt=>{opt.disabled=!world.unlocked.includes(opt.value);}));
 }
 function toggleExplore(on){
@@ -156,7 +161,7 @@ function toggleExplore(on){
 $('world-toggle').addEventListener('click',()=>{if(busy||state.phase==='enemy')return;toggleExplore(!exploring);});
 document.querySelectorAll('[data-walk]').forEach(button=>button.addEventListener('click',()=>{
  if(!exploring)return;const [dx,dz]=button.dataset.walk.split(',').map(Number);
- world=move(world,world.position.x+dx,world.position.z+dz);saveWorld(world);renderWorld();
+ world=move(world,world.position.x+dx,world.position.z+dz);persistSession();saveWorld(world);renderWorld();
 }));
 $('world-interact').addEventListener('click',()=>{
  const npc=district.nearest(world.position);
