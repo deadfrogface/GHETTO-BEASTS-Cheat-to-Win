@@ -103,8 +103,8 @@ function update(){
  $('turn').textContent='Runde '+state.round+' · '+(state.phase==='over'?'Ende':state.phase==='player'?'Dein Zug':'Gegnerzug');
  $('result').textContent=state.history.at(-1)||'Kampfbereit.';
  $('log').textContent=state.history.slice(-5).join('  •  ');
- document.querySelectorAll('[data-action]').forEach(b=>b.disabled=busy||state.phase!=='player'||(b.dataset.action==='cheat'&&Boolean(unavailable)));
- cheatSelect.disabled=busy||state.phase!=='player';
+ document.querySelectorAll('[data-action]').forEach(b=>b.disabled=exploring||busy||state.phase!=='player'||(b.dataset.action==='cheat'&&Boolean(unavailable)));
+ cheatSelect.disabled=exploring||busy||state.phase!=='player';
 }
 function strike(target){hitTarget=target;hitAt=performance.now();}
 function nextOpponent(){return opponentForDistrict(world.district,world.wins).id;}
@@ -114,7 +114,7 @@ function enemyAction(){
  state=enemyTurn(state);strike(player);awardVictory();persist();busy=false;update();
 }
 function take(action){
- if(busy||state.phase!=='player')return;
+ if(exploring||busy||state.phase!=='player')return;
  busy=true;state=playerTurn(state,action);awardVictory();strike(enemy);persist();update();
  if(state.phase==='enemy')enemyTimeout=setTimeout(()=>{enemyTimeout=null;enemyAction();},650);
  else {busy=false;update();}
