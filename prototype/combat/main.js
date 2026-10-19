@@ -1,6 +1,6 @@
 import {OPPONENTS,getOpponent,opponentForDistrict} from './opponents.mjs';
 import {createDistrict} from './district-3d.js';
-import {DISTRICT,QUESTS,SHOP,ECONOMY,itemPrice,districtNpcs,availableDistricts,travel,validWorld,loadWorld,saveWorld,buy,unlockPart,equip,recordWin,claimQuest,move} from './world.mjs';
+import {DISTRICT,QUESTS,SHOP,ECONOMY,itemPrice,districtNpcs,availableDistricts,travel,validWorld,loadWorld,buy,unlockPart,equip,recordWin,claimQuest,move} from './world.mjs';
 import {attachModularParts} from './modular-assets.js';
 import {createPackagedCharacter} from './oss-character.js';
 import {createCreatureRig} from './creature-rig.js';
@@ -17,6 +17,7 @@ let world=loadWorld(),lastWorldWin=false,exploring=false;
 // A legacy combat result is authoritative only when no atomic snapshot exists.
 if(!sessionSnapshot&&state.phase==='over'&&state.enemyHp===0)state={...state,rewardClaimed:true};
 if(sessionSnapshot)world=sessionSnapshot.world;
+lastWorldWin=state.rewardClaimed;
 function persistSession(){if(!validWorld(world))return false;try{localStorage.setItem(SESSION_KEY,JSON.stringify({version:1,combat:state,world}));return true;}catch{return false;}}
 persistSession();
 const scene=new THREE.Scene();scene.background=new THREE.Color('#91b9cf');
