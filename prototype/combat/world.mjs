@@ -7,6 +7,12 @@ export const DISTRICT={id:'kanalviertel',name:'Kanalviertel',npcs:[
  {id:'challenger',name:'Kalle Krawall',role:'arena',x:0,z:3},
  {id:'informant',name:'Petze-Petra',role:'quest',x:-4,z:3}
 ]};
+export const DISTRICT_NPCS={
+ kanalviertel:DISTRICT.npcs,
+ schrottplatz:[{id:'junkdealer',name:'Rost-Rita',role:'shop',x:-3,z:-2},{id:'welder',name:'Professor Funkenflug',role:'lab',x:3,z:-2},{id:'pit',name:'Schrott-Sabine',role:'arena',x:0,z:3},{id:'collector',name:'Pfand-Paule',role:'quest',x:-4,z:3}],
+ rathaus:[{id:'accountant',name:'Kassen-Karla',role:'shop',x:-3,z:-2},{id:'researcher',name:'Dr. Formular',role:'lab',x:3,z:-2},{id:'mayor',name:'Bürgermeister Beton',role:'arena',x:0,z:3},{id:'clerk',name:'Akten-Achim',role:'quest',x:-4,z:3}]
+};
+export const districtNpcs=id=>DISTRICT_NPCS[id]||DISTRICT.npcs;
 export const QUESTS=[
  {id:'first-win',name:'Erster Arenasieg',goal:'wins',target:1,reward:15},
  {id:'three-wins',name:'Dreifacher Ärger',goal:'wins',target:3,reward:30},
