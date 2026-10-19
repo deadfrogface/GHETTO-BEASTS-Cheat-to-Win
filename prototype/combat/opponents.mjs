@@ -12,9 +12,11 @@ export function chooseCounter(state,opponent,random){
  if(!Number.isFinite(random)||random<0||random>=1)throw Error('Invalid RNG');
  const suspicion=state.suspicion||0;
  if(suspicion>=45&&random<opponent.cheatSense)return {type:'expose',damage:5,heat:12,message:opponent.name+' durchschaut den Trick!'};
- if(opponent.style==='trickster'&&random<.24)return {type:'sabotage',damage:Math.max(1,opponent.attack-4),heat:5,message:opponent.name+' sabotiert deine Ausrüstung!'};
+ if(opponent.style==='trickster'&&random<.24)return {type:'sabotage',damage:Math.max(1,opponent.attack-4),heat:5,debuff:2,message:opponent.name+' sabotiert deine Ausrüstung!'};
  if(opponent.style==='enforcer'&&suspicion>=25&&random<.32)return {type:'expose',damage:Math.max(1,opponent.attack-7),heat:8,message:opponent.name+' ruft die Ordnungshüter!'};
  if(state.playerGuard&&random<.35)return {type:'feint',damage:Math.max(1,opponent.attack-3),message:opponent.name+' täuscht einen Schlag an!'};
  return {type:'attack',damage:opponent.attack+Math.floor(random*7),message:opponent.name+' greift an!'};
 }
 export function difficulty(wins){return Math.min(1.4,1+Math.floor(Math.max(0,wins)/3)*.08);}
+export const ENCOUNTER_ROSTERS={kanalviertel:['golem','ratking'],schrottplatz:['scrapper','pigeon'],rathaus:['enforcer','boss']};
+export function opponentForDistrict(district,wins){const roster=ENCOUNTER_ROSTERS[district]||ENCOUNTER_ROSTERS.kanalviertel;return getOpponent(roster[Math.max(0,wins)%roster.length]);}
