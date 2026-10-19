@@ -8,11 +8,14 @@ export function createDistrict(scene){
  const buildingGeometry=new THREE.BoxGeometry(1,1,1);
  const buildingMaterial=new THREE.MeshLambertMaterial({color:0x8392a6,flatShading:true});
  const buildings=new THREE.InstancedMesh(buildingGeometry,buildingMaterial,16);
- const matrix=new THREE.Object3D();let n=0;
- for(const x of [-9,-6,6,9])for(const z of [-8,-3,3,8]){
-  const height=2+((n*7)%5);matrix.position.set(x,height/2,z);matrix.scale.set(2.3,height,2.4);matrix.updateMatrix();buildings.setMatrixAt(n++,matrix.matrix);
- }
- buildings.instanceMatrix.needsUpdate=true;root.add(buildings);
+ const matrix=new THREE.Object3D();
+ function layout(id){let n=0;for(const x of [-9,-6,6,9])for(const z of [-8,-3,3,8]){
+  const height=id==='rathaus'?4+((n*3)%4):id==='schrottplatz'?1.5+((n*5)%3):2+((n*7)%5);
+  const width=id==='schrottplatz'?2.8:id==='rathaus'?2:2.3;
+  matrix.position.set(x,height/2,z);matrix.rotation.y=id==='schrottplatz'?(n%3-1)*.13:0;
+  matrix.scale.set(width,height,id==='rathaus'?2.8:2.4);matrix.updateMatrix();buildings.setMatrixAt(n++,matrix.matrix);
+ }buildings.instanceMatrix.needsUpdate=true;buildings.computeBoundingSphere();}
+ layout(DISTRICT.id);root.add(buildings);
  const npcGeo=new THREE.IcosahedronGeometry(.52,1);
  const npcColors={shop:0xffd06b,lab:0x8de4fb,arena:0xf07c72,quest:0xc7a3fa};
  const markers=new THREE.Group();root.add(markers);
@@ -21,7 +24,7 @@ export function createDistrict(scene){
  const avatar=new THREE.Group();root.add(avatar);
  const body=new THREE.Mesh(new THREE.IcosahedronGeometry(.46,1),new THREE.MeshLambertMaterial({color:0x9bea66,flatShading:true}));body.position.y=.58;avatar.add(body);
  const cameraPosition=new THREE.Vector3();
- return {root,avatar,markers,setTheme(id){updateNpcs(id);const palette={kanalviertel:[0x344c56,0x8392a6],schrottplatz:[0x62513c,0x9c7149],rathaus:[0x4c516b,0xb2a8bf]}[id]||[0x344c56,0x8392a6];ground.material.color.setHex(palette[0]);buildingMaterial.color.setHex(palette[1]);},update(position,camera){
+ return {root,avatar,markers,setTheme(id){updateNpcs(id);layout(id);const palette={kanalviertel:[0x344c56,0x8392a6],schrottplatz:[0x62513c,0x9c7149],rathaus:[0x4c516b,0xb2a8bf]}[id]||[0x344c56,0x8392a6];ground.material.color.setHex(palette[0]);buildingMaterial.color.setHex(palette[1]);},update(position,camera){
   avatar.position.set(position.x,0,position.z);
   cameraPosition.set(position.x+9,9,position.z+11);
   camera.position.lerp(cameraPosition,.14);camera.lookAt(position.x,0,position.z);
