@@ -1,4 +1,5 @@
 // Data-only cheat registry and bounded, deterministic effect interpreter.
+import {deriveStats,validateLoadout} from './mutations.mjs';
 export const START_CASH=8;
 export const CHEAT_DEFS=[
  {id:'brick',name:'Backstein',method:'projectile',target:'enemy',effects:[{type:'damage',amount:27}],chance:.58,fail:[{type:'damage',target:'self',amount:8}],tags:['illegal','ranged'],cost:0,heat:22,cooldown:1},
