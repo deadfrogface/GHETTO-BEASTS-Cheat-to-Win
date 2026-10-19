@@ -16,7 +16,7 @@ export function createDistrict(scene){
  const npcGeo=new THREE.IcosahedronGeometry(.52,1),npcMat=new THREE.MeshLambertMaterial({color:0xffd06b,flatShading:true});
  const markers=new THREE.Group();root.add(markers);
  let activeNpcs=DISTRICT.npcs;
- function updateNpcs(id){activeNpcs=districtNpcs(id);markers.clear();for(const npc of activeNpcs){const colors={shop:0xffd06b,lab:0x7fe3dd,arena:0xe57a72,quest:0xb99cff};const m=new THREE.Mesh(npcGeo,new THREE.MeshLambertMaterial({color:colors[npc.role],flatShading:true}));m.position.set(npc.x,.7,npc.z);m.userData.npc=npc;markers.add(m);}}updateNpcs(DISTRICT.id);
+ function updateNpcs(id){activeNpcs=districtNpcs(id);markers.children.forEach(m=>m.material.dispose());markers.clear();for(const npc of activeNpcs){const colors={shop:0xffd06b,lab:0x7fe3dd,arena:0xe57a72,quest:0xb99cff};const m=new THREE.Mesh(npcGeo,new THREE.MeshLambertMaterial({color:colors[npc.role],flatShading:true}));m.position.set(npc.x,.7,npc.z);m.userData.npc=npc;markers.add(m);}}updateNpcs(DISTRICT.id);
  const avatar=new THREE.Group();root.add(avatar);
  const body=new THREE.Mesh(new THREE.IcosahedronGeometry(.46,1),new THREE.MeshLambertMaterial({color:0x9bea66,flatShading:true}));body.position.y=.58;avatar.add(body);
  const cameraPosition=new THREE.Vector3();
