@@ -2,10 +2,10 @@
 export const OPPONENTS=[
  {id:'golem',name:'Beton-Golem',maxHp:110,attack:12,defense:2,cheatSense:.1,reward:8,style:'bruiser'},
  {id:'ratking',name:'Rattenkönig',maxHp:85,attack:10,defense:1,cheatSense:.35,reward:12,style:'trickster'},
- {id:'enforcer',name:'Inkasso-Igor',maxHp:125,attack:14,defense:4,cheatSense:.55,reward:18,style:'enforcer'},
+ {id:'enforcer',name:'Inkasso-Igor',maxHp:120,attack:13,defense:3,cheatSense:.5,reward:19,style:'enforcer'},
  {id:'pigeon',name:'Tauben-Toni',maxHp:76,attack:9,defense:0,cheatSense:.42,reward:11,style:'trickster'},
  {id:'scrapper',name:'Schrott-Sabine',maxHp:105,attack:13,defense:3,cheatSense:.3,reward:16,style:'bruiser'},
- {id:'boss',name:'Bürgermeister Beton',maxHp:155,attack:17,defense:5,cheatSense:.68,reward:25,style:'enforcer'}
+ {id:'boss',name:'Bürgermeister Beton',maxHp:145,attack:15,defense:4,cheatSense:.58,reward:28,style:'enforcer'}
 ];
 export const getOpponent=id=>OPPONENTS.find(o=>o.id===id)||OPPONENTS[0];
 export function chooseCounter(state,opponent,random){
@@ -17,6 +17,6 @@ export function chooseCounter(state,opponent,random){
  if(state.playerGuard&&random<.35)return {type:'feint',damage:Math.max(1,opponent.attack-3),message:opponent.name+' täuscht einen Schlag an!'};
  return {type:'attack',damage:opponent.attack+Math.floor(random*7),message:opponent.name+' greift an!'};
 }
-export function difficulty(wins){return Math.min(1.4,1+Math.floor(Math.max(0,wins)/3)*.08);}
+export function difficulty(wins){return Math.min(1.25,1+Math.floor(Math.max(0,wins)/4)*.05);}
 export const ENCOUNTER_ROSTERS={kanalviertel:['golem','ratking'],schrottplatz:['scrapper','pigeon'],rathaus:['enforcer','boss']};
 export function opponentForDistrict(district,wins){const roster=ENCOUNTER_ROSTERS[district]||ENCOUNTER_ROSTERS.kanalviertel;return getOpponent(roster[Math.max(0,wins)%roster.length]);}
