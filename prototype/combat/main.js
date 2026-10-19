@@ -36,7 +36,7 @@ function actor(color,accent,x,monster=false){
  }
  group.position.x=x;scene.add(group);return group;
 }
-state={...state,loadout:{...world.loadout}};
+state={...state,loadout:{...world.loadout},playerHp:Math.min(state.playerHp,deriveStats(world.loadout).maxHp)};
 let playerRig=createCreatureRig(state.loadout,'rat'),player=playerRig.root,enemyRig=createCreatureRig({head:'stone-head',arms:'steel-arms',legs:'base-legs',skin:'armor',tail:'none-tail',horns:'none-horns',extraArms:'none-extra',wings:'none-wings'},'golem'),enemy=enemyRig.root;
 player.position.x=-2.7;enemy.position.x=2.7;scene.add(player,enemy);
 player.rotation.y=0.4;enemy.rotation.y=-0.4;
@@ -118,7 +118,7 @@ const cheatSelect=$('cheat-select');
 ALL_CHEATS.forEach(d=>{const option=document.createElement('option');option.value=d.id;option.textContent=d.name+' ('+Math.round(d.chance*100)+'% Erfolg)';cheatSelect.appendChild(option);});
 cheatSelect.addEventListener('change',update);
 document.querySelectorAll('[data-action]').forEach(b=>b.addEventListener('click',()=>take(b.dataset.action==='cheat'?cheatSelect.value:b.dataset.action)));
-$('restart').addEventListener('click',()=>{if(enemyTimeout!==null)clearTimeout(enemyTimeout);enemyTimeout=null;busy=false;state=newGame(OPPONENTS[Math.min(OPPONENTS.length-1,Math.floor(world.wins/2))].id,world.wins);lastWorldWin=false;rebuildPlayer();persist();update();});
+$('restart').addEventListener('click',()=>{if(enemyTimeout!==null)clearTimeout(enemyTimeout);enemyTimeout=null;busy=false;state=newGame(OPPONENTS[Math.min(OPPONENTS.length-1,Math.floor(world.wins/2))].id,world.wins);state.loadout={...world.loadout};state.playerHp=deriveStats(state.loadout).maxHp;lastWorldWin=false;rebuildPlayer();persist();update();});
 function renderWorld(){
  $('world-status').textContent='🪙 '+world.coins+' $ · 🧰 Schrott '+world.inventory.scrap+' · 🩹 Verbände '+world.inventory.medkit+' · 🏆 Siege '+world.wins;
  const map=$('world-map');map.replaceChildren();
