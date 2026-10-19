@@ -1,4 +1,4 @@
-import {OPPONENTS,getOpponent} from './opponents.mjs';
+import {OPPONENTS,getOpponent,opponentForDistrict} from './opponents.mjs';
 import {createDistrict} from './district-3d.js';
 import {DISTRICT,QUESTS,SHOP,districtNpcs,availableDistricts,travel,loadWorld,saveWorld,buy,unlockPart,equip,recordWin,claimQuest,move} from './world.mjs';
 import {attachModularParts} from './modular-assets.js';
@@ -107,7 +107,7 @@ function update(){
  cheatSelect.disabled=busy||state.phase!=='player';
 }
 function strike(target){hitTarget=target;hitAt=performance.now();}
-function nextOpponent(){const roster={kanalviertel:['golem','ratking'],schrottplatz:['scrapper','pigeon'],rathaus:['enforcer','boss']}[world.district]||['golem'];return roster[world.wins%roster.length];}
+function nextOpponent(){return opponentForDistrict(world.district,world.wins).id;}
 function awardVictory(){if(state.phase!=='over'||state.enemyHp!==0||lastWorldWin||state.rewardClaimed)return;const opponent=getOpponent(state.opponentId);const rewarded=recordWin(world,opponent.reward);if(rewarded===world)return;world=rewarded;state={...state,rewardClaimed:true};saveWorld(world);lastWorldWin=true;}
 function enemyAction(){
  if(state.phase!=='enemy')return;
