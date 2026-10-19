@@ -35,6 +35,7 @@ function actor(color,accent,x,monster=false){
  }
  group.position.x=x;scene.add(group);return group;
 }
+state={...state,loadout:{...world.loadout}};
 let playerRig=createCreatureRig(state.loadout,'rat'),player=playerRig.root,enemyRig=createCreatureRig({head:'stone-head',arms:'steel-arms',legs:'base-legs',skin:'armor',tail:'none-tail',horns:'none-horns',extraArms:'none-extra',wings:'none-wings'},'golem'),enemy=enemyRig.root;
 player.position.x=-2.7;enemy.position.x=2.7;scene.add(player,enemy);
 player.rotation.y=0.4;enemy.rotation.y=-0.4;
@@ -48,6 +49,7 @@ for(const slot of SLOT_TYPES){
  label.appendChild(select);mutationPanel.appendChild(label);
  select.addEventListener('change',()=>{
   if(state.phase!=='player'){select.value=state.loadout[slot];return;}
+  if(!exploring||district.nearest(world.position)?.role!=='lab'){select.value=state.loadout[slot];return;}
   const next=mutate(state.loadout,slot,select.value);
   if(!world.unlocked.includes(select.value)){select.value=state.loadout[slot];return;}
   if(next===state.loadout)return;
@@ -89,7 +91,7 @@ function update(){
  const stats=deriveStats(state.loadout);
  $('player-hp').textContent=state.playerHp+' / '+stats.maxHp+' HP';
  $('mutation-stats').textContent='Max. HP '+stats.maxHp+' · Angriff +'+stats.attack+' · Verteidigung +'+stats.defense;
- mutationPanel.querySelectorAll('select').forEach(select=>{select.value=state.loadout[select.dataset.slot];select.disabled=busy||state.phase!=='player';});
+ mutationPanel.querySelectorAll('select').forEach(select=>{select.value=state.loadout[select.dataset.slot];select.disabled=busy||state.phase!=='player'||!exploring||district.nearest(world.position)?.role!=='lab';});
  $('enemy-hp').textContent=state.enemyHp+' / 110 HP';
  $('player-bar').style.width=state.playerHp/stats.maxHp*100+'%';
  $('enemy-bar').style.width=state.enemyHp/110*100+'%';
@@ -118,13 +120,13 @@ $('restart').addEventListener('click',()=>{if(enemyTimeout!==null)clearTimeout(e
 function renderWorld(){
  $('world-status').textContent='🪙 '+world.coins+' $ · 🧰 Schrott '+world.inventory.scrap+' · 🩹 Verbände '+world.inventory.medkit+' · 🏆 Siege '+world.wins;
  const map=$('world-map');map.replaceChildren();
- for(const npc of DISTRICT.npcs){const b=document.createElement('button');b.textContent=npc.name+' · '+npc.role;b.addEventListener('click',()=>{world=move(world,npc.x,npc.z);saveWorld(world);renderWorld();});map.appendChild(b);}
+ for(const npc of DISTRICT.npcs){const b=document.createElement('button');b.textContent=npc.name+' · '+npc.role;b.addEventListener('click',()=>{if(!exploring)return;world=move(world,npc.x,npc.z);saveWorld(world);renderWorld();});map.appendChild(b);}
  const actions=$('world-actions');actions.replaceChildren();
  const heading=document.createElement('p');heading.textContent='Shop · Labor · Arena';actions.appendChild(heading);
- for(const item of SHOP){const b=document.createElement('button');b.textContent='Kaufen: '+item.name+' ('+item.price+' $)';b.disabled=world.coins<item.price||!district.nearest(world.position)||district.nearest(world.position).role!=='shop';b.addEventListener('click',()=>{world=buy(world,item.id);saveWorld(world);renderWorld();});actions.appendChild(b);}
- for(const part of PARTS.filter(p=>!world.unlocked.includes(p.id))){const b=document.createElement('button');b.textContent='🔬 '+part.name+' (2 Schrott)';b.disabled=world.inventory.scrap<2||district.nearest(world.position)?.role!=='lab';b.addEventListener('click',()=>{world=unlockPart(world,part.id);saveWorld(world);renderWorld();update();});actions.appendChild(b);}
+ for(const item of SHOP){const b=document.createElement('button');b.textContent='Kaufen: '+item.name+' ('+item.price+' $)';b.disabled=!exploring||world.coins<item.price||district.nearest(world.position)?.role!=='shop';b.addEventListener('click',()=>{world=buy(world,item.id);saveWorld(world);renderWorld();});actions.appendChild(b);}
+ for(const part of PARTS.filter(p=>!world.unlocked.includes(p.id))){const b=document.createElement('button');b.textContent='🔬 '+part.name+' (2 Schrott)';b.disabled=!exploring||world.inventory.scrap<2||district.nearest(world.position)?.role!=='lab';b.addEventListener('click',()=>{world=unlockPart(world,part.id);saveWorld(world);renderWorld();update();});actions.appendChild(b);}
  const quests=$('world-quests');quests.replaceChildren();
- for(const q of QUESTS){const b=document.createElement('button');b.textContent=(world.completed.includes(q.id)?'✓ ':world[q.goal]>=q.target?'🎁 ':'🔒 ')+q.name+' ('+world[q.goal]+'/'+q.target+')';b.disabled=world.completed.includes(q.id)||world[q.goal]<q.target||district.nearest(world.position)?.role!=='quest';b.addEventListener('click',()=>{world=claimQuest(world,q.id);saveWorld(world);renderWorld();});quests.appendChild(b);}
+ for(const q of QUESTS){const b=document.createElement('button');b.textContent=(world.completed.includes(q.id)?'✓ ':world[q.goal]>=q.target?'🎁 ':'🔒 ')+q.name+' ('+world[q.goal]+'/'+q.target+')';b.disabled=!exploring||world.completed.includes(q.id)||world[q.goal]<q.target||district.nearest(world.position)?.role!=='quest';b.addEventListener('click',()=>{world=claimQuest(world,q.id);saveWorld(world);renderWorld();});quests.appendChild(b);}
  mutationPanel.querySelectorAll('select').forEach(select=>select.querySelectorAll('option').forEach(opt=>{opt.disabled=!world.unlocked.includes(opt.value);}));
 }
 function toggleExplore(on){
@@ -144,6 +146,7 @@ $('world-interact').addEventListener('click',()=>{
  if(npc.role==='arena'){toggleExplore(false);if(state.phase==='over'){$('restart').click();}}
  else{$('world-status').textContent=npc.name+': '+({shop:'Willkommen im Schrottladen!',lab:'Zwei Schrottteile pro Mutation.',quest:'Schau nach deinen Aufträgen.'}[npc.role]||'Hallo!');}
 });
+$('world-panel').open=true;
 function resize(){const w=innerWidth,h=innerHeight;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));renderer.setSize(w,h,false);}
 window.addEventListener('resize',resize);
 let last=0,frames=0,acc=0,raf=0;
