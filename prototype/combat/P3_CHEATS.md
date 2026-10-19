@@ -1,40 +1,28 @@
-# P3 — Datengetriebene Betrugs-Engine
+# P3 — Betrugs-Engine: Implementierungsstand
 
-## Implementiert
+**Umgesetzt im isolierten Kampf-Prototyp; Tests und Balancing noch nicht abgenommen.**
 
-- Separates, renderer-unabhängiges Effektregister in `cheats.mjs`.
-- Vier Grundaktionen: Backstein, Bestechung, Ablenkung, Sabotage.
-- Automatisch generierte Kombinationen **verschiedener Methoden**, ohne handgeschriebene Paarregeln.
-- Definierte Effekte: `damage`, `heal`, `weaken`, `skip`; deterministische Zufallswürfe.
-- Katalog-Validierung mit Mengen-/Typgrenzen, Eindeutigkeit und Ausschluss inkompatibler Methodengleichheit.
-- Anbindung an den Kampfablauf und die mobile Betrugs-Auswahl.
-- Tests für Katalog, Kombinationen, deterministisches Verhalten, Wertebereiche und Fehlschläge.
+## Spielregeln
 
-## Designgrenzen / offene Punkte
+- Fünf datengetriebene Grundaktionen: Backstein, Bestechung, Ablenkung, Sabotage, manipuliertes Medkit.
+- Generierte Paar-Kombinationen verschiedener Methoden mit kompatiblen Zielen, ohne exklusive oder medizinische Mischungen.
+- Begrenzte Effekte: Schaden, Heilung, Gegner schwächen und Gegnerzug überspringen.
+- Pro Aktion: deterministische Erfolgschance, Fehlschlageffekt, Bargeldkosten, Verdachtsanstieg und Abklingzeit.
+- Start mit 8 $; unbezahlbare und abklingende Aktionen sind gesperrt. 100 Verdacht führt zur Niederlage durch Razzia.
+- Wertebereiche und Katalogschema werden vor Anwendung validiert. Aktionen mit unzulässigen Kosten oder Cooldowns verbrauchen keinen Zug und keinen Zufallswert.
+- Savegame enthält Geld, Verdacht, Abklingzeiten und Status; ältere P2-Spielstände werden beim Laden ergänzt. Neue Speicherkennung schützt die ursprüngliche P2-Demo.
 
-- **Keine unbegrenzte kreative KI**: Kombinationen bestehen aus vordefinierten Effekten.
-- Die `cost`-Eigenschaft ist bislang **nur Metadatum**; es gibt noch kein Ressourceninventar und daher keine Abbuchung. Vor produktivem Gameplay zwingend Kostenprüfung implementieren.
-- Tag-Regeln sind derzeit einfach (verschiedene Methoden, `exclusive`); komplexere Ziel- und Zustandskompatibilität folgt später.
-- Effekte werden innerhalb einer Aktion nacheinander angewendet; spätere Prioritäts-/Resistenzregeln sind noch nicht implementiert.
-- Savegame-Schema erlaubt optionale neue Felder für alte P2-Spielstände; Migration/Versionierung folgt.
-- Node-Tests sind geschrieben, aber **nicht hier ausgeführt**. Browser-/Gerätetest und Balancing fehlen.
-- Bestehende 2D-App bleibt unberührt; P3 baut auf P2 auf.
+## Grenzen
 
-## Tests
+- **Keine automatische Erfindung neuer Grundeffekte:** Kombinationsgenerator verknüpft definierte Regeln.
+- Die Gegner-KI bleibt einfach und nicht auf das gesamte Betrugssystem abgestimmt; umfangreiche KI gehört zu P6.
+- Die Ökonomie ist eine isolierte Demo mit 8 $ Startkapital, kein vollständiges Inventar- oder Shop-System (P5).
+- Keine automatischen oder manuellen Tests hier ausgeführt. Balancing und reale Smartphone-Leistung bleiben offen.
+- Three.js kommt im Demo-Prototyp noch vom CDN; für die Offline-App muss es lokal gebündelt werden.
+- Der bisherige 2D-Prototyp wurde nicht verändert.
 
-```sh
-node --test prototype/combat/rules.test.mjs prototype/combat/cheats.test.mjs
-```
+## Testaufruf
 
-Zum manuellen Test `prototype/combat/` per HTTP-Server öffnen, Betrug im Dropdown wählen und über die Betrugs-Schaltfläche ausführen. Testen: Erfolg, Fehlschlag, Ablenkung (Gegnerzug aussetzen), Schwächung, Kombinationen, Sieg/Niederlage, Reload.
+`node --test prototype/combat/rules.test.mjs prototype/combat/cheats.test.mjs`
 
-## Abnahme
-
-- [x] Datengetriebener Effektbaukasten
-- [x] Mehrere Methoden und generierte Kombinationen
-- [x] Eingabevalidierung und definierte Grenzen
-- [x] Einbindung in den P2-Kampf
-- [x] Testfälle geschrieben
-- [ ] Automatisierte Tests ausgeführt und grün
-- [ ] Ressourcen-/Kostenregeln und umfassende Kompatibilitätsregeln
-- [ ] Balancing und echte Android-/iOS-Tests
+**Abnahme P3:** Effektbaukasten, Kombinationen, Kosten, Abklingzeiten, Verdacht, Gegenmaßnahmen (Gegner-Skip/Schwächung), Spielstand und UI implementiert. Testausführung, Balancing und mobile Abnahme stehen aus.
