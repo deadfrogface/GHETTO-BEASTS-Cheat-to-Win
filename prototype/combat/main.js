@@ -104,7 +104,7 @@ function enemyAction(){
 }
 function take(action){
  if(busy||state.phase!=='player')return;
- busy=true;state=playerTurn(state,action);strike(enemy);persist();update();
+ busy=true;state=playerTurn(state,action);if(state.phase==='over'&&state.enemyHp<=0&&!lastWorldWin){world=recordWin(world);saveWorld(world);lastWorldWin=true;}strike(enemy);persist();update();
  if(state.phase==='enemy')enemyTimeout=setTimeout(()=>{enemyTimeout=null;enemyAction();},650);
  else {busy=false;update();}
 }
