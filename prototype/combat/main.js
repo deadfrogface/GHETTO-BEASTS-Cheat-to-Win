@@ -1,6 +1,6 @@
 import {OPPONENTS,getOpponent} from './opponents.mjs';
 import {createDistrict} from './district-3d.js';
-import {DISTRICT,QUESTS,SHOP,availableDistricts,travel,loadWorld,saveWorld,buy,unlockPart,equip,recordWin,claimQuest,move} from './world.mjs';
+import {DISTRICT,QUESTS,SHOP,districtNpcs,availableDistricts,travel,loadWorld,saveWorld,buy,unlockPart,equip,recordWin,claimQuest,move} from './world.mjs';
 import {attachModularParts} from './modular-assets.js';
 import {createPackagedCharacter} from './oss-character.js';
 import {createCreatureRig} from './creature-rig.js';
@@ -128,7 +128,7 @@ function renderWorld(){
  $('world-status').textContent='🪙 '+world.coins+' $ · 🧰 Schrott '+world.inventory.scrap+' · 🩹 Verbände '+world.inventory.medkit+' · 🏆 Siege '+world.wins;
  const map=$('world-map');map.replaceChildren();
  for(const area of availableDistricts(world.wins)){const button=document.createElement('button');button.textContent=(world.district===area.id?'📍 ':'🗺️ ')+area.name;button.disabled=!exploring||world.district===area.id;button.addEventListener('click',()=>{world=travel(world,area.id);district.setTheme(world.district);saveWorld(world);renderWorld();});map.appendChild(button);}
- for(const npc of DISTRICT.npcs){const b=document.createElement('button');b.textContent=npc.name+' · '+npc.role;b.addEventListener('click',()=>{if(!exploring)return;world=move(world,npc.x,npc.z);saveWorld(world);renderWorld();});map.appendChild(b);}
+ for(const npc of districtNpcs(world.district)){const b=document.createElement('button');b.textContent=npc.name+' · '+npc.role;b.addEventListener('click',()=>{if(!exploring)return;world=move(world,npc.x,npc.z);saveWorld(world);renderWorld();});map.appendChild(b);}
  const actions=$('world-actions');actions.replaceChildren();
  const heading=document.createElement('p');heading.textContent='Shop · Labor · Arena';actions.appendChild(heading);
  if(world.inventory.medkit>0){const heal=document.createElement('button');heal.textContent='🩹 Verband verwenden (+20 HP)';heal.disabled=!exploring||state.playerHp>=deriveStats(state.loadout).maxHp;heal.addEventListener('click',()=>{if(!exploring||world.inventory.medkit<=0)return;world={...world,inventory:{...world.inventory,medkit:world.inventory.medkit-1}};state={...state,playerHp:Math.min(deriveStats(state.loadout).maxHp,state.playerHp+20)};saveWorld(world);persist();update();});actions.appendChild(heal);}
