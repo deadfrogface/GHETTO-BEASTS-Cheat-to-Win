@@ -1,6 +1,6 @@
 import {OPPONENTS,getOpponent,opponentForDistrict} from './opponents.mjs';
 import {createDistrict} from './district-3d.js';
-import {DISTRICT,QUESTS,SHOP,districtNpcs,availableDistricts,travel,loadWorld,saveWorld,buy,unlockPart,equip,recordWin,claimQuest,move} from './world.mjs';
+import {DISTRICT,QUESTS,SHOP,itemPrice,districtNpcs,availableDistricts,travel,loadWorld,saveWorld,buy,unlockPart,equip,recordWin,claimQuest,move} from './world.mjs';
 import {attachModularParts} from './modular-assets.js';
 import {createPackagedCharacter} from './oss-character.js';
 import {createCreatureRig} from './creature-rig.js';
@@ -132,7 +132,7 @@ function renderWorld(){
  const actions=$('world-actions');actions.replaceChildren();
  const heading=document.createElement('p');heading.textContent='Shop · Labor · Arena';actions.appendChild(heading);
  if(world.inventory.medkit>0){const heal=document.createElement('button');heal.textContent='🩹 Verband verwenden (+20 HP)';heal.disabled=!exploring||state.phase==='enemy'||state.playerHp>=deriveStats(state.loadout).maxHp;heal.addEventListener('click',()=>{if(!exploring||state.phase==='enemy'||world.inventory.medkit<=0)return;world={...world,inventory:{...world.inventory,medkit:world.inventory.medkit-1}};state={...state,playerHp:Math.min(deriveStats(state.loadout).maxHp,state.playerHp+20)};saveWorld(world);persist();update();});actions.appendChild(heal);}
- for(const item of SHOP){const b=document.createElement('button');b.textContent='Kaufen: '+item.name+' ('+item.price+' $)';b.disabled=!exploring||world.coins<item.price||district.nearest(world.position)?.role!=='shop';b.addEventListener('click',()=>{world=buy(world,item.id);saveWorld(world);renderWorld();});actions.appendChild(b);}
+ for(const item of SHOP){const b=document.createElement('button');b.textContent='Kaufen: '+item.name+' ('+itemPrice(world.district,item.id)+' $)';b.disabled=!exploring||world.coins<itemPrice(world.district,item.id)||district.nearest(world.position)?.role!=='shop';b.addEventListener('click',()=>{world=buy(world,item.id);saveWorld(world);renderWorld();});actions.appendChild(b);}
  for(const part of PARTS.filter(p=>!world.unlocked.includes(p.id))){const b=document.createElement('button');b.textContent='🔬 '+part.name+' (2 Schrott)';b.disabled=!exploring||world.inventory.scrap<2||district.nearest(world.position)?.role!=='lab';b.addEventListener('click',()=>{world=unlockPart(world,part.id);saveWorld(world);renderWorld();update();});actions.appendChild(b);}
  const quests=$('world-quests');quests.replaceChildren();
  for(const q of QUESTS){const b=document.createElement('button');b.textContent=(world.completed.includes(q.id)?'✓ ':world[q.goal]>=q.target?'🎁 ':'🔒 ')+q.name+' ('+world[q.goal]+'/'+q.target+')';b.disabled=!exploring||world.completed.includes(q.id)||world[q.goal]<q.target||district.nearest(world.position)?.role!=='quest';b.addEventListener('click',()=>{world=claimQuest(world,q.id);saveWorld(world);renderWorld();});quests.appendChild(b);}
