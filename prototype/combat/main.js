@@ -1,3 +1,4 @@
+import {createPackagedCharacter} from './oss-character.js';
 import {createCreatureRig} from './creature-rig.js';
 import {PARTS,SLOT_TYPES,mutate,deriveStats} from './mutations.mjs';
 import * as THREE from 'three';
@@ -50,12 +51,23 @@ for(const slot of SLOT_TYPES){
  });
 }
 function rebuildPlayer(){
+ if(playerModel){playerModel.dispose();playerModel=null;}
  scene.remove(player);playerRig.dispose();
  playerRig=createCreatureRig(state.loadout,'rat');player=playerRig.root;
  player.position.x=-2.7;player.rotation.y=.4;scene.add(player);
 }
 
 let busy=false,hitAt=0,hitTarget=null,enemyTimeout=null;
+let playerModel=null,enemyModel=null,lastFrame=0;
+async function loadPackagedModels(){
+ const models=[['./assets/characters/rat.glb','player'],['./assets/characters/golem.glb','enemy']];
+ for(const [url,who] of models){try{
+  const rig=await createPackagedCharacter(url,{scale:1});
+  if(who==='player'){scene.remove(player);playerRig.dispose();playerRig=rig;player=rig.root;player.position.x=-2.7;player.rotation.y=.4;scene.add(player);playerModel=rig;}
+  else{scene.remove(enemy);enemyRig.dispose();enemyRig=rig;enemy=rig.root;enemy.position.x=2.7;enemy.rotation.y=-.4;scene.add(enemy);enemyModel=rig;}
+ }catch{/* No bundled GLB yet: use low-poly procedural fallback. */}}
+}
+
 function persist(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(state));}catch{$('result').textContent='Speichern nicht verfügbar; Kampf läuft nur in dieser Sitzung.';}}
 function update(){
  $('resources').textContent='Bargeld: '+state.cash+' $ · Verdacht: '+state.suspicion+'/100';
@@ -97,8 +109,9 @@ function resize(){const w=innerWidth,h=innerHeight;camera.aspect=w/h;camera.upda
 window.addEventListener('resize',resize);
 let last=0,frames=0,acc=0,raf=0;
 function loop(now){raf=requestAnimationFrame(loop);if(last){const dt=now-last;if(dt>0&&dt<250){frames++;acc+=dt;if(acc>=1000){$('fps').textContent='FPS '+Math.round(frames*1000/acc);frames=0;acc=0;}}}last=now;
- const t=now/1000;player.position.y=Math.sin(t*2)*0.07;enemy.position.y=Math.sin(t*1.8+2)*0.08;playerRig.animate(t);enemyRig.animate(t+.8);
+ const delta=lastFrame?Math.min(.1,(now-lastFrame)/1000):0;lastFrame=now;
+ const t=now/1000;player.position.y=Math.sin(t*2)*0.07;enemy.position.y=Math.sin(t*1.8+2)*0.08;playerRig.animate(t,delta);enemyRig.animate(t+.8,delta);
  if(hitTarget){hitTarget.rotation.z=Math.sin((now-hitAt)/170*Math.PI)*0.15;if(now-hitAt>170){hitTarget.rotation.z=0;hitTarget=null;}}
  renderer.render(scene,camera);}
 window.addEventListener('pagehide',()=>cancelAnimationFrame(raf),{once:true});
-rebuildPlayer();resize();if(state.phase==='enemy'){busy=true;enemyTimeout=setTimeout(()=>{enemyTimeout=null;enemyAction();},650);}update();raf=requestAnimationFrame(loop);
+rebuildPlayer();void loadPackagedModels();resize();if(state.phase==='enemy'){busy=true;enemyTimeout=setTimeout(()=>{enemyTimeout=null;enemyAction();},650);}update();raf=requestAnimationFrame(loop);
