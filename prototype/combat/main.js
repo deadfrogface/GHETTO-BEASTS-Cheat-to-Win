@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {SAVE_KEY,newGame,validSave,playerTurn,enemyTurn} from './rules.mjs';
+import {SAVE_KEY,newGame,validSave,playerTurn,enemyTurn,ALL_CHEATS} from './rules.mjs';
 const $=id=>document.getElementById(id);
 let state;
 try{const raw=localStorage.getItem(SAVE_KEY);const parsed=raw?JSON.parse(raw):null;state=validSave(parsed)?parsed:newGame();}catch{state=newGame();}
@@ -52,7 +52,9 @@ function take(action){
  if(state.phase==='enemy')enemyTimeout=setTimeout(()=>{enemyTimeout=null;enemyAction();},650);
  else {busy=false;update();}
 }
-document.querySelectorAll('[data-action]').forEach(b=>b.addEventListener('click',()=>take(b.dataset.action)));
+const cheatSelect=$('cheat-select');
+ALL_CHEATS.forEach(d=>{const option=document.createElement('option');option.value=d.id;option.textContent=d.name+' ('+Math.round(d.chance*100)+'% Erfolg)';cheatSelect.appendChild(option);});
+document.querySelectorAll('[data-action]').forEach(b=>b.addEventListener('click',()=>take(b.dataset.action==='cheat'?cheatSelect.value:b.dataset.action)));
 $('restart').addEventListener('click',()=>{if(enemyTimeout!==null)clearTimeout(enemyTimeout);enemyTimeout=null;busy=false;state=newGame();persist();update();});
 function resize(){const w=innerWidth,h=innerHeight;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));renderer.setSize(w,h,false);}
 window.addEventListener('resize',resize);
