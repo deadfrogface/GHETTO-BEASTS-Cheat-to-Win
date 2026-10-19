@@ -104,13 +104,14 @@ function update(){
  cheatSelect.disabled=busy||state.phase!=='player';
 }
 function strike(target){hitTarget=target;hitAt=performance.now();}
+function awardVictory(){if(state.phase!=='over'||state.enemyHp!==0||lastWorldWin)return;const opponent=getOpponent(state.opponentId);world=recordWin(world,opponent.reward);saveWorld(world);lastWorldWin=true;}
 function enemyAction(){
  if(state.phase!=='enemy')return;
- state=enemyTurn(state);strike(player);if(state.phase==='over'&&state.enemyHp<=0&&!lastWorldWin){world=recordWin(world);saveWorld(world);lastWorldWin=true;}persist();busy=false;update();
+ state=enemyTurn(state);strike(player);awardVictory();persist();busy=false;update();
 }
 function take(action){
  if(busy||state.phase!=='player')return;
- busy=true;state=playerTurn(state,action);if(state.phase==='over'&&state.enemyHp<=0&&!lastWorldWin){world=recordWin(world);saveWorld(world);lastWorldWin=true;}strike(enemy);persist();update();
+ busy=true;state=playerTurn(state,action);awardVictory();strike(enemy);persist();update();
  if(state.phase==='enemy')enemyTimeout=setTimeout(()=>{enemyTimeout=null;enemyAction();},650);
  else {busy=false;update();}
 }
