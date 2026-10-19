@@ -10,12 +10,12 @@ import {SAVE_KEY,LEGACY_SAVE_KEY,newGame,migrateSave,playerTurn,enemyTurn,ALL_CH
 const $=id=>document.getElementById(id);
 const SESSION_KEY='ghetto-beasts-p6-session-v1';
 let sessionSnapshot=null;
-try{const saved=JSON.parse(localStorage.getItem(SESSION_KEY));if(saved?.version===1&&saved.world&&saved.combat)sessionSnapshot=saved;}catch{}
+try{const saved=JSON.parse(localStorage.getItem(SESSION_KEY));if(saved?.version===1&&validWorld(saved.world)&&migrateSave(saved.combat))sessionSnapshot=saved;}catch{}
 let state;
 try{const raw=localStorage.getItem(SAVE_KEY)||localStorage.getItem(LEGACY_SAVE_KEY);const parsed=raw?JSON.parse(raw):null;state=migrateSave(sessionSnapshot?.combat)||migrateSave(parsed)||newGame();}catch{state=newGame();}
 let world=loadWorld(),lastWorldWin=false,exploring=false;
 if(sessionSnapshot){const candidate=sessionSnapshot.world;if(validWorld(candidate))world=candidate;}
-function persistSession(){try{localStorage.setItem(SESSION_KEY,JSON.stringify({version:1,combat:state,world}));return true;}catch{return false;}}
+function persistSession(){if(!validWorld(world))return false;try{localStorage.setItem(SESSION_KEY,JSON.stringify({version:1,combat:state,world}));return true;}catch{return false;}}
 // A completed battle can be recovered after a reload without paying twice.
 if(state.phase==='over'&&state.enemyHp===0&&!state.rewardClaimed){
  const reward=getOpponent(state.opponentId).reward;
