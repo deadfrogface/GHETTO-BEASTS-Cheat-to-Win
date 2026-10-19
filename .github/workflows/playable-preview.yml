@@ -12,8 +12,8 @@ permissions:
   id-token: write
 
 concurrency:
-  group: playable-preview
-  cancel-in-progress: true
+  group: playable-preview-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   build:
