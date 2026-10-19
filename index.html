@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GHETTO BEASTS: Cheat to Win</title>
+    <!-- Animate.css via CDN für fette Pack-Opening Effekte -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <style>
+        :root {
+            --bg-color: #030305;
+            --panel-bg: #0b0e14;
+            --neon-green: #00ff66;
+            --neon-red: #ff0055;
+            --neon-yellow: #ffcc00;
+            --neon-blue: #00ccff;
+            --rarity-common: #a0a0a0;
+            --rarity-uncommon: #1eff00;
+            --rarity-rare: #0070dd;
+            --rarity-epic: #a335ee;
+            --rarity-legendary: #ff8000;
+            --border-color: #1a2332;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            margin: 0;
+            padding: 0;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        /* Phone Screen Frame */
+        #burner-phone {
+            width: 100%;
+            max-width: 440px;
+            height: 100vh;
+            max-height: 900px;
+            background: var(--panel-bg);
+            border: 2px solid var(--neon-green);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 0 25px rgba(0, 255, 102, 0.25);
+            overflow: hidden;
+        }
+
+        /* Header / Top HUD */
+        #phone-header {
+            background: #05070a;
+            border-bottom: 2px solid var(--border-color);
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 10;
+        }
+
+        .header-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: #666;
+            letter-spacing: 1px;
+        }
+
+        .currencies-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #000;
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+
+        .curr-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .curr-label { font-size: 9px; color: #888; }
+        .curr-val { font-size: 13px; font-weight: bold; }
+
+        .c-dirty { color: var(--neon-yellow); }
+        .c-clean { color: var(--neon-green); }
+        .c-diamonds { color: var(--neon-blue); text-shadow: 0 0 5px var(--neon-blue); }
+
+        /* Main Content Viewport */
+        #viewport {
+            flex: 1;
+            position: relative;
+            overflow-y: auto;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tab-content {
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+            height: 100%;
+        }
+
+        .tab-content.active {
+            display: flex;
+        }
+
+        /* Gacha Shop Styles */
+        .shop-banner {
+            background: linear-gradient(135deg, #101726, #000);
+            border: 1px solid var(--neon-blue);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: inset 0 0 15px rgba(0, 204, 255, 0.15);
+        }
+
+        .pack-card {
+            background: #0d131d;
+            border: 2px solid var(--neon-blue);
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            text-align: center;
+            box-shadow: 0 0 15px rgba(0, 204, 255, 0.2);
+            position: relative;
+        }
+
+        .pack-icon {
+            font-size: 48px;
+            filter: drop-shadow(0 0 10px var(--neon-blue));
+        }
+
+        .btn-buy-pack {
+            background: var(--neon-blue);
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            text-transform: uppercase;
+            box-shadow: 0 0 10px var(--neon-blue);
+        }
+
+        .btn-buy-pack:active {
+            transform: scale(0.98);
+        }
+
+        /* IAP Store Block */
+        .iap-section {
+            background: #110d18;
+            border: 1px solid var(--rarity-epic);
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-iap {
+            background: var(--rarity-epic);
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: bold;
+            border-radius: 4px;
+        }
+
+        /* Collection & Roster List */
+        .roster-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .beast-card {
+            background: #080c12;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 11px;
+            position: relative;
+        }
+
+        .beast-badge {
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            color: #000;
+            font-weight: bold;
+            width: fit-content;
+        }
+
+        /* Booster Reveal Overlay */
+        #gacha-overlay {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(3, 3, 5, 0.95);
+            z-index: 100;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+        }
+
+        #gacha-overlay.active {
+            display: flex;
+        }
+
+        .revealed-card {
+            width: 260px;
+            background: #0d131d;
+            border: 3px solid var(--neon-green);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 0 30px var(--neon-green);
+            text-align: center;
+        }
+
+        .card-type { font-size: 10px; color: #888; text-transform: uppercase; }
+        .card-name { font-size: 16px; font-weight: bold; }
+        .card-stats { font-size: 12px; color: #ccc; line-height: 1.6; }
+
+        /* Bottom Phone Nav */
+        #phone-nav {
+            background: #05070a;
+            border-top: 2px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            z-index: 10;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: none;
+            color: #666;
+            font-size: 11px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            width: 25%;
+        }
+
+        .nav-btn.active {
+            color: var(--neon-green);
+        }
+
+        .nav-icon { font-size: 18px; }
+    </style>
+</head>
+<body>
+
+<div id="burner-phone">
+    <!-- Header HUD -->
+    <div id="phone-header">
+        <div class="header-title">
+            <span>BURNER-OS v4.02</span>
+            <span id="audio-toggle" style="cursor:pointer; color: var(--neon-blue);" onclick="toggleAudio()">🔊 AUDIO: OFF</span>
+        </div>
+        <div class="currencies-bar">
+            <div class="curr-item">
+                <span class="curr-label">SCHMUTZGELD</span>
+                <span id="val-dirty" class="curr-val c-dirty">$150</span>
+            </div>
+            <div class="curr-item">
+                <span class="curr-label">SAUBERES CASH</span>
+                <span id="val-clean" class="curr-val c-clean">$500</span>
+            </div>
+            <div class="curr-item">
+                <span class="curr-label">DIAMANTEN</span>
+                <span id="val-diamonds" class="curr-val c-diamonds">💎 100</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Viewport Screens -->
+    <div id="viewport">
+        
+        <!-- TAB 1: GACHA SHOP -->
+        <div id="tab-shop" class="tab-content active">
+            <div class="shop-banner">
+                <h3 style="color: var(--neon-blue); margin-bottom: 5px;">DARKNET DNA-STORE</h3>
+                <p style="font-size: 11px; color: #aaa;">Illegale Container-Imports & Söldner-Rekrutierung.</p>
+            </div>
+
+            <!-- Booster Pack Purchase -->
+            <div class="pack-card">
+                <div class="pack-icon">📦</div>
+                <h3 style="color: var(--neon-green);">CONTAINER PACK</h3>
+                <p style="font-size: 11px; color: #888;">Enthält 1x mutiertes Biest ODER 1x Ghetto-NPC (Hostess, Crackhead etc.)</p>
+                <div style="font-size: 10px; color: var(--neon-yellow);">
+                    70% Common | 20% Uncommon | 7% Rare | 2.5% Epic | 0.5% Legendary
+                </div>
+                <button class="btn-buy-pack" onclick="buyBoosterPack()">PACK ÖFFNEN (💎 50)</button>
+            </div>
+
+            <!-- Fake IAP Topup -->
+            <div style="margin-top: 10px; font-size: 11px; color: #666;">KRYPTO-AUFLADUNG (IAP):</div>
+            <div class="iap-section">
+                <div>
+                    <div style="font-weight: bold; color: var(--neon-blue);">100 DIRTY DIAMONDS</div>
+                    <div style="font-size: 10px; color: #888;">Google Play / App Store Test-Purchase</div>
+                </div>
+                <button class="btn-iap" onclick="buyDiamonds(100)">1,99 €</button>
+            </div>
+        </div>
+
+        <!-- TAB 2: ROSTER / INVENTAR -->
+        <div id="tab-roster" class="tab-content">
+            <h3 style="color: var(--neon-green); border-bottom: 1px solid var(--border-color); padding-bottom: 5px;">MEINE BEASTS & NPCs</h3>
+            <div id="roster-container" class="roster-grid">
+                <!-- Dynamische Karten werden hier gerendert -->
+            </div>
+        </div>
+
+        <!-- TAB 3: OBERWELT VORSCHAU -->
+        <div id="tab-map" class="tab-content">
+            <div style="text-align: center; margin-top: 50px; color: #666;">
+                <div style="font-size: 40px; margin-bottom: 10px;">🗺️</div>
+                <h3>OBERWELT-MAP</h3>
+                <p style="font-size: 11px; margin-top: 10px;">Wird in Modul 2 geladen...</p>
+            </div>
+        </div>
+
+        <!-- TAB 4: ARENA VORSCHAU -->
+        <div id="tab-arena" class="tab-content">
+            <div style="text-align: center; margin-top: 50px; color: #666;">
+                <div style="font-size: 40px; margin-bottom: 10px;">🥊</div>
+                <h3>HINTERHOF-ARENA</h3>
+                <p style="font-size: 11px; margin-top: 10px;">Wird in Modul 4 geladen...</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Gacha Reveal Modal Overlay -->
+    <div id="gacha-overlay">
+        <div id="revealed-card-el" class="revealed-card animate__animated">
+            <div id="card-rarity-badge" class="beast-badge">RARITY</div>
+            <div id="card-type" class="card-type">TYP</div>
+            <div id="card-icon" style="font-size: 50px;">🧬</div>
+            <div id="card-name" class="card-name">NAME</div>
+            <div id="card-stats" class="card-stats">STATS</div>
+            <button class="btn-buy-pack" style="margin-top: 10px; background: var(--neon-green);" onclick="closeGachaOverlay()">IN DEN KÄFIG</button>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div id="phone-nav">
+        <button class="nav-btn active" onclick="switchTab('shop', this)">
+            <span class="nav-icon">💎</span>
+            <span>STORE</span>
+        </button>
+        <button class="nav-btn" onclick="switchTab('roster', this)">
+            <span class="nav-icon">🦧</span>
+            <span>KÄFIG</span>
+        </button>
+        <button class="nav-btn" onclick="switchTab('map', this)">
+            <span class="nav-icon">🗺️</span>
+            <span>MAP</span>
+        </button>
+        <button class="nav-btn" onclick="switchTab('arena', this)">
+            <span class="nav-icon">🥊</span>
+            <span>ARENA</span>
+        </button>
+    </div>
+</div>
+
+<script>
+// --- STATE MANAGEMENT ---
+const state = {
+    dirtyCash: 150,
+    cleanCash: 500,
+    dirtyDiamonds: 100,
+    roster: []
+};
+
+// --- GACHA DATABASE SAMPLE (Extrahierung aus der Master-Bibel) ---
+const GACHA_POOL = [
+  // Tiere
+  { id: "anim_01", type: "Animal", name: "Räudige Kanalratte", rarity: "Common", hp: 45, atk: 12, def: 5, spd: 18, skill: "Giftspeichel", icon: "🐀" },
+  { id: "anim_16", type: "Animal", name: "Kupferstecher-Pitbull", rarity: "Uncommon", hp: 85, atk: 22, def: 12, spd: 14, skill: "Kiefersperre", icon: "🐕" },
+  { id: "anim_31", type: "Animal", name: "Illegaler Hyänen-Mischling", rarity: "Rare", hp: 130, atk: 35, def: 15, spd: 17, skill: "Irres Lachen", icon: "🐺" },
+  { id: "anim_41", type: "Animal", name: "Alpha-Silberrücken-Gorilla", rarity: "Epic", hp: 280, atk: 55, def: 30, spd: 12, skill: "Brusttrommeln", icon: "🦍" },
+  { id: "anim_49", type: "Animal", name: "Cyber-Pitbull 'CYBER-PIT'", rarity: "Legendary", hp: 400, atk: 90, def: 50, spd: 26, skill: "Titan-Legierung", icon: "🤖" },
+  
+  // Ghetto NPCs
+  { id: "npc_01", type: "NPC", name: "Hinterhof-Crackhead", rarity: "Common", hp: 30, atk: 15, def: 2, spd: 20, skill: "Gebrauchte Nadel", icon: "💉" },
+  { id: "npc_16", type: "NPC", name: "Club-Hostess 'Chantal'", rarity: "Uncommon", hp: 55, atk: 5, def: 8, spd: 15, skill: "Shirt hochziehen (Betörung)", icon: "💃" },
+  { id: "npc_17", type: "NPC", name: "Korrupter Türsteher 'Ede'", rarity: "Rare", hp: 110, atk: 22, def: 25, spd: 8, skill: "Hausverbot (Betäubung)", icon: "🕴️" },
+  { id: "npc_41", type: "NPC", name: "Drogen-König 'El Capo'", rarity: "Epic", hp: 180, atk: 45, def: 20, spd: 14, skill: "Kartell-Verstärkung", icon: "🕴️" },
+  { id: "npc_49", type: "NPC", name: "Schatten-Stripperin 'Lilith'", rarity: "Legendary", hp: 220, atk: 40, def: 30, spd: 25, skill: "Tödlicher Verführungstanz", icon: "👑" }
+];
+
+const RARITY_COLORS = {
+    Common: "var(--rarity-common)",
+    Uncommon: "var(--rarity-uncommon)",
+    Rare: "var(--rarity-rare)",
+    Epic: "var(--rarity-epic)",
+    Legendary: "var(--rarity-legendary)"
+};
+
+// --- AUDIO SYNTHESIZER (Web Audio API) ---
+class AudioEngine {
+    constructor() {
+        this.ctx = null;
+        this.enabled = false;
+        this.bgmTimer = null;
+    }
+
+    init() {
+        if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        this.enabled = true;
+    }
+
+    playClick() {
+        if (!this.enabled) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(200, this.ctx.currentTime + 0.05);
+        gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.05);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.05);
+    }
+
+    playGachaSound() {
+        if (!this.enabled) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.4);
+        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.4);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.4);
+    }
+
+    startBgm() {
+        if (!this.enabled || this.bgmTimer) return;
+        this.loopBgm();
+    }
+
+    loopBgm() {
+        if (!this.enabled) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        const notes = [40, 40, 52, 40, 36, 40, 45, 36];
+        const note = notes[Math.floor((now * 4) % notes.length)];
+        osc.frequency.setValueAtTime(note, now);
+        gain.gain.setValueAtTime(0.02, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.22);
+        this.bgmTimer = setTimeout(() => this.loopBgm(), 250);
+    }
+}
+
+const audio = new AudioEngine();
+
+function toggleAudio() {
+    audio.init();
+    audio.enabled = !audio.enabled;
+    const btn = document.getElementById('audio-toggle');
+    if (audio.enabled) {
+        btn.innerText = "🔊 AUDIO: ON";
+        audio.startBgm();
+    } else {
+        btn.innerText = "🔇 AUDIO: OFF";
+        clearTimeout(audio.bgmTimer);
+        audio.bgmTimer = null;
+    }
+}
+
+// --- UI & TAB SYSTEM ---
+function updateHUD() {
+    document.getElementById('val-dirty').innerText = `$${state.dirtyCash}`;
+    document.getElementById('val-clean').innerText = `$${state.cleanCash}`;
+    document.getElementById('val-diamonds').innerText = `💎 ${state.dirtyDiamonds}`;
+}
+
+function switchTab(tabId, btn) {
+    audio.playClick();
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById(`tab-${tabId}`).classList.add('active');
+    btn.classList.add('active');
+
+    if (tabId === 'roster') renderRoster();
+}
+
+// --- GACHA LOOTBOX LOGIC ---
+function buyBoosterPack() {
+    if (state.dirtyDiamonds < 50) {
+        alert("Nicht genug Dirty Diamonds! Lade dein Schweizer Krypto-Konto auf.");
+        return;
+    }
+
+    state.dirtyDiamonds -= 50;
+    updateHUD();
+    audio.playGachaSound();
+
+    // Rarity Roll
+    const rand = Math.random() * 100;
+    let targetRarity = "Common";
+    if (rand < 0.5) targetRarity = "Legendary";
+    else if (rand < 3.0) targetRarity = "Epic";
+    else if (rand < 10.0) targetRarity = "Rare";
+    else if (rand < 30.0) targetRarity = "Uncommon";
+
+    // Item aus Pool nach Rarity filtern
+    let pool = GACHA_POOL.filter(item => item.rarity === targetRarity);
+    if (pool.length === 0) pool = GACHA_POOL; // Fallback
+    const pulled = pool[Math.floor(Math.random() * pool.length)];
+
+    // Zu Inventar hinzufügen
+    state.roster.push(pulled);
+
+    // Modal Reveal vorbereiten
+    showGachaReveal(pulled);
+}
+
+function showGachaReveal(item) {
+    const overlay = document.getElementById('gacha-overlay');
+    const card = document.getElementById('revealed-card-el');
+    
+    document.getElementById('card-rarity-badge').innerText = item.rarity;
+    document.getElementById('card-rarity-badge').style.background = RARITY_COLORS[item.rarity];
+    document.getElementById('card-type').innerText = item.type === "NPC" ? "GHETTO-NPC" : "MUTIERTES BIEST";
+    document.getElementById('card-icon').innerText = item.icon;
+    document.getElementById('card-name').innerText = item.name;
+    document.getElementById('card-name').style.color = RARITY_COLORS[item.rarity];
+    document.getElementById('card-stats').innerHTML = `
+        <b>HP:</b> ${item.hp} | <b>ATK:</b> ${item.atk}<br>
+        <b>DEF:</b> ${item.def} | <b>SPD:</b> ${item.spd}<br>
+        <span style="color: var(--neon-yellow);"><b>Skill:</b> ${item.skill}</span>
+    `;
+
+    card.style.borderColor = RARITY_COLORS[item.rarity];
+    card.style.boxShadow = `0 0 30px ${RARITY_COLORS[item.rarity]}`;
+    
+    // Animate.css Pop
+    card.className = "revealed-card animate__animated animate__backInDown";
+    overlay.classList.add('active');
+}
+
+function closeGachaOverlay() {
+    audio.playClick();
+    document.getElementById('gacha-overlay').classList.remove('active');
+}
+
+function buyDiamonds(amount) {
+    audio.playClick();
+    state.dirtyDiamonds += amount;
+    updateHUD();
+    alert(`[KRYPTO-PAYMENT] SUCCESS!\n+${amount} Dirty Diamonds gutgeschrieben.`);
+}
+
+// --- ROSTER RENDER ---
+function renderRoster() {
+    const container = document.getElementById('roster-container');
+    container.innerHTML = "";
+
+    if (state.roster.length === 0) {
+        container.innerHTML = `<div style="grid-column: span 2; color: #666; text-align: center; padding: 20px;">Dein Käfig ist leer. Ziehe Booster im Store!</div>`;
+        return;
+    }
+
+    state.roster.forEach(item => {
+        const el = document.createElement('div');
+        el.className = 'beast-card';
+        el.style.borderColor = RARITY_COLORS[item.rarity];
+        el.innerHTML = `
+            <div class="beast-badge" style="background: ${RARITY_COLORS[item.rarity]};">${item.rarity}</div>
+            <div style="font-size: 24px; text-align: center;">${item.icon}</div>
+            <div style="font-weight: bold; color: ${RARITY_COLORS[item.rarity]}">${item.name}</div>
+            <div>HP: ${item.hp} | ATK: ${item.atk}</div>
+            <div style="font-size: 9px; color: var(--neon-yellow);">${item.skill}</div>
+        `;
+        container.appendChild(el);
+    });
+}
+
+// Init
+updateHUD();
+</script>
+</body>
+</html>
