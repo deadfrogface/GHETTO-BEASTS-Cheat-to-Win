@@ -63,7 +63,7 @@ for(const slot of SLOT_TYPES){
   const next=mutate(state.loadout,slot,select.value);
   if(!world.unlocked.includes(select.value)){select.value=state.loadout[slot];return;}
   if(next===state.loadout||next[slot]===state.loadout[slot])return;
-  const oldMax=deriveStats(state.loadout).maxHp,newMax=deriveStats(next).maxHp;
+  const newMax=deriveStats(next).maxHp;
   const equipped=equip(world,slot,select.value);
   if(equipped===world){select.value=state.loadout[slot];return;}
   world=equipped;
@@ -155,7 +155,7 @@ function toggleExplore(on){
  if(!on){camera.position.set(9,8,13);camera.lookAt(0,1.1,0);}
  renderWorld();
 }
-$('world-toggle').addEventListener('click',()=>{if(busy||state.phase==='enemy')return;if(exploring){const npc=district.nearest(world.position);if(npc?.role!=='arena'){$('world-status').textContent='Betritt eine Arena, um zu kämpfen.';return;}toggleExplore(false);if(state.phase==='over')$('restart').click();else if(state.opponentId!==nextOpponent()){$('world-status').textContent='Beende zuerst den laufenden Kampf.';toggleExplore(true);}}else if(state.phase==='over'||state.phase==='player')toggleExplore(true);});
+$('world-toggle').addEventListener('click',()=>{if(busy||state.phase==='enemy')return;if(exploring){const npc=district.nearest(world.position);if(npc?.role!=='arena'){$('world-status').textContent='Betritt eine Arena, um zu kämpfen.';return;}toggleExplore(false);if(state.phase==='over')$('restart').click();else if(state.opponentId!==nextOpponent()){toggleExplore(true);$('world-status').textContent='Laufenden Kampf zuerst abschließen.';}}else if(state.phase==='over'||state.phase==='player')toggleExplore(true);});
 document.querySelectorAll('[data-walk]').forEach(button=>button.addEventListener('click',()=>{
  if(!exploring)return;const [dx,dz]=button.dataset.walk.split(',').map(Number);
  world=move(world,world.position.x+dx,world.position.z+dz);persistSession();renderWorld();
@@ -167,7 +167,7 @@ $('world-interact').addEventListener('click',()=>{
   // Entering a district arena always starts its own encounter; no stale opponent.
   if(state.phase==='enemy'||busy)return;
   toggleExplore(false);
-  if(state.phase==='over'||state.opponentId!==nextOpponent())$('restart').click();
+  if(state.phase==='over')$('restart').click();else if(state.opponentId!==nextOpponent()){toggleExplore(true);$('world-status').textContent='Laufenden Kampf zuerst abschließen.';}
  }
  else{$('world-status').textContent=npc.name+': '+({shop:'Willkommen im Schrottladen!',lab:'Zwei Schrottteile pro Mutation.',quest:'Schau nach deinen Aufträgen.'}[npc.role]||'Hallo!');}
 });
