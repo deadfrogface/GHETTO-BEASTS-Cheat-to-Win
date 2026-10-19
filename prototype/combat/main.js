@@ -1,3 +1,4 @@
+import {createDistrict} from './district-3d.js';
 import {DISTRICT,QUESTS,SHOP,loadWorld,saveWorld,buy,unlockPart,equip,recordWin,claimQuest,move} from './world.mjs';
 import {attachModularParts} from './modular-assets.js';
 import {createPackagedCharacter} from './oss-character.js';
@@ -8,11 +9,12 @@ import {SAVE_KEY,LEGACY_SAVE_KEY,newGame,migrateSave,playerTurn,enemyTurn,ALL_CH
 const $=id=>document.getElementById(id);
 let state;
 try{const raw=localStorage.getItem(SAVE_KEY)||localStorage.getItem(LEGACY_SAVE_KEY);const parsed=raw?JSON.parse(raw):null;state=migrateSave(parsed)||newGame();}catch{state=newGame();}
-let world=loadWorld(),lastWorldWin=false;
+let world=loadWorld(),lastWorldWin=false,exploring=false;
 const scene=new THREE.Scene();scene.background=new THREE.Color('#91b9cf');
 const camera=new THREE.PerspectiveCamera(43,1,0.1,60);camera.position.set(9,8,13);camera.lookAt(0,1.1,0);
 const renderer=new THREE.WebGLRenderer({canvas:$('scene'),antialias:false,powerPreference:'high-performance'});
 renderer.outputColorSpace=THREE.SRGBColorSpace;
+const district=createDistrict(scene);
 scene.add(new THREE.HemisphereLight(0xffffff,0x354153,2.3));
 const sun=new THREE.DirectionalLight(0xffdfb1,2);sun.position.set(-4,9,7);scene.add(sun);
 const box=new THREE.BoxGeometry(1,1,1),ball=new THREE.IcosahedronGeometry(1,1),cone=new THREE.ConeGeometry(1,1,5),cyl=new THREE.CylinderGeometry(1,1,1,16);
@@ -119,12 +121,29 @@ function renderWorld(){
  for(const npc of DISTRICT.npcs){const b=document.createElement('button');b.textContent=npc.name+' · '+npc.role;b.addEventListener('click',()=>{world=move(world,npc.x,npc.z);saveWorld(world);renderWorld();});map.appendChild(b);}
  const actions=$('world-actions');actions.replaceChildren();
  const heading=document.createElement('p');heading.textContent='Shop · Labor · Arena';actions.appendChild(heading);
- for(const item of SHOP){const b=document.createElement('button');b.textContent='Kaufen: '+item.name+' ('+item.price+' $)';b.disabled=world.coins<item.price;b.addEventListener('click',()=>{world=buy(world,item.id);saveWorld(world);renderWorld();});actions.appendChild(b);}
- for(const part of PARTS.filter(p=>!world.unlocked.includes(p.id))){const b=document.createElement('button');b.textContent='🔬 '+part.name+' (2 Schrott)';b.disabled=world.inventory.scrap<2;b.addEventListener('click',()=>{world=unlockPart(world,part.id);saveWorld(world);renderWorld();update();});actions.appendChild(b);}
+ for(const item of SHOP){const b=document.createElement('button');b.textContent='Kaufen: '+item.name+' ('+item.price+' $)';b.disabled=world.coins<item.price||!district.nearest(world.position)||district.nearest(world.position).role!=='shop';b.addEventListener('click',()=>{world=buy(world,item.id);saveWorld(world);renderWorld();});actions.appendChild(b);}
+ for(const part of PARTS.filter(p=>!world.unlocked.includes(p.id))){const b=document.createElement('button');b.textContent='🔬 '+part.name+' (2 Schrott)';b.disabled=world.inventory.scrap<2||district.nearest(world.position)?.role!=='lab';b.addEventListener('click',()=>{world=unlockPart(world,part.id);saveWorld(world);renderWorld();update();});actions.appendChild(b);}
  const quests=$('world-quests');quests.replaceChildren();
- for(const q of QUESTS){const b=document.createElement('button');b.textContent=(world.completed.includes(q.id)?'✓ ':world[q.goal]>=q.target?'🎁 ':'🔒 ')+q.name+' ('+world[q.goal]+'/'+q.target+')';b.disabled=world.completed.includes(q.id)||world[q.goal]<q.target;b.addEventListener('click',()=>{world=claimQuest(world,q.id);saveWorld(world);renderWorld();});quests.appendChild(b);}
+ for(const q of QUESTS){const b=document.createElement('button');b.textContent=(world.completed.includes(q.id)?'✓ ':world[q.goal]>=q.target?'🎁 ':'🔒 ')+q.name+' ('+world[q.goal]+'/'+q.target+')';b.disabled=world.completed.includes(q.id)||world[q.goal]<q.target||district.nearest(world.position)?.role!=='quest';b.addEventListener('click',()=>{world=claimQuest(world,q.id);saveWorld(world);renderWorld();});quests.appendChild(b);}
  mutationPanel.querySelectorAll('select').forEach(select=>select.querySelectorAll('option').forEach(opt=>{opt.disabled=!world.unlocked.includes(opt.value);}));
 }
+function toggleExplore(on){
+ exploring=on;district.root.visible=on;player.visible=!on;enemy.visible=!on;document.body.classList.toggle('exploring',on);
+ $('walk-controls').hidden=!on;$('world-toggle').textContent=on?'⚔️ Zur Arena':'🏙️ Stadt erkunden';
+ if(!on){camera.position.set(9,8,13);camera.lookAt(0,1.1,0);}
+ renderWorld();
+}
+$('world-toggle').addEventListener('click',()=>toggleExplore(!exploring));
+document.querySelectorAll('[data-walk]').forEach(button=>button.addEventListener('click',()=>{
+ if(!exploring)return;const [dx,dz]=button.dataset.walk.split(',').map(Number);
+ world=move(world,world.position.x+dx,world.position.z+dz);saveWorld(world);renderWorld();
+}));
+$('world-interact').addEventListener('click',()=>{
+ const npc=district.nearest(world.position);
+ if(!npc){$('world-status').textContent='Kein NPC in Reichweite.';return;}
+ if(npc.role==='arena'){toggleExplore(false);if(state.phase==='over'){$('restart').click();}}
+ else{$('world-status').textContent=npc.name+': '+({shop:'Willkommen im Schrottladen!',lab:'Zwei Schrottteile pro Mutation.',quest:'Schau nach deinen Aufträgen.'}[npc.role]||'Hallo!');}
+});
 function resize(){const w=innerWidth,h=innerHeight;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));renderer.setSize(w,h,false);}
 window.addEventListener('resize',resize);
 let last=0,frames=0,acc=0,raf=0;
@@ -132,6 +151,7 @@ function loop(now){raf=requestAnimationFrame(loop);if(last){const dt=now-last;if
  const delta=lastFrame?Math.min(.1,(now-lastFrame)/1000):0;lastFrame=now;
  const t=now/1000;player.position.y=Math.sin(t*2)*0.07;enemy.position.y=Math.sin(t*1.8+2)*0.08;playerRig.animate(t,delta);modularController?.animate(delta);enemyRig.animate(t+.8,delta);
  if(hitTarget){hitTarget.rotation.z=Math.sin((now-hitAt)/170*Math.PI)*0.15;if(now-hitAt>170){hitTarget.rotation.z=0;hitTarget=null;}}
+ if(exploring)district.update(world.position,camera);
  renderer.render(scene,camera);}
 window.addEventListener('pagehide',()=>cancelAnimationFrame(raf),{once:true});
 rebuildPlayer();void loadPackagedModels();resize();if(state.phase==='enemy'){busy=true;enemyTimeout=setTimeout(()=>{enemyTimeout=null;enemyAction();},650);}update();raf=requestAnimationFrame(loop);
