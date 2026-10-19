@@ -2,23 +2,18 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>GHETTO BEASTS: Cheat to Win</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <style>
         :root {
-            --bg-color: #030305;
-            --panel-bg: #0b0e14;
+            --bg-color: #020204;
+            --panel-bg: #07090f;
             --neon-green: #00ff66;
             --neon-red: #ff0055;
             --neon-yellow: #ffcc00;
             --neon-blue: #00ccff;
-            --rarity-common: #a0a0a0;
-            --rarity-uncommon: #1eff00;
-            --rarity-rare: #0070dd;
-            --rarity-epic: #a335ee;
-            --rarity-legendary: #ff8000;
-            --border-color: #1a2332;
+            --border-color: #141c29;
         }
 
         * {
@@ -36,27 +31,28 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            height: 100vh;
+            height: 100dvh;
             overflow: hidden;
             touch-action: manipulation;
         }
 
-        /* Phone Screen Frame */
+        /* Smartphone Frame with Safe Area Padding */
         #burner-phone {
             width: 100%;
             max-width: 440px;
             height: 100vh;
-            max-height: 900px;
+            height: 100dvh;
             background: var(--panel-bg);
             border: 2px solid var(--neon-green);
             display: flex;
             flex-direction: column;
             position: relative;
-            box-shadow: 0 0 25px rgba(0, 255, 102, 0.25);
             overflow: hidden;
+            padding-bottom: calc(24px + env(safe-area-inset-bottom));
         }
 
-        /* CRT Screen Lines Overlay */
+        /* CRT Overlay */
         #burner-phone::after {
             content: " ";
             display: block;
@@ -66,18 +62,19 @@
             background-size: 100% 4px;
             z-index: 999;
             pointer-events: none;
-            opacity: 0.6;
+            opacity: 0.4;
         }
 
         /* Header HUD */
         #phone-header {
-            background: #05070a;
+            background: #040609;
             border-bottom: 2px solid var(--border-color);
-            padding: 8px 10px;
+            padding: 6px 10px;
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 3px;
             z-index: 10;
+            flex-shrink: 0;
         }
 
         .header-title {
@@ -85,8 +82,7 @@
             justify-content: space-between;
             align-items: center;
             font-size: 9px;
-            color: #666;
-            letter-spacing: 1px;
+            color: #555;
         }
 
         .currencies-bar {
@@ -94,18 +90,17 @@
             justify-content: space-between;
             align-items: center;
             background: #000;
-            padding: 5px 8px;
+            padding: 4px 8px;
             border-radius: 4px;
             border: 1px solid var(--border-color);
         }
 
         .curr-item { display: flex; flex-direction: column; align-items: center; }
-        .curr-label { font-size: 7px; color: #888; }
+        .curr-label { font-size: 7px; color: #777; }
         .curr-val { font-size: 11px; font-weight: bold; }
-
         .c-dirty { color: var(--neon-yellow); }
         .c-clean { color: var(--neon-green); }
-        .c-diamonds { color: var(--neon-blue); text-shadow: 0 0 4px var(--neon-blue); }
+        .c-diamonds { color: var(--neon-blue); }
 
         /* Viewport */
         #viewport {
@@ -119,16 +114,15 @@
         .tab-content {
             display: none;
             flex-direction: column;
-            gap: 12px;
             height: 100%;
             padding: 10px;
             overflow-y: auto;
+            gap: 10px;
         }
         .tab-content.active { display: flex; }
 
-        /* General UI Elements */
         .cyber-btn {
-            background: #111722;
+            background: #0d121c;
             border: 1px solid var(--neon-green);
             color: var(--neon-green);
             padding: 10px;
@@ -142,54 +136,93 @@
         .cyber-btn:active { background: var(--neon-green); color: #000; }
 
         .panel-box {
-            background: #080c12;
+            background: #06090e;
             border: 1px solid var(--border-color);
             border-radius: 6px;
             padding: 10px;
         }
 
-        /* Map & Overworld */
-        #tab-map { padding: 0; justify-content: space-between; }
+        /* Map Screen Layout */
+        #tab-map { padding: 0; justify-content: space-between; height: 100%; }
+        
         #map-dialog {
-            position: absolute;
-            top: 8px; left: 8px; right: 8px;
-            background: rgba(11, 14, 20, 0.95);
+            background: rgba(7, 9, 15, 0.95);
             border: 1px solid var(--neon-green);
             padding: 6px 10px;
             font-size: 10px;
             border-radius: 4px;
-            z-index: 5;
+            margin: 6px;
             color: #fff;
+            z-index: 5;
+            flex-shrink: 0;
         }
-        #map-canvas-container { flex: 1; display: flex; justify-content: center; align-items: center; background: #000; position: relative; }
-        canvas { image-rendering: pixelated; }
+
+        #map-canvas-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #000;
+            overflow: hidden;
+            position: relative;
+        }
+
+        canvas {
+            image-rendering: pixelated;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border: 1px solid var(--border-color);
+        }
 
         #controls-bar {
-            background: #05070a;
+            background: #040609;
             border-top: 2px solid var(--border-color);
-            padding: 8px;
+            padding: 8px 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             z-index: 10;
+            flex-shrink: 0;
         }
-        .dpad-grid { display: grid; grid-template-columns: repeat(3, 36px); grid-template-rows: repeat(3, 36px); gap: 3px; }
-        .dpad-btn { background: #111722; border: 1px solid var(--neon-green); color: var(--neon-green); font-size: 14px; font-weight: bold; border-radius: 4px; display: flex; justify-content: center; align-items: center; }
+
+        .dpad-grid { display: grid; grid-template-columns: repeat(3, 38px); grid-template-rows: repeat(3, 38px); gap: 3px; }
+        .dpad-btn { background: #0d121c; border: 1px solid var(--neon-green); color: var(--neon-green); font-size: 14px; font-weight: bold; border-radius: 4px; display: flex; justify-content: center; align-items: center; }
         .dpad-btn:active { background: var(--neon-green); color: #000; }
         .dpad-btn.empty { background: transparent; border: none; }
-        .btn-action-a { width: 70px; height: 70px; border-radius: 50%; background: #111722; border: 2px solid var(--neon-green); color: var(--neon-green); font-size: 12px; font-weight: bold; display: flex; justify-content: center; align-items: center; }
+        .btn-action-a { width: 68px; height: 68px; border-radius: 50%; background: #0d121c; border: 2px solid var(--neon-green); color: var(--neon-green); font-size: 11px; font-weight: bold; display: flex; justify-content: center; align-items: center; }
 
-        /* Roster Grid */
-        .roster-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-        .beast-card { background: #080c12; border: 1px solid var(--border-color); border-radius: 6px; padding: 8px; display: flex; flex-direction: column; gap: 4px; font-size: 10px; cursor: pointer; }
-        .beast-badge { font-size: 7px; padding: 2px 4px; border-radius: 2px; color: #000; font-weight: bold; width: fit-content; }
+        /* Combat Screen */
+        #tab-combat { background: #040203; justify-content: space-between; }
+        .combat-arena { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; }
+        .combatant-box { width: 45%; background: #0a0406; border: 1px solid var(--neon-red); border-radius: 6px; padding: 8px; text-align: center; }
+        .health-bar { width: 100%; height: 6px; background: #1a1a1a; border-radius: 3px; overflow: hidden; margin-top: 5px; }
+        .health-fill { height: 100%; background: var(--neon-green); width: 100%; transition: width 0.3s; }
+        .suspicion-container { background: #0a0406; border: 1px solid var(--neon-yellow); padding: 8px; border-radius: 6px; font-size: 10px; }
+        .suspicion-bar { width: 100%; height: 6px; background: #1a1a1a; border-radius: 3px; overflow: hidden; margin-top: 4px; }
+        .suspicion-fill { height: 100%; background: var(--neon-red); width: 0%; transition: width 0.3s; }
+        .combat-log { flex: 1; background: #000; border: 1px solid var(--border-color); border-radius: 6px; padding: 8px; font-size: 9px; overflow-y: auto; color: var(--neon-green); margin: 6px 0; max-height: 120px; }
+        .combat-actions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
 
-        /* Modals & Overlays */
+        /* Bottom Nav with Elevated Padding */
+        #phone-nav {
+            background: #040609;
+            border-top: 2px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0 6px 0;
+            z-index: 20;
+            flex-shrink: 0;
+        }
+        .nav-btn { background: transparent; border: none; color: #555; font-size: 9px; display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; width: 20%; }
+        .nav-btn.active { color: var(--neon-green); }
+        .nav-icon { font-size: 15px; }
+
         .modal-overlay {
             display: none;
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(3, 3, 5, 0.95);
+            background: rgba(2, 2, 4, 0.96);
             z-index: 100;
             flex-direction: column;
             justify-content: center;
@@ -198,30 +231,9 @@
         }
         .modal-overlay.active { display: flex; }
 
-        /* Combat UI */
-        #tab-combat { background: #050204; padding: 10px; justify-content: space-between; }
-        .combat-arena { display: flex; justify-content: space-between; align-items: center; padding: 15px 5px; }
-        .combatant-box { width: 45%; background: #0d0609; border: 1px solid var(--neon-red); border-radius: 6px; padding: 8px; text-align: center; }
-        .health-bar { width: 100%; height: 6px; background: #222; border-radius: 3px; overflow: hidden; margin-top: 5px; }
-        .health-fill { height: 100%; background: var(--neon-green); width: 100%; transition: width 0.3s; }
-        .suspicion-container { background: #0d0609; border: 1px solid var(--neon-yellow); padding: 8px; border-radius: 6px; font-size: 10px; }
-        .suspicion-bar { width: 100%; height: 8px; background: #222; border-radius: 4px; overflow: hidden; margin-top: 4px; }
-        .suspicion-fill { height: 100%; background: var(--neon-red); width: 0%; transition: width 0.3s; }
-        .combat-log { flex: 1; background: #000; border: 1px solid var(--border-color); border-radius: 6px; padding: 8px; font-size: 9px; overflow-y: auto; color: #00ff66; margin: 8px 0; }
-        .combat-actions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
-
-        /* Bottom Nav */
-        #phone-nav {
-            background: #05070a;
-            border-top: 2px solid var(--border-color);
-            display: flex;
-            justify-content: space-around;
-            padding: 6px 0;
-            z-index: 10;
-        }
-        .nav-btn { background: transparent; border: none; color: #666; font-size: 9px; display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; width: 20%; }
-        .nav-btn.active { color: var(--neon-green); }
-        .nav-icon { font-size: 15px; }
+        .roster-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .beast-card { background: #06090e; border: 1px solid var(--border-color); border-radius: 6px; padding: 8px; font-size: 10px; cursor: pointer; }
+        .beast-badge { font-size: 7px; padding: 2px 4px; border-radius: 2px; color: #000; font-weight: bold; width: fit-content; }
     </style>
 </head>
 <body>
@@ -240,12 +252,11 @@
         </div>
     </div>
 
-    <!-- Viewport -->
+    <!-- Viewport Screens -->
     <div id="viewport">
-        
         <!-- TAB 1: OBERWELT MAP -->
         <div id="tab-map" class="tab-content active">
-            <div id="map-dialog">Willkommen in den Cyber-Slums. Erkunde die Gassen oder betrete Gebäude!</div>
+            <div id="map-dialog">Willkommen im Ghetto! Erkunde die Gassen oder betrete Gebäude mit [A].</div>
             <div id="map-canvas-container">
                 <canvas id="mapCanvas" width="384" height="384"></canvas>
             </div>
@@ -267,8 +278,8 @@
 
         <!-- TAB 2: STORE / GACHA -->
         <div id="tab-shop" class="tab-content">
-            <div class="panel-box" style="text-align:center; background: linear-gradient(135deg, #101726, #000); border-color: var(--neon-blue);">
-                <h3 style="color: var(--neon-blue); font-size:13px; margin-bottom:4px;">DARKNET DNA-STORE</h3>
+            <div class="panel-box" style="text-align:center; border-color: var(--neon-blue); background: linear-gradient(135deg, #0d1624, #000);">
+                <h3 style="color: var(--neon-blue); font-size:13px;">DARKNET DNA-STORE</h3>
                 <p style="font-size: 10px; color: #aaa;">Container-Imports & Gen-Material.</p>
             </div>
             <div class="panel-box" style="display:flex; flex-direction:column; align-items:center; gap:8px; text-align:center;">
@@ -292,11 +303,13 @@
             <div id="roster-container" class="roster-grid"></div>
         </div>
 
-        <!-- TAB 4: GEBÄUDE-HUB (CRISPR / DOPE / LAUNDRY) -->
+        <!-- TAB 4: HUBS -->
         <div id="tab-hub" class="tab-content">
             <h3 id="hub-title" style="color: var(--neon-green); font-size:13px;">GEBÄUDE-MENÜ</h3>
-            <div id="hub-body" style="font-size: 10px; display:flex; flex-direction:column; gap:8px;"></div>
-            <button class="cyber-btn" style="background:var(--neon-red); color:#fff; margin-top:auto;" onclick="switchTab('map', document.querySelectorAll('.nav-btn')[0])">ZURÜCK ZUR MAP</button>
+            <div id="hub-body" style="font-size: 10px; display:flex; flex-direction:column; gap:8px; flex:1;">
+                <p>Gehe auf der Map zu einem Gebäude (DOPE, CRISPR, WASH, ARENA) und drücke [A].</p>
+            </div>
+            <button class="cyber-btn" style="background:var(--neon-red); color:#fff;" onclick="switchTab('map', document.querySelectorAll('.nav-btn')[0])">ZURÜCK ZUR MAP</button>
         </div>
 
         <!-- TAB 5: KAMPF-MODUS -->
@@ -329,19 +342,18 @@
 
             <div class="combat-actions">
                 <button class="cyber-btn" onclick="combatAction('attack')">Normaler Angriff</button>
-                <button class="cyber-btn" style="border-color:var(--neon-yellow); color:var(--neon-yellow);" onclick="combatAction('dope')">Doping spritzen (+20 Atk)</button>
-                <button class="cyber-btn" style="border-color:var(--neon-red); color:var(--neon-red);" onclick="combatAction('brick')">Backstein werfen (35% K.O.)</button>
-                <button class="cyber-btn" style="border-color:var(--neon-blue); color:var(--neon-blue);" onclick="combatAction('bribe')">Schiri bestechen (-50% Verdacht)</button>
-                <button class="cyber-btn" onclick="combatAction('skill')" id="btn-npc-skill" style="display:none;">NPC Spezial-Skill</button>
-                <button class="cyber-btn" style="background:#222; color:#aaa; border-color:#444;" onclick="combatAction('escape')">Feige Flucht</button>
+                <button class="cyber-btn" style="border-color:var(--neon-yellow); color:var(--neon-yellow);" onclick="combatAction('dope')">Doping (+20 Atk)</button>
+                <button class="cyber-btn" style="border-color:var(--neon-red); color:var(--neon-red);" onclick="combatAction('brick')">Backstein (35% K.O.)</button>
+                <button class="cyber-btn" style="border-color:var(--neon-blue); color:var(--neon-blue);" onclick="combatAction('bribe')">Schiri bestechen</button>
+                <button class="cyber-btn" onclick="combatAction('skill')" id="btn-npc-skill" style="display:none; grid-column:span 2;">NPC Spezial-Skill</button>
+                <button class="cyber-btn" style="background:#222; color:#aaa; border-color:#444; grid-column:span 2;" onclick="combatAction('escape')">Feige Flucht</button>
             </div>
         </div>
-
     </div>
 
-    <!-- Gacha Reveal Overlay -->
+    <!-- Gacha Overlay -->
     <div id="gacha-overlay" class="modal-overlay">
-        <div id="revealed-card-el" class="panel-box animate__animated animate__backInDown" style="width:260px; text-align:center; border:2px solid var(--neon-green);">
+        <div class="panel-box animate__animated animate__backInDown" style="width:260px; text-align:center; border:2px solid var(--neon-green);">
             <div id="card-rarity-badge" class="beast-badge" style="margin:0 auto 8px auto;">RARITY</div>
             <div id="card-icon" style="font-size: 40px; margin-bottom:6px;">🧬</div>
             <div id="card-name" style="font-weight: bold; font-size: 14px; margin-bottom:6px;">NAME</div>
@@ -350,25 +362,24 @@
         </div>
     </div>
 
-    <!-- Prison / Knast Overlay (Tunnel Grab Minigame) -->
+    <!-- Prison Overlay -->
     <div id="prison-overlay" class="modal-overlay" style="background:rgba(5,2,3,0.98);">
         <div class="panel-box" style="width:100%; max-width:380px; text-align:center; border-color:var(--neon-red);">
-            <h3 style="color:var(--neon-red); font-size:14px; margin-bottom:6px;">🚨 Razzia! Das SWAT-Team stürmt das Revier!</h3>
-            <p style="font-size:9px; color:#aaa; margin-bottom:10px;">Dein Schmutzgeld ($) wurde konfisziert. Entkomme aus dem Knast oder zahle Kaution!</p>
+            <h3 style="color:var(--neon-red); font-size:14px; margin-bottom:6px;">🚨 SWAT-Razzia im Ring!</h3>
+            <p style="font-size:9px; color:#aaa; margin-bottom:10px;">Dein Schmutzgeld ($) wurde konfisziert. Entkomme aus dem Knast!</p>
             
             <div style="display:flex; gap:6px; margin-bottom:10px;">
-                <button class="cyber-btn" style="flex:1; border-color:var(--neon-blue); color:var(--neon-blue);" onclick="prisonBribe()">Wärter bestechen (💎50)</button>
+                <button class="cyber-btn" style="flex:1; border-color:var(--neon-blue); color:var(--neon-blue);" onclick="prisonBribe()">Bestechen (💎50)</button>
                 <button class="cyber-btn" style="flex:1;" onclick="startTunnelMinigame()">Tunnel graben</button>
             </div>
 
-            <div id="tunnel-container" style="display:none; position:relative; width:100%; height:200px; background:#000; border:1px solid var(--neon-red); margin-bottom:10px; overflow:hidden;">
-                <canvas id="tunnelCanvas" width="360" height="198" style="display:block; margin:0 auto;"></canvas>
+            <div id="tunnel-container" style="display:none; position:relative; width:100%; height:180px; background:#000; border:1px solid var(--neon-red); margin-bottom:10px; overflow:hidden;">
+                <canvas id="tunnelCanvas" width="360" height="178" style="display:block; margin:0 auto;"></canvas>
             </div>
             <div id="tunnel-controls" style="display:none; grid-template-columns:repeat(3,40px); gap:4px; justify-content:center; margin-bottom:10px;">
                 <div></div><button class="cyber-btn" onclick="moveTunnelPlayer(0,-1)">▲</button><div></div>
                 <button class="cyber-btn" onclick="moveTunnelPlayer(-1,0)">◄</button><button class="cyber-btn" onclick="moveTunnelPlayer(0,1)">▼</button><button class="cyber-btn" onclick="moveTunnelPlayer(1,0)">►</button>
             </div>
-
             <button class="cyber-btn" style="background:#222; color:#aaa; width:100%;" onclick="closePrison()">Anwalt rufen ($1000 Clean)</button>
         </div>
     </div>
@@ -379,6 +390,7 @@
         <button class="nav-btn" onclick="switchTab('shop', this)"><span class="nav-icon">💎</span><span>STORE</span></button>
         <button class="nav-btn" onclick="switchTab('roster', this)"><span class="nav-icon">🦧</span><span>KÄFIG</span></button>
         <button class="nav-btn" onclick="switchTab('hub', this)"><span class="nav-icon">🏢</span><span>HUBS</span></button>
+        <button class="nav-btn" onclick="switchTab('combat', this)"><span class="nav-icon">🥊</span><span>KAMPF</span></button>
     </div>
 </div>
 
@@ -389,33 +401,26 @@ const state = {
     cleanCash: 800,
     dirtyDiamonds: 150,
     roster: [
-        { id: "anim_01", type: "Animal", name: "Kupferstecher-Pitbull", rarity: "Uncommon", hp: 80, maxHp: 80, atk: 18, def: 12, spd: 14, skill: "Kiefersperre", icon: "🐕", mutations: [], instability: 0 }
+        { id: "anim_01", type: "Animal", name: "Kupferstecher-Pitbull", rarity: "Uncommon", hp: 80, maxHp: 80, atk: 18, def: 12, spd: 14, skill: "Kiefersperre", icon: "🐕", instability: 0 }
     ],
     activeBeastIndex: 0,
     suspicion: 0,
     activeBuilding: null
 };
 
-// --- DATABASES ---
 const GACHA_POOL = [
-  { id: "anim_01", type: "Animal", name: "Räudige Kanalratte", rarity: "Common", hp: 50, maxHp: 50, atk: 12, def: 5, spd: 18, skill: "Giftspeichel", icon: "🐀" },
-  { id: "anim_16", type: "Animal", name: "Kupferstecher-Pitbull", rarity: "Uncommon", hp: 80, maxHp: 80, atk: 18, def: 12, spd: 14, skill: "Kiefersperre", icon: "🐕" },
-  { id: "anim_41", type: "Animal", name: "Alpha-Gorilla", rarity: "Epic", hp: 220, maxHp: 220, atk: 45, def: 25, spd: 10, skill: "Brusttrommeln", icon: "🦍" },
-  { id: "npc_16", type: "NPC", name: "Club-Hostess 'Chantal'", rarity: "Uncommon", hp: 60, maxHp: 60, atk: 10, def: 8, spd: 16, skill: "Shirt hochziehen (Betörung)", icon: "💃" },
-  { id: "npc_49", type: "NPC", name: "Schatten-Stripperin 'Lilith'", rarity: "Legendary", hp: 180, maxHp: 180, atk: 55, def: 20, spd: 28, skill: "Tödlicher Tanz", icon: "👑" }
-];
-
-const CRISPR_MUTATIONS = [
-  { id: "m1", slot: "Head", name: "Gorilla-Kiefer", atk: 15, instab: 15, desc: "+15 Atk" },
-  { id: "m2", slot: "Limbs", name: "Klingen-Pranken", atk: 22, instab: 25, desc: "+22 Atk, Hohe Instabilität" },
-  { id: "m3", slot: "Skin", name: "Chitin-Panzer", def: 20, instab: 18, desc: "+20 Def" }
+  { id: "anim_01", type: "Animal", name: "Kanalratte", rarity: "Common", hp: 50, maxHp: 50, atk: 12, icon: "🐀", skill: "Giftspeichel" },
+  { id: "anim_16", type: "Animal", name: "Pitbull", rarity: "Uncommon", hp: 80, maxHp: 80, atk: 18, icon: "🐕", skill: "Kiefersperre" },
+  { id: "anim_41", type: "Animal", name: "Alpha-Gorilla", rarity: "Epic", hp: 220, maxHp: 220, atk: 45, icon: "🦍", skill: "Brusttrommeln" },
+  { id: "npc_16", type: "NPC", name: "Hostess Chantal", rarity: "Uncommon", hp: 60, maxHp: 60, atk: 14, icon: "💃", skill: "Shirt hochziehen (Betörung)" },
+  { id: "npc_49", type: "NPC", name: "Schatten-Lilith", rarity: "Legendary", hp: 180, maxHp: 180, atk: 55, icon: "👑", skill: "Tödlicher Tanz" }
 ];
 
 const RARITY_COLORS = { Common: "#a0a0a0", Uncommon: "#1eff00", Rare: "#0070dd", Epic: "#a335ee", Legendary: "#ff8000" };
 
 // --- AUDIO SYNTHESIZER ---
 class AudioEngine {
-    constructor() { this.ctx = null; this.enabled = false; this.timer = null; }
+    constructor() { this.ctx = null; this.enabled = false; }
     init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); if (this.ctx.state === 'suspended') this.ctx.resume(); this.enabled = true; }
     playTone(freq, duration, type='sine') {
         if (!this.enabled) return;
@@ -430,7 +435,7 @@ class AudioEngine {
 const audio = new AudioEngine();
 function toggleAudio() { audio.init(); audio.enabled = !audio.enabled; document.getElementById('audio-toggle').innerText = audio.enabled ? "🔊 AUDIO: ON" : "🔇 AUDIO: OFF"; }
 
-// --- OVERWORLD MAP ENGINE ---
+// --- PROCEDURAL MAP & PIXEL-ART RENDERER ---
 const TILE_SIZE = 32;
 const MAP_SIZE = 12;
 const mapGrid = [
@@ -455,11 +460,11 @@ const enemies = [
 ];
 
 const buildings = {
-    2: { name: "Dope Shop", code: "DOPE", desc: "Verbotene Amphetamine & Spritzen." },
+    2: { name: "Dope Shop", code: "DOPE", desc: "Verbotene Spritzen & Adrenalin." },
     3: { name: "CRISPR-Labor", code: "CRISPR", desc: "Gen-Mutationen & Fleisch-Transplantate." },
-    4: { name: "Schwarzmarkt", code: "WEAP", desc: "Trainer-Waffen, Backsteine & Taser." },
-    5: { name: "Waschsalon", code: "WASH", desc: "Geldwäsche: Schmutzgeld in sauberes Cash." },
-    6: { name: "Arena", code: "ARENA", desc: "Illegale Hinterhof-Kämpfe & Wetten." }
+    4: { name: "Schwarzmarkt", code: "WEAP", desc: "Trainer-Waffen & Backsteine." },
+    5: { name: "Waschsalon", code: "WASH", desc: "Geldwäsche: Schmutzgeld reinigen." },
+    6: { name: "Arena", code: "ARENA", desc: "Illegale Kämpfe & Wetten." }
 };
 
 const canvas = document.getElementById('mapCanvas');
@@ -467,37 +472,59 @@ const ctx = canvas.getContext('2d');
 
 function drawMap() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
     for (let r = 0; r < MAP_SIZE; r++) {
         for (let c = 0; c < MAP_SIZE; c++) {
             const tile = mapGrid[r][c];
             const x = c * TILE_SIZE; const y = r * TILE_SIZE;
-            ctx.fillStyle = '#0a0d12'; ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
-            ctx.strokeStyle = '#121922'; ctx.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
 
-            if (tile === 1) {
-                ctx.fillStyle = '#1c2536'; ctx.fillRect(x+2, y+2, TILE_SIZE-4, TILE_SIZE-4);
-                ctx.strokeStyle = '#ff0055'; ctx.strokeRect(x+4, y+4, TILE_SIZE-8, TILE_SIZE-8);
-            } else if (tile === 7) {
-                ctx.fillStyle = 'rgba(0, 204, 255, 0.2)'; ctx.fillRect(x+4, y+4, TILE_SIZE-8, TILE_SIZE-8);
-            } else if (buildings[tile]) {
-                ctx.fillStyle = '#111e16'; ctx.fillRect(x+2, y+2, TILE_SIZE-4, TILE_SIZE-4);
-                ctx.strokeStyle = '#00ff66'; ctx.strokeRect(x+2, y+2, TILE_SIZE-4, TILE_SIZE-4);
-                ctx.fillStyle = '#00ff66'; ctx.font = '8px monospace'; ctx.textAlign = 'center';
+            // Base Asphalt Ground
+            ctx.fillStyle = '#090d14'; ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+            ctx.fillStyle = '#06080e'; ctx.fillRect(x+1, y+1, TILE_SIZE-2, TILE_SIZE-2);
+            ctx.strokeStyle = '#101722'; ctx.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
+
+            if (tile === 1) { // Brick Wall
+                ctx.fillStyle = '#1a0d18'; ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+                ctx.fillStyle = '#2d1424'; 
+                ctx.fillRect(x+2, y+2, 12, 6); ctx.fillRect(x+16, y+2, 14, 6);
+                ctx.fillRect(x+2, y+10, 28, 6);
+                ctx.fillRect(x+2, y+18, 14, 6); ctx.fillRect(x+18, y+18, 12, 6);
+                ctx.strokeStyle = '#ff0055'; ctx.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
+            } else if (tile === 7) { // Puddle
+                ctx.fillStyle = 'rgba(0, 204, 255, 0.3)'; ctx.fillRect(x+4, y+4, TILE_SIZE-8, TILE_SIZE-8);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.2)'; ctx.fillRect(x+6, y+6, 6, 2);
+            } else if (buildings[tile]) { // Neon Building
+                ctx.fillStyle = '#091810'; ctx.fillRect(x+1, y+1, TILE_SIZE-2, TILE_SIZE-2);
+                ctx.strokeStyle = '#00ff66'; ctx.lineWidth = 2; ctx.strokeRect(x+2, y+2, TILE_SIZE-4, TILE_SIZE-4);
+                ctx.lineWidth = 1;
+                ctx.fillStyle = '#00ff66'; ctx.font = 'bold 8px monospace'; ctx.textAlign = 'center';
                 ctx.fillText(buildings[tile].code, x + TILE_SIZE/2, y + TILE_SIZE/2 + 3);
             }
         }
     }
 
+    // Enemies (Red & Blue Sprites)
     enemies.forEach(en => {
-        ctx.fillStyle = en.color; ctx.fillRect(en.x * TILE_SIZE + 6, en.y * TILE_SIZE + 6, TILE_SIZE - 12, TILE_SIZE - 12);
-        ctx.fillStyle = 'rgba(255, 0, 85, 0.2)';
+        const ex = en.x * TILE_SIZE; const ey = en.y * TILE_SIZE;
+        ctx.fillStyle = en.color;
+        ctx.fillRect(ex + 8, ey + 12, 16, 14); // Body
+        ctx.fillRect(ex + 10, ey + 4, 12, 8);  // Head
+        ctx.fillStyle = '#fff'; ctx.fillRect(ex + 12, ey + 6, 2, 2); ctx.fillRect(ex + 18, ey + 6, 2, 2); // Eyes
+
+        // Sightlines
+        ctx.fillStyle = 'rgba(255, 0, 85, 0.15)';
         for (let i = 1; i <= en.sightRange; i++) {
             const sx = (en.x + en.dirX * i) * TILE_SIZE; const sy = (en.y + en.dirY * i) * TILE_SIZE;
-            ctx.fillRect(sx + 8, sy + 8, TILE_SIZE - 16, TILE_SIZE - 16);
+            ctx.fillRect(sx + 4, sy + 4, TILE_SIZE - 8, TILE_SIZE - 8);
         }
     });
 
-    ctx.fillStyle = '#00ff66'; ctx.fillRect(player.x * TILE_SIZE + 6, player.y * TILE_SIZE + 6, TILE_SIZE - 12, TILE_SIZE - 12);
+    // Player (Green Character Sprite)
+    const px = player.x * TILE_SIZE; const py = player.y * TILE_SIZE;
+    ctx.fillStyle = '#00ff66';
+    ctx.fillRect(px + 8, py + 12, 16, 14); // Jacket
+    ctx.fillRect(px + 10, py + 4, 12, 8);   // Head
+    ctx.fillStyle = '#000'; ctx.fillRect(px + 12, py + 6, 2, 2); ctx.fillRect(px + 18, py + 6, 2, 2); // Eyes
 }
 
 function movePlayer(dx, dy) {
@@ -511,7 +538,7 @@ function movePlayer(dx, dy) {
             if (tile === 7 && Math.random() < 0.25) {
                 startCombat({ name: "Streunender Kampfhund", hp: 60, maxHp: 60, atk: 15 });
             } else {
-                updateMapMsg("Durchstreife die Gassen...");
+                updateMapMsg("Durchstreife die Cyber-Gassen...");
             }
         } else if (buildings[tile]) {
             updateMapMsg(`Vor dir: [${buildings[tile].name}]. Drücke [A].`);
@@ -542,12 +569,12 @@ function interactMap() {
             return;
         }
     }
-    updateMapMsg("Hier ist nichts.");
+    updateMapMsg("Hier ist nichts zum Interagieren.");
 }
 
 function updateMapMsg(txt) { document.getElementById('map-dialog').innerText = txt; }
 
-// --- HUB & BUILDINGS (MODUL 3) ---
+// --- HUBS & SHOPS ---
 function openHub(tileId) {
     const bld = buildings[tileId];
     state.activeBuilding = tileId;
@@ -556,25 +583,13 @@ function openHub(tileId) {
     body.innerHTML = `<p>${bld.desc}</p>`;
 
     if (tileId === 2) { // Dope Shop
-        body.innerHTML += `
-            <button class="cyber-btn" onclick="buyDope('adrenalin')">Adrenalin-Spritze ($50 Clean) -> +20 Atk</button>
-            <button class="cyber-btn" onclick="buyDope('stabilizer')">Gen-Stabilisator ($100 Clean) -> -25% Instabilität</button>`;
-    } else if (tileId === 3) { // CRISPR
-        body.innerHTML += `<div style="font-weight:bold; color:var(--neon-green);">Verfügbare Mutationen:</div>`;
-        CRISPR_MUTATIONS.forEach(m => {
-            body.innerHTML += `<div style="display:flex; justify-content:space-between; align-items:center; background:#000; padding:6px; border-radius:4px;">
-                <span>${m.name} (${m.desc})</span>
-                <button class="cyber-btn" style="padding:4px 8px;" onclick="applyMutation('${m.id}')">Injizieren ($150)</button>
-            </div>`;
-        });
-    } else if (tileId === 4) { // Schwarzmarkt
-        body.innerHTML += `<button class="cyber-btn" onclick="buyWeapon('brick')">Klassischer Backstein ($30) [Chance auf Sofort-Sieg]</button>`;
+        body.innerHTML += `<button class="cyber-btn" onclick="buyDope('adrenalin')">Adrenalin-Spritze ($50 Clean) -> +20 Atk</button>`;
     } else if (tileId === 5) { // Waschsalon
-        body.innerHTML += `
-            <p>Schmutzgeld: $${state.dirtyCash}</p>
-            <button class="cyber-btn" onclick="washMoney()">$100 Schmutzgeld in Clean Cash waschen</button>`;
+        body.innerHTML += `<p>Schmutzgeld: $${state.dirtyCash}</p><button class="cyber-btn" onclick="washMoney()">$100 Schmutzgeld waschen</button>`;
     } else if (tileId === 6) { // Arena
         body.innerHTML += `<button class="cyber-btn" style="background:var(--neon-red);" onclick="startCombat({name:'Hinterhof-Champion', hp:140, maxHp:140, atk:30})">In den Ring steigen!</button>`;
+    } else {
+        body.innerHTML += `<p style="color:#888;">Bereit für illegale Transaktionen.</p>`;
     }
 
     switchTab('hub', document.querySelectorAll('.nav-btn')[3]);
@@ -584,6 +599,7 @@ function washMoney() {
     if (state.dirtyCash >= 100) {
         state.dirtyCash -= 100; state.cleanCash += 100;
         updateHUD(); alert("$100 erfolgreich gewaschen!");
+        openHub(5);
     } else alert("Nicht genug Schmutzgeld!");
 }
 
@@ -592,36 +608,22 @@ function addDiamonds(amt) { state.dirtyDiamonds += amt; updateHUD(); alert(`+${a
 function buyDope(type) {
     if (state.cleanCash >= 50) {
         state.cleanCash -= 50; updateHUD();
-        if (type === 'adrenalin') state.roster[state.activeBeastIndex].atk += 20;
-        if (type === 'stabilizer') state.roster[state.activeBeastIndex].instability = Math.max(0, state.roster[state.activeBeastIndex].instability - 25);
-        alert("Spritze verabreicht!");
+        state.roster[state.activeBeastIndex].atk += 20;
+        alert("Adrenalin verabreicht! +20 Atk.");
     } else alert("Nicht genug Clean Cash!");
 }
 
-function applyMutation(mId) {
-    if (state.cleanCash >= 150) {
-        state.cleanCash -= 150; updateHUD();
-        const mut = CRISPR_MUTATIONS.find(x => x.id === mId);
-        const beast = state.roster[state.activeBeastIndex];
-        beast.mutations.push(mut.name);
-        beast.atk += mut.atk || 0;
-        beast.def += mut.def || 0;
-        beast.instability += mut.instab;
-        alert(`Mutation ${mut.name} erfolgreich! Instabilität: ${beast.instability}%`);
-    } else alert("Nicht genug Clean Cash!");
-}
-
-// --- COMBAT ENGINE (MODUL 4) ---
+// --- COMBAT ENGINE ---
 let combat = { player: null, enemy: null };
 
 function startCombat(enemyData) {
-    if (state.roster.length === 0) return alert("Du hast kein Biest im Käfig! Ziehe eins im Store.");
+    if (state.roster.length === 0) return alert("Kein Biest im Käfig!");
     combat.player = { ...state.roster[state.activeBeastIndex] };
     combat.enemy = { ...enemyData };
     state.suspicion = 0;
     updateCombatUI();
-    switchTab('combat', document.querySelectorAll('.nav-btn')[0]);
-    logCombat(`Kampf gegen ${combat.enemy.name} hat begonnen!`);
+    switchTab('combat', document.querySelectorAll('.nav-btn')[4]);
+    logCombat(`Kampf gegen ${combat.enemy.name} gestartet!`);
 
     const activeBeast = state.roster[state.activeBeastIndex];
     const btnSkill = document.getElementById('btn-npc-skill');
@@ -660,26 +662,28 @@ function combatAction(action) {
     } else if (action === 'dope') {
         combat.player.atk += 20;
         state.suspicion += 25;
-        logCombat(`Doping injiziert! +20 Atk, +25% Verdacht.`);
+        logCombat(`Doping! +20 Atk, +25% Verdacht.`);
     } else if (action === 'brick') {
         if (Math.random() < 0.35) {
-            logCombat(`🎯 Backstein-Treffer! Der gegnerische Trainer ist K.O.! SOFORTIGER SIEG!`);
-            endCombat(true);
+            logCombat(`🎯 Backstein-Treffer! Trainer K.O.! SIEG!`);
+            state.dirtyCash += 200;
+            updateHUD();
+            setTimeout(() => switchTab('map', document.querySelectorAll('.nav-btn')[0]), 1500);
             return;
         } else {
             state.suspicion = 100;
-            logCombat(`❌ Daneben! Die Cops haben dich erwischt! Verdacht bei 100%!`);
+            logCombat(`❌ Daneben! SWAT-Team rückt an!`);
             checkSuspicion();
             return;
         }
     } else if (action === 'bribe') {
         state.suspicion = Math.max(0, state.suspicion - 50);
-        logCombat(`Schiri bestochen! Verdacht um 50% gesenkt.`);
+        logCombat(`Schiri bestochen! Verdacht -50%.`);
     } else if (action === 'skill') {
         combat.enemy.hp = Math.max(0, combat.enemy.hp - 45);
-        logCombat(`NPC Spezial-Skill eingesetzt! 45 Schaden.`);
+        logCombat(`Spezial-Skill! 45 Schaden.`);
     } else if (action === 'escape') {
-        logCombat(`Du bist geflohen!`);
+        logCombat(`Geflohen!`);
         switchTab('map', document.querySelectorAll('.nav-btn')[0]);
         return;
     }
@@ -687,34 +691,31 @@ function combatAction(action) {
     updateCombatUI();
 
     if (combat.enemy.hp <= 0) {
-        logCombat(`SIEG! Du hast den Kampf dominiert.`);
+        logCombat(`SIEG!`);
         state.dirtyCash += 150;
         updateHUD();
-        setTimeout(() => switchTab('map', document.querySelectorAll('.nav-btn')[0]), 2000);
+        setTimeout(() => switchTab('map', document.querySelectorAll('.nav-btn')[0]), 1500);
         return;
     }
 
-    // Enemy Turn
     setTimeout(() => {
         const edmg = combat.enemy.atk;
         combat.player.hp = Math.max(0, combat.player.hp - edmg);
-        logCombat(`${combat.enemy.name} schlägt zurück für ${edmg} Schaden!`);
+        logCombat(`${combat.enemy.name} kontert für ${edmg} Schaden!`);
         updateCombatUI();
 
         if (combat.player.hp <= 0) {
-            logCombat(`DEIN BIEST IST K.O. – Spiel vorbei!`);
-            setTimeout(() => switchTab('map', document.querySelectorAll('.nav-btn')[0]), 2000);
+            logCombat(`Dein Biest ist K.O.!`);
+            setTimeout(() => switchTab('map', document.querySelectorAll('.nav-btn')[0]), 1500);
         }
-    }, 600);
+    }, 500);
 }
 
 function checkSuspicion() {
-    if (state.suspicion >= 100) {
-        triggerPrisonRaid();
-    }
+    if (state.suspicion >= 100) triggerPrisonRaid();
 }
 
-// --- KNAST & TUNNEL MINIGAME (MODUL 5) ---
+// --- KNAST & TUNNEL ---
 function triggerPrisonRaid() {
     state.dirtyCash = 0;
     updateHUD();
@@ -734,11 +735,10 @@ function closePrison() {
         state.cleanCash -= 1000; updateHUD();
         document.getElementById('prison-overlay').classList.remove('active');
         alert("Anwalt hat dich rausgeboxt!");
-    } else alert("Nicht genug Clean Cash für den Anwalt!");
+    } else alert("Nicht genug Clean Cash!");
 }
 
-// Tunnel Grab Minigame
-let tunnel = { x: 1, y: 1, exitX: 8, exitY: 8 };
+let tunnel = { x: 1, y: 1 };
 function startTunnelMinigame() {
     document.getElementById('tunnel-container').style.display = 'block';
     document.getElementById('tunnel-controls').style.display = 'grid';
@@ -762,16 +762,15 @@ function drawTunnel() {
     const tcan = document.getElementById('tunnelCanvas');
     const tctx = tcan.getContext('2d');
     tctx.clearRect(0, 0, tcan.width, tcan.height);
-    const ts = 20;
-
+    const ts = 18;
     for (let r = 0; r < 10; r++) {
         for (let c = 0; c < 10; c++) {
             tctx.fillStyle = tunnelGrid[r][c] === 1 ? "#111" : (tunnelGrid[r][c] === 9 ? "#00ff66" : "#222");
-            tctx.fillRect(c*ts, r*ts, ts-2, ts-2);
+            tctx.fillRect(c*ts, r*ts, ts-1, ts-1);
         }
     }
     tctx.fillStyle = "#ff0055";
-    tctx.fillRect(tunnel.x*ts, tunnel.y*ts, ts-2, ts-2);
+    tctx.fillRect(tunnel.x*ts, tunnel.y*ts, ts-1, ts-1);
 }
 
 function moveTunnelPlayer(dx, dy) {
@@ -779,7 +778,7 @@ function moveTunnelPlayer(dx, dy) {
     if (tunnelGrid[ny][nx] !== 1) {
         tunnel.x = nx; tunnel.y = ny;
         if (tunnelGrid[ny][nx] === 9) {
-            alert("Erfolgreich aus dem Knast ausgegraben!");
+            alert("Ausgegraben! Frei.");
             document.getElementById('prison-overlay').classList.remove('active');
             document.getElementById('tunnel-container').style.display = 'none';
             document.getElementById('tunnel-controls').style.display = 'none';
@@ -789,21 +788,18 @@ function moveTunnelPlayer(dx, dy) {
     }
 }
 
-// --- GACHA & ROSTER UI ---
+// --- GACHA & ROSTER ---
 function buyBoosterPack() {
-    if (state.dirtyDiamonds < 50) return alert("Nicht genug Dirty Diamonds!");
+    if (state.dirtyDiamonds < 50) return alert("Nicht genug Diamonds!");
     state.dirtyDiamonds -= 50; updateHUD();
     const pulled = GACHA_POOL[Math.floor(Math.random() * GACHA_POOL.length)];
-    state.roster.push({ ...pulled, hp: pulled.maxHp, mutations: [], instability: 0 });
-    showGachaReveal(pulled);
-}
-
-function showGachaReveal(item) {
-    document.getElementById('card-rarity-badge').innerText = item.rarity;
-    document.getElementById('card-rarity-badge').style.background = RARITY_COLORS[item.rarity];
-    document.getElementById('card-icon').innerText = item.icon;
-    document.getElementById('card-name').innerText = item.name;
-    document.getElementById('card-stats').innerText = `HP:${item.maxHp} | ATK:${item.atk} | Skill:${item.skill}`;
+    state.roster.push({ ...pulled, hp: pulled.maxHp, instability: 0 });
+    
+    document.getElementById('card-rarity-badge').innerText = pulled.rarity;
+    document.getElementById('card-rarity-badge').style.background = RARITY_COLORS[pulled.rarity];
+    document.getElementById('card-icon').innerText = pulled.icon;
+    document.getElementById('card-name').innerText = pulled.name;
+    document.getElementById('card-stats').innerText = `HP:${pulled.maxHp} | ATK:${pulled.atk}`;
     document.getElementById('gacha-overlay').classList.add('active');
 }
 
@@ -818,7 +814,7 @@ function renderRoster() {
                 <div class="beast-badge" style="background:${RARITY_COLORS[item.rarity]}">${item.rarity}</div>
                 <div style="font-size:22px; text-align:center;">${item.icon}</div>
                 <div style="font-weight:bold; color:${RARITY_COLORS[item.rarity]}">${item.name}</div>
-                <div>Atk: ${item.atk} | Instab: ${item.instability}%</div>
+                <div>Atk: ${item.atk}</div>
             </div>`;
     });
 }
@@ -826,7 +822,7 @@ function renderRoster() {
 function setActiveBeast(idx) {
     state.activeBeastIndex = idx;
     renderRoster();
-    alert(`${state.roster[idx].name} als aktives Kampf-Biest ausgewählt!`);
+    alert(`${state.roster[idx].name} als aktives Biest gewählt!`);
 }
 
 function updateHUD() {
@@ -845,8 +841,10 @@ function switchTab(tabId, btn) {
 }
 
 // Init
-updateHUD();
-drawMap();
+window.onload = () => {
+    updateHUD();
+    drawMap();
+};
 </script>
 </body>
 </html>
