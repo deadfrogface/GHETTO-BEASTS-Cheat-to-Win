@@ -51,20 +51,19 @@ for(const slot of SLOT_TYPES){
  });
 }
 function rebuildPlayer(){
- if(playerModel){playerModel=null;}
  scene.remove(player);playerRig.dispose();
  playerRig=createCreatureRig(state.loadout,'rat');player=playerRig.root;
  player.position.x=-2.7;player.rotation.y=.4;scene.add(player);
 }
 
 let busy=false,hitAt=0,hitTarget=null,enemyTimeout=null;
-let playerModel=null,enemyModel=null,lastFrame=0;
+let enemyModel=null,lastFrame=0;
 async function loadPackagedModels(){
- const models=[['./assets/characters/rat.glb','player'],['./assets/characters/golem.glb','enemy']];
+ // The player must stay modular; a whole-body GLB would hide active mutations.
+ const models=[['./assets/characters/golem.glb','enemy']];
  for(const [url,who] of models){try{
   const rig=await createPackagedCharacter(url,{scale:1});
-  if(who==='player'){scene.remove(player);playerRig.dispose();playerRig=rig;player=rig.root;player.position.x=-2.7;player.rotation.y=.4;scene.add(player);playerModel=rig;}
-  else{scene.remove(enemy);enemyRig.dispose();enemyRig=rig;enemy=rig.root;enemy.position.x=2.7;enemy.rotation.y=-.4;scene.add(enemy);enemyModel=rig;}
+  {scene.remove(enemy);enemyRig.dispose();enemyRig=rig;enemy=rig.root;enemy.position.x=2.7;enemy.rotation.y=-.4;scene.add(enemy);enemyModel=rig;}
  }catch{/* No bundled GLB yet: use low-poly procedural fallback. */}}
 }
 
