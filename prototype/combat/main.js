@@ -104,6 +104,7 @@ function update(){
  cheatSelect.disabled=busy||state.phase!=='player';
 }
 function strike(target){hitTarget=target;hitAt=performance.now();}
+function nextOpponent(){const roster={kanalviertel:['golem','ratking'],schrottplatz:['scrapper','pigeon'],rathaus:['enforcer','boss']}[world.district]||['golem'];return roster[world.wins%roster.length];}
 function awardVictory(){if(state.phase!=='over'||state.enemyHp!==0||lastWorldWin)return;const opponent=getOpponent(state.opponentId);world=recordWin(world,opponent.reward);saveWorld(world);lastWorldWin=true;}
 function enemyAction(){
  if(state.phase!=='enemy')return;
@@ -119,7 +120,7 @@ const cheatSelect=$('cheat-select');
 ALL_CHEATS.forEach(d=>{const option=document.createElement('option');option.value=d.id;option.textContent=d.name+' ('+Math.round(d.chance*100)+'% Erfolg)';cheatSelect.appendChild(option);});
 cheatSelect.addEventListener('change',update);
 document.querySelectorAll('[data-action]').forEach(b=>b.addEventListener('click',()=>take(b.dataset.action==='cheat'?cheatSelect.value:b.dataset.action)));
-$('restart').addEventListener('click',()=>{if(enemyTimeout!==null)clearTimeout(enemyTimeout);enemyTimeout=null;busy=false;state=newGame(OPPONENTS[Math.min(OPPONENTS.length-1,Math.floor(world.wins/2))].id,world.wins);state.loadout={...world.loadout};state.playerHp=deriveStats(state.loadout).maxHp;lastWorldWin=false;rebuildPlayer();persist();update();});
+$('restart').addEventListener('click',()=>{if(enemyTimeout!==null)clearTimeout(enemyTimeout);enemyTimeout=null;busy=false;state=newGame(nextOpponent(),world.wins);state.loadout={...world.loadout};state.playerHp=deriveStats(state.loadout).maxHp;lastWorldWin=false;rebuildPlayer();persist();update();});
 function renderWorld(){
  $('world-status').textContent='🪙 '+world.coins+' $ · 🧰 Schrott '+world.inventory.scrap+' · 🩹 Verbände '+world.inventory.medkit+' · 🏆 Siege '+world.wins;
  const map=$('world-map');map.replaceChildren();
