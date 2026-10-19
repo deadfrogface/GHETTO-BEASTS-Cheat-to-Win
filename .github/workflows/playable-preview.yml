@@ -52,7 +52,9 @@ jobs:
         uses: actions/deploy-pages@v4
       - name: Link zur spielbaren Version
         if: steps.deployment.outcome == 'success'
-        run: echo "Spiel starten: ${{ steps.deployment.outputs.page_url }}prototype/combat/" >> "$GITHUB_STEP_SUMMARY"
+        run: |
+          echo "Spiel starten: ${{ steps.deployment.outputs.page_url }}prototype/combat/" >> "$GITHUB_STEP_SUMMARY"
       - name: Hinweis, falls Pages noch nicht aktiviert ist
         if: steps.deployment.outcome != 'success'
-        run: echo "Download unter Actions > dieser Lauf > Artifacts > ghetto-beasts-spielbar. Fuer einen direkten Browser-Link: Settings > Pages > Build and deployment > Source = GitHub Actions." >> "$GITHUB_STEP_SUMMARY"
+        run: |
+          echo "Download unter Actions > dieser Lauf > Artifacts > ghetto-beasts-spielbar. Fuer einen direkten Browser-Link: Settings > Pages > Build and deployment > Source = GitHub Actions." >> "$GITHUB_STEP_SUMMARY"
