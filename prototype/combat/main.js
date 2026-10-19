@@ -20,10 +20,11 @@ scene.add(new THREE.HemisphereLight(0xffffff,0x354153,2.3));
 const sun=new THREE.DirectionalLight(0xffdfb1,2);sun.position.set(-4,9,7);scene.add(sun);
 const box=new THREE.BoxGeometry(1,1,1),ball=new THREE.IcosahedronGeometry(1,1),cone=new THREE.ConeGeometry(1,1,5),cyl=new THREE.CylinderGeometry(1,1,1,16);
 const material=c=>new THREE.MeshLambertMaterial({color:c,flatShading:true});
+const arena=new THREE.Group();scene.add(arena);
 function add(g,m,p,x,y,z,sx=1,sy=1,sz=1){const mesh=new THREE.Mesh(g,m);mesh.position.set(x,y,z);mesh.scale.set(sx,sy,sz);p.add(mesh);return mesh;}
-add(box,material('#4c6573'),scene,0,-0.5,0,30,1,30);
-add(cyl,material('#c7a783'),scene,0,-0.05,0,11,0.2,11);
-for(let i=0;i<8;i++){const a=i*Math.PI/4;add(box,material('#687c8b'),scene,Math.sin(a)*13,1.5,Math.cos(a)*13,2,3+(i%3)*2,2);}
+add(box,material('#4c6573'),arena,0,-0.5,0,30,1,30);
+add(cyl,material('#c7a783'),arena,0,-0.05,0,11,0.2,11);
+for(let i=0;i<8;i++){const a=i*Math.PI/4;add(box,material('#687c8b'),arena,Math.sin(a)*13,1.5,Math.cos(a)*13,2,3+(i%3)*2,2);}
 function actor(color,accent,x,monster=false){
  const group=new THREE.Group(),skin=material(color),trim=material(accent),eyes=material('#182030');
  add(ball,skin,group,0,1.2,0,monster?0.85:0.6,monster?0.85:0.72,0.58);
@@ -71,11 +72,13 @@ function rebuildPlayer(){
 
 let busy=false,hitAt=0,hitTarget=null,enemyTimeout=null;
 let enemyModel=null,lastFrame=0;
+function rebuildEnemy(){const opponent=getOpponent(state.opponentId);const layouts={golem:{head:'stone-head',arms:'steel-arms',skin:'armor'},ratking:{head:'rat-head',arms:'claws',tail:'rat-tail'},enforcer:{head:'base-head',arms:'steel-arms',skin:'armor'},pigeon:{head:'rat-head',arms:'claws',wings:'bat-wings'},scrapper:{head:'stone-head',arms:'steel-arms',skin:'spikes'},boss:{head:'stone-head',arms:'steel-arms',skin:'armor',horns:'horns'}};const species=['golem','boss'].includes(opponent.id)?'golem':opponent.id==='enforcer'||opponent.id==='scrapper'?'human':'rat';const loadout={head:'base-head',arms:'base-arms',legs:'base-legs',skin:'base-skin',tail:'none-tail',horns:'none-horns',extraArms:'none-extra',wings:'none-wings',...layouts[opponent.id]};if(species==='golem')loadout.wings='none-wings';scene.remove(enemy);enemyRig.dispose();enemyRig=createCreatureRig(loadout,species);enemy=enemyRig.root;enemy.position.x=2.7;enemy.rotation.y=-.4;enemy.visible=!exploring;scene.add(enemy);}
 async function loadPackagedModels(){
  // The player must stay modular; a whole-body GLB would hide active mutations.
+ if(state.opponentId!=='golem')return;
  const models=[['./assets/characters/golem.glb','enemy']];
  for(const [url,who] of models){try{
-  const rig=await createPackagedCharacter(url,{scale:1});
+  const rig=await createPackagedCharacter(url,{scale:1});if(state.opponentId!=='golem'){rig.dispose();continue;}
   {scene.remove(enemy);enemyRig.dispose();enemyRig=rig;enemy=rig.root;enemy.position.x=2.7;enemy.rotation.y=-.4;scene.add(enemy);enemyModel=rig;}
  }catch{/* No bundled GLB yet: use low-poly procedural fallback. */}}
 }
@@ -120,7 +123,7 @@ const cheatSelect=$('cheat-select');
 ALL_CHEATS.forEach(d=>{const option=document.createElement('option');option.value=d.id;option.textContent=d.name+' ('+Math.round(d.chance*100)+'% Erfolg)';cheatSelect.appendChild(option);});
 cheatSelect.addEventListener('change',update);
 document.querySelectorAll('[data-action]').forEach(b=>b.addEventListener('click',()=>take(b.dataset.action==='cheat'?cheatSelect.value:b.dataset.action)));
-$('restart').addEventListener('click',()=>{if(enemyTimeout!==null)clearTimeout(enemyTimeout);enemyTimeout=null;busy=false;state=newGame(nextOpponent(),world.wins);state.loadout={...world.loadout};state.playerHp=deriveStats(state.loadout).maxHp;lastWorldWin=false;rebuildPlayer();persist();update();});
+$('restart').addEventListener('click',()=>{if(enemyTimeout!==null)clearTimeout(enemyTimeout);enemyTimeout=null;busy=false;state=newGame(nextOpponent(),world.wins);state.loadout={...world.loadout};state.playerHp=deriveStats(state.loadout).maxHp;lastWorldWin=false;rebuildPlayer();rebuildEnemy();persist();update();});
 function renderWorld(){
  $('world-status').textContent='🪙 '+world.coins+' $ · 🧰 Schrott '+world.inventory.scrap+' · 🩹 Verbände '+world.inventory.medkit+' · 🏆 Siege '+world.wins;
  const map=$('world-map');map.replaceChildren();
@@ -136,7 +139,7 @@ function renderWorld(){
  mutationPanel.querySelectorAll('select').forEach(select=>select.querySelectorAll('option').forEach(opt=>{opt.disabled=!world.unlocked.includes(opt.value);}));
 }
 function toggleExplore(on){
- exploring=on;district.root.visible=on;player.visible=!on;enemy.visible=!on;document.body.classList.toggle('exploring',on);
+ exploring=on;arena.visible=!on;district.root.visible=on;player.visible=!on;enemy.visible=!on;document.body.classList.toggle('exploring',on);
  $('walk-controls').hidden=!on;$('world-toggle').textContent=on?'⚔️ Zur Arena':'🏙️ Stadt erkunden';
  if(!on){camera.position.set(9,8,13);camera.lookAt(0,1.1,0);}
  renderWorld();
@@ -163,4 +166,4 @@ function loop(now){raf=requestAnimationFrame(loop);if(last){const dt=now-last;if
  if(exploring)district.update(world.position,camera);
  renderer.render(scene,camera);}
 window.addEventListener('pagehide',()=>cancelAnimationFrame(raf),{once:true});
-rebuildPlayer();void loadPackagedModels();resize();if(state.phase==='enemy'){busy=true;enemyTimeout=setTimeout(()=>{enemyTimeout=null;enemyAction();},650);}update();raf=requestAnimationFrame(loop);
+rebuildPlayer();rebuildEnemy();void loadPackagedModels();resize();if(state.phase==='enemy'){busy=true;enemyTimeout=setTimeout(()=>{enemyTimeout=null;enemyAction();},650);}update();raf=requestAnimationFrame(loop);
