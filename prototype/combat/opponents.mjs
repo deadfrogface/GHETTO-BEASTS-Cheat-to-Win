@@ -2,13 +2,18 @@
 export const OPPONENTS=[
  {id:'golem',name:'Beton-Golem',maxHp:110,attack:12,defense:2,cheatSense:.1,reward:8,style:'bruiser'},
  {id:'ratking',name:'Rattenkönig',maxHp:85,attack:10,defense:1,cheatSense:.35,reward:12,style:'trickster'},
- {id:'enforcer',name:'Inkasso-Igor',maxHp:125,attack:14,defense:4,cheatSense:.55,reward:18,style:'enforcer'}
+ {id:'enforcer',name:'Inkasso-Igor',maxHp:125,attack:14,defense:4,cheatSense:.55,reward:18,style:'enforcer'},
+ {id:'pigeon',name:'Tauben-Toni',maxHp:76,attack:9,defense:0,cheatSense:.42,reward:11,style:'trickster'},
+ {id:'scrapper',name:'Schrott-Sabine',maxHp:105,attack:13,defense:3,cheatSense:.3,reward:16,style:'bruiser'},
+ {id:'boss',name:'Bürgermeister Beton',maxHp:155,attack:17,defense:5,cheatSense:.68,reward:25,style:'enforcer'}
 ];
 export const getOpponent=id=>OPPONENTS.find(o=>o.id===id)||OPPONENTS[0];
 export function chooseCounter(state,opponent,random){
  if(!Number.isFinite(random)||random<0||random>=1)throw Error('Invalid RNG');
  const suspicion=state.suspicion||0;
  if(suspicion>=45&&random<opponent.cheatSense)return {type:'expose',damage:5,heat:12,message:opponent.name+' durchschaut den Trick!'};
+ if(opponent.style==='trickster'&&random<.24)return {type:'sabotage',damage:Math.max(1,opponent.attack-4),heat:5,message:opponent.name+' sabotiert deine Ausrüstung!'};
+ if(opponent.style==='enforcer'&&suspicion>=25&&random<.32)return {type:'expose',damage:Math.max(1,opponent.attack-7),heat:8,message:opponent.name+' ruft die Ordnungshüter!'};
  if(state.playerGuard&&random<.35)return {type:'feint',damage:Math.max(1,opponent.attack-3),message:opponent.name+' täuscht einen Schlag an!'};
  return {type:'attack',damage:opponent.attack+Math.floor(random*7),message:opponent.name+' greift an!'};
 }
