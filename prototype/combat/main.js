@@ -1,3 +1,4 @@
+import {DISTRICT,QUESTS,SHOP,loadWorld,saveWorld,buy,unlockPart,equip,recordWin,claimQuest,move} from './world.mjs';
 import {attachModularParts} from './modular-assets.js';
 import {createPackagedCharacter} from './oss-character.js';
 import {createCreatureRig} from './creature-rig.js';
@@ -7,6 +8,7 @@ import {SAVE_KEY,LEGACY_SAVE_KEY,newGame,migrateSave,playerTurn,enemyTurn,ALL_CH
 const $=id=>document.getElementById(id);
 let state;
 try{const raw=localStorage.getItem(SAVE_KEY)||localStorage.getItem(LEGACY_SAVE_KEY);const parsed=raw?JSON.parse(raw):null;state=migrateSave(parsed)||newGame();}catch{state=newGame();}
+let world=loadWorld(),lastWorldWin=false;
 const scene=new THREE.Scene();scene.background=new THREE.Color('#91b9cf');
 const camera=new THREE.PerspectiveCamera(43,1,0.1,60);camera.position.set(9,8,13);camera.lookAt(0,1.1,0);
 const renderer=new THREE.WebGLRenderer({canvas:$('scene'),antialias:false,powerPreference:'high-performance'});
@@ -45,10 +47,11 @@ for(const slot of SLOT_TYPES){
  select.addEventListener('change',()=>{
   if(state.phase!=='player'){select.value=state.loadout[slot];return;}
   const next=mutate(state.loadout,slot,select.value);
+  if(!world.unlocked.includes(select.value)){select.value=state.loadout[slot];return;}
   if(next===state.loadout)return;
   const oldMax=deriveStats(state.loadout).maxHp,newMax=deriveStats(next).maxHp;
   state={...state,loadout:next,playerHp:Math.max(1,Math.min(newMax,state.playerHp+newMax-oldMax))};
-  rebuildPlayer();persist();update();
+  world=equip(world,slot,select.value);saveWorld(world);rebuildPlayer();persist();update();
  });
 }
 let modularController=null,modularAbort=null;
@@ -74,6 +77,7 @@ async function loadPackagedModels(){
 
 function persist(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(state));}catch{$('result').textContent='Speichern nicht verfügbar; Kampf läuft nur in dieser Sitzung.';}}
 function update(){
+ renderWorld();
  $('resources').textContent='Bargeld: '+state.cash+' $ · Verdacht: '+state.suspicion+'/100';
  const selected=ALL_CHEATS.find(d=>d.id===cheatSelect.value);
  const unavailable=selected&&(state.cash<selected.cost||(state.cooldowns[selected.id]||0)>state.round);
@@ -96,7 +100,7 @@ function update(){
 function strike(target){hitTarget=target;hitAt=performance.now();}
 function enemyAction(){
  if(state.phase!=='enemy')return;
- state=enemyTurn(state);strike(player);persist();busy=false;update();
+ state=enemyTurn(state);strike(player);if(state.phase==='over'&&state.enemyHp<=0&&!lastWorldWin){world=recordWin(world);saveWorld(world);lastWorldWin=true;}persist();busy=false;update();
 }
 function take(action){
  if(busy||state.phase!=='player')return;
@@ -108,7 +112,19 @@ const cheatSelect=$('cheat-select');
 ALL_CHEATS.forEach(d=>{const option=document.createElement('option');option.value=d.id;option.textContent=d.name+' ('+Math.round(d.chance*100)+'% Erfolg)';cheatSelect.appendChild(option);});
 cheatSelect.addEventListener('change',update);
 document.querySelectorAll('[data-action]').forEach(b=>b.addEventListener('click',()=>take(b.dataset.action==='cheat'?cheatSelect.value:b.dataset.action)));
-$('restart').addEventListener('click',()=>{if(enemyTimeout!==null)clearTimeout(enemyTimeout);enemyTimeout=null;busy=false;state=newGame();rebuildPlayer();persist();update();});
+$('restart').addEventListener('click',()=>{if(enemyTimeout!==null)clearTimeout(enemyTimeout);enemyTimeout=null;busy=false;state=newGame();lastWorldWin=false;rebuildPlayer();persist();update();});
+function renderWorld(){
+ $('world-status').textContent='🪙 '+world.coins+' $ · 🧰 Schrott '+world.inventory.scrap+' · 🩹 Verbände '+world.inventory.medkit+' · 🏆 Siege '+world.wins;
+ const map=$('world-map');map.replaceChildren();
+ for(const npc of DISTRICT.npcs){const b=document.createElement('button');b.textContent=npc.name+' · '+npc.role;b.addEventListener('click',()=>{world=move(world,npc.x,npc.z);saveWorld(world);renderWorld();});map.appendChild(b);}
+ const actions=$('world-actions');actions.replaceChildren();
+ const heading=document.createElement('p');heading.textContent='Shop · Labor · Arena';actions.appendChild(heading);
+ for(const item of SHOP){const b=document.createElement('button');b.textContent='Kaufen: '+item.name+' ('+item.price+' $)';b.disabled=world.coins<item.price;b.addEventListener('click',()=>{world=buy(world,item.id);saveWorld(world);renderWorld();});actions.appendChild(b);}
+ for(const part of PARTS.filter(p=>!world.unlocked.includes(p.id))){const b=document.createElement('button');b.textContent='🔬 '+part.name+' (2 Schrott)';b.disabled=world.inventory.scrap<2;b.addEventListener('click',()=>{world=unlockPart(world,part.id);saveWorld(world);renderWorld();update();});actions.appendChild(b);}
+ const quests=$('world-quests');quests.replaceChildren();
+ for(const q of QUESTS){const b=document.createElement('button');b.textContent=(world.completed.includes(q.id)?'✓ ':world[q.goal]>=q.target?'🎁 ':'🔒 ')+q.name+' ('+world[q.goal]+'/'+q.target+')';b.disabled=world.completed.includes(q.id)||world[q.goal]<q.target;b.addEventListener('click',()=>{world=claimQuest(world,q.id);saveWorld(world);renderWorld();});quests.appendChild(b);}
+ mutationPanel.querySelectorAll('select').forEach(select=>select.querySelectorAll('option').forEach(opt=>{opt.disabled=!world.unlocked.includes(opt.value);}));
+}
 function resize(){const w=innerWidth,h=innerHeight;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));renderer.setSize(w,h,false);}
 window.addEventListener('resize',resize);
 let last=0,frames=0,acc=0,raf=0;
