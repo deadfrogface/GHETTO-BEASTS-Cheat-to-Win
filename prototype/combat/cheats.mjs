@@ -1,5 +1,6 @@
 // Data-only cheat registry and bounded, deterministic effect interpreter.
-import {deriveStats,validateLoadout} from './mutations.mjs';
+import {deriveStats} from './mutations.mjs';
+import {getOpponent} from './opponents.mjs';
 export const START_CASH=8;
 export const CHEAT_DEFS=[
  {id:'brick',name:'Backstein',method:'projectile',target:'enemy',effects:[{type:'damage',amount:27}],chance:.58,fail:[{type:'damage',target:'self',amount:8}],tags:['illegal','ranged'],cost:0,heat:22,cooldown:1},
@@ -48,7 +49,7 @@ export function applyCheat(s,d,random){
  const clamp=(n,max)=>Math.max(0,Math.min(max,n));
  let weaken=0,skip=false;
  for(const e of (success?d.effects:d.fail)){
-  const target=e.target||d.target,key=target==='self'?'playerHp':'enemyHp',max=target==='self'?90:110;
+  const target=e.target||d.target,key=target==='self'?'playerHp':'enemyHp',max=target==='self'?deriveStats(t.loadout).maxHp:getOpponent(t.opponentId).maxHp;
   if(e.type==='damage')t[key]=clamp(t[key]-e.amount,max);
   if(e.type==='heal')t[key]=clamp(t[key]+e.amount,max);
   if(e.type==='weaken'&&target==='enemy')weaken+=e.amount;
@@ -58,7 +59,7 @@ export function applyCheat(s,d,random){
  t.skipEnemy=Boolean(s.skipEnemy||skip);
  t.suspicion=clamp(s.suspicion+d.heat+(success?0:12),100);
  t.history.push(d.name+(success?' gelungen':' gescheitert')+' · -'+d.cost+' $ · Verdacht '+t.suspicion+'/100');
- if(t.enemyHp===0){t.phase='over';t.history.push('Sieg! Beton-Golem besiegt.');}
+ if(t.enemyHp===0){t.phase='over';t.history.push('Sieg! '+getOpponent(t.opponentId).name+' besiegt.');}
  else if(t.playerHp===0){t.phase='over';t.history.push('Niederlage!');}
  else if(t.suspicion===100){t.phase='over';t.history.push('Enttarnt! Kampf durch Razzia verloren.');}
  t.history=t.history.slice(-10);
