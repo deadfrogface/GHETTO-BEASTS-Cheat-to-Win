@@ -4,3 +4,30 @@
 #mutation-panel{margin:8px 0;border:1px solid #7896a3;border-radius:9px;padding:7px;font-size:12px}#mutation-panel summary{cursor:pointer;font-weight:700}#mutation-slots{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}#mutation-slots label{display:flex;flex-direction:column;gap:3px}#mutation-slots select{min-width:0;max-width:100%;background:#274455;color:white;border:1px solid #a9ed84;border-radius:7px;padding:6px}#mutation-stats{margin:8px 0 0;color:#c8edb0}
 
 #world-panel{pointer-events:auto;background:#101a29e8;border:1px solid #7896a3;border-radius:12px;padding:8px;margin-top:7px;max-height:34vh;overflow:auto;font-size:12px}#world-panel button{background:#274455;color:#fff;border:1px solid #87bca0;border-radius:7px;min-height:38px;padding:7px;margin:3px}#walk-controls:not([hidden]){display:flex;flex-wrap:wrap;gap:4px}#walk-controls button{min-width:48px}#world-actions,#world-quests{display:flex;flex-wrap:wrap}body.exploring .fighters,body.exploring .bottom{display:none}body.exploring #world-panel{max-height:45vh}body.exploring .hud{justify-content:flex-start}
+
+
+/* Compact game HUD: world controls stay accessible without obscuring the scene. */
+.hud{padding:12px clamp(12px,2vw,28px);gap:0}
+header{padding:7px 10px;border-radius:10px;background:linear-gradient(90deg,#10151fd9,#10151f55);pointer-events:none}
+header b{font-size:clamp(18px,2vw,27px);letter-spacing:.06em}
+#world-panel{position:absolute;top:64px;left:clamp(12px,2vw,28px);width:min(360px,calc(100vw - 24px));max-height:min(66dvh,620px);margin:0;padding:12px;border:1px solid #6e7780;background:#101720f2;box-shadow:0 14px 45px #0009;backdrop-filter:blur(14px);z-index:10}
+#world-panel:not([open]){width:auto;max-height:none;padding:0;background:transparent;border:0;box-shadow:none}
+#world-panel>summary{cursor:pointer;list-style:none;border-radius:10px;padding:12px 15px;background:#192632e8;border:1px solid #a8bc8a;font-size:14px;font-weight:750}
+#world-panel>summary::-webkit-details-marker{display:none}
+#world-panel[open]>summary{margin-bottom:12px;background:#304137}
+#world-panel button{display:block;width:100%;margin:5px 0;text-align:left;min-height:43px;border-radius:9px}
+#world-map,#world-actions,#world-quests{display:grid;grid-template-columns:1fr;gap:3px}
+#world-map:empty,#world-actions:empty,#world-quests:empty{display:none}
+#walk-controls:not([hidden]){display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+#walk-controls button{min-width:0;text-align:center}
+#walk-controls #world-interact{grid-column:1/-1;text-align:center}
+body.exploring .hud{justify-content:initial}
+body.exploring #world-panel{max-height:min(66dvh,620px)}
+.fighters{width:min(580px,100%);align-self:center;margin-top:10px}
+.bottom{max-height:46dvh;overflow:auto;box-shadow:0 12px 35px #0009}
+@media(max-width:650px){
+  header span{font-size:9px}
+  #world-panel{top:60px;width:min(320px,calc(100vw - 24px));max-height:58dvh}
+  body.exploring #world-panel{max-height:58dvh}
+  .bottom{max-height:42dvh}
+}
