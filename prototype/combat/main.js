@@ -156,7 +156,21 @@ function toggleExplore(on){
  if(!on){camera.position.set(9,8,13);camera.lookAt(0,1.1,0);}
  renderWorld();
 }
-$('world-toggle').addEventListener('click',()=>{if(busy||state.phase==='enemy')return;if(exploring){const npc=district.nearest(world.position);if(npc?.role!=='arena'){$('world-status').textContent='Betritt eine Arena, um zu kämpfen.';return;}toggleExplore(false);if(state.phase==='over')$('restart').click();else if(state.opponentId!==nextOpponent()){toggleExplore(true);$('world-status').textContent='Laufenden Kampf zuerst abschließen.';}}else if(state.phase==='over'||state.phase==='player')toggleExplore(true);});
+function enterArena(){
+ if(!exploring||busy||state.phase==='enemy')return;
+ if(district.nearest(world.position)?.role!=='arena'){
+  $('world-status').textContent='Betritt eine Arena, um zu kämpfen.';return;
+ }
+ if(state.phase!=='over'&&state.opponentId!==nextOpponent()){
+  $('world-status').textContent='Laufenden Kampf zuerst abschließen.';return;
+ }
+ toggleExplore(false);
+ if(state.phase==='over')$('restart').click();
+}
+$('world-toggle').addEventListener('click',()=>{
+ if(busy||state.phase==='enemy')return;
+ if(exploring)enterArena();else toggleExplore(true);
+});
 document.querySelectorAll('[data-walk]').forEach(button=>button.addEventListener('click',()=>{
  if(!exploring)return;const [dx,dz]=button.dataset.walk.split(',').map(Number);
  world=move(world,world.position.x+dx,world.position.z+dz);persistSession();renderWorld();
@@ -164,12 +178,7 @@ document.querySelectorAll('[data-walk]').forEach(button=>button.addEventListener
 $('world-interact').addEventListener('click',()=>{
  const npc=district.nearest(world.position);
  if(!exploring||!npc){$('world-status').textContent='Kein NPC in Reichweite.';return;}
- if(npc.role==='arena'){
-  // Entering a district arena always starts its own encounter; no stale opponent.
-  if(state.phase==='enemy'||busy)return;
-  toggleExplore(false);
-  if(state.phase==='over')$('restart').click();else if(state.opponentId!==nextOpponent()){toggleExplore(true);$('world-status').textContent='Laufenden Kampf zuerst abschließen.';}
- }
+ if(npc.role==='arena')enterArena();
  else{$('world-status').textContent=npc.name+': '+({shop:'Willkommen im Schrottladen!',lab:'Zwei Schrottteile pro Mutation.',quest:'Schau nach deinen Aufträgen.'}[npc.role]||'Hallo!');}
 });
 $('world-panel').open=true;
