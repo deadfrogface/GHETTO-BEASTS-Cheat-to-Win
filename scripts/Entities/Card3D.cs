@@ -65,7 +65,7 @@ namespace GhettoBeasts.Entities
 
             var reveal = CreateTween().SetParallel();
             reveal.TweenProperty(this, "scale", Vector3.One, 0.3).SetTrans(Tween.TransitionType.Back).SetEase(Tween.EaseType.Out);
-            reveal.TweenMethod(Callable.From<float>(g => material.SetShaderParameter("glow", g)), 5f, 1.6f, 0.4);
+            reveal.TweenShaderParameter(material, "glow", 1.6f, 0.4, from: 5f);
             await ToSignal(reveal, Tween.SignalName.Finished);
             await Vfx.Delay(this, 0.3);
 
@@ -92,7 +92,7 @@ namespace GhettoBeasts.Entities
             rig?.Punch();
 
             var dissolve = CreateTween().SetParallel();
-            dissolve.TweenMethod(Callable.From<float>(d => material.SetShaderParameter("dissolve", d)), 0f, 1f, 0.55);
+            dissolve.TweenShaderParameter(material, "dissolve", 1f, 0.55, from: 0f);
             dissolve.TweenProperty(this, "scale", Vector3.One * 1.25f, 0.55);
             foreach (var label in labels)
             {

@@ -133,6 +133,18 @@ namespace GhettoBeasts.Visuals
             projectile.QueueFree();
         }
 
+        /// <summary>
+        /// Tweens a shader uniform via <see cref="ShaderMaterial.SetShaderParameter"/>. Unlike
+        /// <c>TweenProperty("shader_parameter/x")</c> this does not depend on the renderer exposing the
+        /// uniform list (the headless dummy renderer does not), so it never returns a null tweener.
+        /// </summary>
+        public static MethodTweener TweenShaderParameter(this Tween tween, ShaderMaterial material, string parameter,
+            float to, double duration, float? from = null)
+        {
+            float start = from ?? material.GetShaderParameter(parameter).AsSingle();
+            return tween.TweenMethod(Callable.From<float>(v => material.SetShaderParameter(parameter, v)), start, to, duration);
+        }
+
         public static async Task Delay(Node node, double seconds)
         {
             await node.ToSignal(node.GetTree().CreateTimer(Math.Max(0.0, seconds)), SceneTreeTimer.SignalName.Timeout);

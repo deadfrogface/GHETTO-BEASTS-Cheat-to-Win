@@ -514,7 +514,7 @@ namespace GhettoBeasts.Combat
         {
             crt.SetShaderParameter("glitch", strength);
             var tween = CreateTween();
-            tween.TweenProperty(crt, "shader_parameter/glitch", 0f, duration);
+            tween.TweenShaderParameter(crt, "glitch", 0f, duration, from: strength);
         }
 
         private Beast3D? BeastFor(Side? side) => side switch

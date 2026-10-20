@@ -22,6 +22,7 @@ namespace GhettoBeasts.Entities
         private readonly List<ShaderMaterial> toonMaterials = new();
         private Node3D model = null!;
         private OmniLight3D statusLight = null!;
+        private Tween? flashTween;
         private Vector3 headLocal = new(0f, 1f, 0f);
         private float baseScale = 1f;
 
@@ -147,12 +148,13 @@ namespace GhettoBeasts.Entities
 
         private void Flash(Color color, float strength, double duration)
         {
+            if (toonMaterials.Count == 0) return;
+            flashTween?.Kill();
+            flashTween = CreateTween().SetParallel();
             foreach (var material in toonMaterials)
             {
                 material.SetShaderParameter("emission_color", color);
-                material.SetShaderParameter("emission_strength", strength);
-                var tween = CreateTween();
-                tween.TweenProperty(material, "shader_parameter/emission_strength", 0f, duration);
+                flashTween.TweenShaderParameter(material, "emission_strength", 0f, duration, from: strength);
             }
         }
 
