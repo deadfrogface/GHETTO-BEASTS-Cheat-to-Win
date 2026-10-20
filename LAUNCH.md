@@ -34,18 +34,24 @@ Optional Live-Updates vom Cloud-Agent: `tools\auto-sync.bat` doppelklicken (Fens
 
 Schnellhilfe: `tools\open-in-godot.bat` doppelklicken (öffnet den Projektordner; mit gesetzter `GODOT`-Umgebungsvariable startet es Godot direkt).
 
-## 4. Was du sehen solltest
+## 4. Was du sehen solltest (Full Loop)
 
-1. **Setup-Screen** – Karte wählen (Tasten **1–5** oder UI), optional CRISPR-Mutationen, Gegner wählen.
-2. **Karten-Summon** – Hologramm-Karte schlägt auf den Asphalt, Kreatur erscheint.
-3. **Kampf** – Sabotage / Angriff / Skill; SWAT-Meter bei Tricks.
+1. **District Hub** – Titel, Wallet, Buttons zu Gasse / Arena / Lab / Wash / Gacha / Shops.
+2. **Gasse (Stealth)** – isometrische Alley, blaue Cop-Sichtkegel meiden, Hotspot-Pads mit **E** betreten.
+3. **Arena-Setup** – nur **Roster**-Karten (Starter + Gacha), Gene aus dem Lab, Gegner wählen → Summon.
+4. **Kampf** – Sabotage / Angriff / Skill; bei 100 % Verdacht → SWAT → Knast-Tunnel.
+5. **CRISPR / Wash / Darknet** – Gene + Stabilisatoren, Dirty waschen, Packs für Diamonds.
+
+Nach Kampf/Knast kehrst du zum Hub (oder zur Gasse) zurück. Spielstand: automatisch + Hub-Button „Speichern“.
 
 ## 5. Tasten (Kurz)
 
 | Taste | Aktion |
 | --- | --- |
-| **1–5** | Schnellwahl / Aktionen im Setup bzw. Kampf |
-| **F5** | Spiel starten (Editor) |
-| **Esc** | Pause / zurück (je nach Screen) |
+| **WASD / Stick** | Gasse bewegen |
+| **E** | Hotspot betreten |
+| **1–5** | Kampf-Aktionen |
+| **F5** | Spiel starten (Editor) → Hub |
 
-Bei Problemen: Godot-.NET-Edition prüfen (nicht Standard), erneut **Build**, dann F5.
+Bei Problemen: Godot-.NET-Edition prüfen (nicht Standard), erneut **Build**, dann F5.  
+`git pull` (oder `tools\auto-sync.bat`), falls der Cloud-Agent neue Commits gepusht hat.

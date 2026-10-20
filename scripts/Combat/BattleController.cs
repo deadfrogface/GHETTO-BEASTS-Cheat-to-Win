@@ -10,6 +10,7 @@ using GhettoBeasts.UI;
 using GhettoBeasts.Visuals;
 using Godot;
 using Side = GhettoBeasts.Combat.Side;
+using MutationSlot = GhettoBeasts.Data.MutationSlot;
 
 namespace GhettoBeasts.Combat
 {
@@ -76,6 +77,7 @@ namespace GhettoBeasts.Combat
             hud.ContinuePressed += OnContinuePressed;
             prison.Finished += OnPrisonFinished;
             setup.StartRequested += (cardId, mutationIds, opponentId) => Run(() => StartBattleAsync(cardId, mutationIds, opponentId));
+            setup.BackRequested += () => Game.GoTo(string.IsNullOrEmpty(Game.ReturnScenePath) ? GameManager.HubScene : Game.ReturnScenePath);
 
             AutoBattleOptions? autoBattle;
             try
@@ -88,7 +90,21 @@ namespace GhettoBeasts.Combat
                 GetTree().Quit(3);
                 return;
             }
-            if (autoBattle is not null) Run(() => AutoBattleAsync(autoBattle));
+            if (autoBattle is not null)
+            {
+                Run(() => AutoBattleAsync(autoBattle));
+                return;
+            }
+
+            // Stealth detection / scripted entrance with forced opponent
+            if (Game.PendingOpponentId is { Length: > 0 } forcedOpponent)
+            {
+                string cardId = Game.Save.ActiveFighterId;
+                string[] muts = Roster.GetEquippedMutationIds(Game.Save, cardId).ToArray();
+                Game.PendingOpponentId = null;
+                setup.Visible = false;
+                Run(() => StartBattleAsync(cardId, muts, forcedOpponent));
+            }
         }
 
         public override void _UnhandledInput(InputEvent @event)
@@ -133,7 +149,19 @@ namespace GhettoBeasts.Combat
             Combatant enemy;
             try
             {
-                player = Combatant.Create(Side.Player, ContentCatalog.GetCard(cardId), mutationIds.Select(ContentCatalog.GetMutation));
+                if (!Roster.OwnsCard(Game.Save, cardId))
+                    Roster.TryAwardCard(Game.Save, cardId); // autobattle / legacy may use unowned ids
+                foreach (MutationSlot slot in Enum.GetValues<MutationSlot>())
+                    CrisprLab.TryEquip(Game.Save, cardId, slot, null, out _);
+                foreach (var mid in mutationIds)
+                {
+                    if (!Roster.OwnsMutation(Game.Save, mid))
+                        Roster.TryAwardMutation(Game.Save, mid);
+                    var gene = ContentCatalog.GetMutation(mid);
+                    CrisprLab.TryEquip(Game.Save, cardId, gene.Slot, mid, out _);
+                }
+                Roster.SetActiveFighter(Game.Save, cardId);
+                player = CrisprLab.BuildFighter(Game.Save, cardId, Side.Player);
                 enemy = Combatant.Create(Side.Enemy, ContentCatalog.GetCard(opponentId));
             }
             catch (Exception ex) when (ex is InvalidOperationException or KeyNotFoundException)
@@ -143,10 +171,9 @@ namespace GhettoBeasts.Combat
                 return;
             }
 
-            Game.Save.SelectedCardId = cardId;
-            Game.Save.EquippedMutationIds = mutationIds.ToList();
             Game.Save.LastOpponentId = opponentId;
             Game.Persist();
+            Audio.AudioBus.Play("summon");
 
             ClearBattlefield();
             engine = new BattleEngine(player, enemy, Game.Economy, Game.Random);
@@ -220,6 +247,7 @@ namespace GhettoBeasts.Combat
 
                 case BattleEventType.Damage when beast is not null:
                     beast.PlayHit(e.Critical);
+                    Audio.AudioBus.Play("hit");
                     Vfx.FloatingText(this, beast.HeadGlobalPosition + Vector3.Up * 0.4f, $"-{e.Amount}",
                         e.Critical ? Palette.NeonYellow : Colors.White, e.Critical ? 96 : 68);
                     hud.SetHp(e.Target!.Value, e.ValueAfter);
@@ -386,6 +414,7 @@ namespace GhettoBeasts.Combat
         private async Task PlayRaidAsync()
         {
             hud.DisableActions();
+            Audio.AudioBus.Play("raid");
             PulseGlitch(1f, 1.4);
             camera.Shake(0.35f, 0.8);
 
@@ -489,6 +518,17 @@ namespace GhettoBeasts.Combat
             ClearBattlefield();
             hud.Visible = false;
             prison.Visible = false;
+
+            // Full loop: leave combat back to hub/district when we entered from there.
+            string returnPath = Game.ReturnScenePath;
+            if (!string.IsNullOrEmpty(returnPath) &&
+                returnPath != GameManager.CombatScene &&
+                !OS.GetCmdlineUserArgs().Any(a => a.StartsWith("--autobattle", StringComparison.OrdinalIgnoreCase)))
+            {
+                Game.GoTo(returnPath);
+                return;
+            }
+
             setup.Visible = true;
             setup.Refresh();
         }
