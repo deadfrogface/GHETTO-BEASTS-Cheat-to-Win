@@ -31,7 +31,7 @@ namespace GhettoBeasts.District
         {
             body = new Node3D { Name = "Body" };
             AddChild(body);
-            Shapes.Humanoid(body, new Color(0.1f, 0.15f, 0.35f), new Color(0.85f, 0.7f, 0.6f), Palette.PoliceBlue, hat: true);
+            Shapes.Humanoid(body, new Color(0.18f, 0.22f, 0.34f), Palette.Skin, Palette.PoliceBlue, hat: true);
             Core.VisualManager.EnforceCelShading(body);
 
             cone = new MeshInstance3D

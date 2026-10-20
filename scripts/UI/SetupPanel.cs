@@ -47,15 +47,15 @@ namespace GhettoBeasts.UI
             var center = new CenterContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill };
             scroll.AddChild(center);
 
-            var panel = new PanelContainer { CustomMinimumSize = new Vector2(Mathf.Min(620f, GetViewportRect().Size.X - 24f), 0f) };
-            panel.AddThemeStyleboxOverride("panel", UiKit.Box(new Color(0.04f, 0.02f, 0.09f, 0.94f), Palette.NeonPink, 2, 10, 20));
+            var panel = new PanelContainer { CustomMinimumSize = new Vector2(Mathf.Min(600f, GetViewportRect().Size.X - 24f), 0f) };
+            panel.AddThemeStyleboxOverride("panel", UiKit.Box(new Color(0.07f, 0.08f, 0.11f, 0.9f), Palette.PanelBorder, 1, 14, 18));
             center.AddChild(panel);
 
             var box = new VBoxContainer();
             box.AddThemeConstantOverride("separation", 10);
             panel.AddChild(box);
 
-            box.AddChild(UiKit.Label("UNDERGROUND ARENA", 34, Palette.NeonPink, HorizontalAlignment.Center));
+            box.AddChild(UiKit.Label("UNDERGROUND ARENA", 30, Colors.White, HorizontalAlignment.Center));
             var subtitle = UiKit.Label("Roster-Kämpfer wählen, CRISPR aus dem Lab, Gegner picken.", 14, Palette.TextDim, HorizontalAlignment.Center);
             subtitle.AutowrapMode = TextServer.AutowrapMode.WordSmart;
             box.AddChild(subtitle);
@@ -86,7 +86,7 @@ namespace GhettoBeasts.UI
             preview = new RichTextLabel { BbcodeEnabled = true, FitContent = true, ScrollActive = false, CustomMinimumSize = new Vector2(0f, 120f) };
             preview.AddThemeFontSizeOverride("normal_font_size", 14);
             var previewPanel = new PanelContainer();
-            previewPanel.AddThemeStyleboxOverride("panel", UiKit.Box(new Color(0.02f, 0.01f, 0.05f, 0.9f), Palette.NeonPurple.Darkened(0.3f), 1, 6, 10));
+            previewPanel.AddThemeStyleboxOverride("panel", UiKit.Box(new Color(0.05f, 0.06f, 0.09f, 0.85f), Palette.PanelBorder, 1, 8, 10));
             previewPanel.AddChild(preview);
             box.AddChild(previewPanel);
 
@@ -117,10 +117,10 @@ namespace GhettoBeasts.UI
             var reset = UiKit.Button("Reset");
             reset.CustomMinimumSize = new Vector2(100f, 44f);
             reset.Pressed += OnResetPressed;
-            startButton = UiKit.Button("KARTE AUSSPIELEN!");
-            startButton.CustomMinimumSize = new Vector2(220f, 52f);
-            startButton.AddThemeFontSizeOverride("font_size", 19);
-            startButton.AddThemeStyleboxOverride("normal", UiKit.Box(new Color(0.45f, 0.05f, 0.35f, 1f), Palette.NeonPink, 2, 8, 10));
+            startButton = UiKit.CompactButton("KARTE AUSSPIELEN!");
+            startButton.CustomMinimumSize = new Vector2(200f, 40f);
+            startButton.AddThemeFontSizeOverride("font_size", 15);
+            startButton.AddThemeStyleboxOverride("normal", UiKit.Box(new Color(0.16f, 0.28f, 0.34f, 0.95f), Palette.NeonCyan, 1, 12, 10));
             startButton.Pressed += OnStartPressed;
             buttons.AddChild(back);
             buttons.AddChild(reset);

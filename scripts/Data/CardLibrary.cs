@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using GhettoBeasts.Visuals;
 using Godot;
 
 namespace GhettoBeasts.Data
@@ -79,28 +80,20 @@ namespace GhettoBeasts.Data
         private static (Color Primary, Color Secondary, Color Eyes) ColorsFor(CardDefinition card, ContentCatalog.BodyArchetype archetype)
         {
             float hue = (Hash(card.Id) % 1000) / 1000f;
+            // Desaturated bases — neon reserved for eyes / cyber accents.
             Color primary = card.Traits.HasFlag(CardTraits.Cyber)
-                ? new Color(0.45f, 0.55f, 0.65f)
-                : Color.FromHsv(hue, 0.45f + (int)card.Rarity * 0.05f, 0.55f);
-            Color secondary = primary.Darkened(0.35f).Lerp(PaletteSafe(card.Rarity), 0.25f);
+                ? new Color(0.42f, 0.48f, 0.55f)
+                : Color.FromHsv(hue, 0.28f + (int)card.Rarity * 0.03f, 0.52f);
+            Color secondary = primary.Darkened(0.28f).Lerp(PaletteSafe(card.Rarity), 0.2f);
             Color eyes = card.Traits.HasFlag(CardTraits.Cyber)
-                ? new Color(1f, 0.1f, 0.2f)
-                : Color.FromHsv((hue + 0.35f) % 1f, 0.8f, 1f);
-            if (archetype == ContentCatalog.BodyArchetype.Reptile) primary = primary.Lerp(new Color(0.25f, 0.4f, 0.2f), 0.5f);
-            if (archetype == ContentCatalog.BodyArchetype.Insect) primary = primary.Lerp(new Color(0.35f, 0.2f, 0.1f), 0.4f);
+                ? new Color(0.9f, 0.28f, 0.35f)
+                : Color.FromHsv((hue + 0.35f) % 1f, 0.55f, 0.9f);
+            if (archetype == ContentCatalog.BodyArchetype.Reptile) primary = primary.Lerp(new Color(0.28f, 0.38f, 0.26f), 0.55f);
+            if (archetype == ContentCatalog.BodyArchetype.Insect) primary = primary.Lerp(new Color(0.36f, 0.28f, 0.2f), 0.45f);
             return (primary, secondary, eyes);
         }
 
-        private static Color PaletteSafe(Rarity rarity) => rarity switch
-        {
-            Rarity.Common => new Color(0.68f, 0.7f, 0.74f),
-            Rarity.Uncommon => new Color(0.22f, 1f, 0.53f),
-            Rarity.Rare => new Color(0.2f, 0.7f, 1f),
-            Rarity.Epic => new Color(0.7f, 0.3f, 1f),
-            Rarity.Legendary => new Color(1f, 0.76f, 0.2f),
-            Rarity.Boss => new Color(1f, 0.2f, 0.33f),
-            _ => Colors.White
-        };
+        private static Color PaletteSafe(Rarity rarity) => Palette.ForRarity(rarity);
 
         private static int Hash(string text)
         {

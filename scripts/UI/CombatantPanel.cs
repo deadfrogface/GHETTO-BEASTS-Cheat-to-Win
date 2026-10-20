@@ -6,6 +6,7 @@ using Godot;
 
 namespace GhettoBeasts.UI
 {
+    /// <summary>Slim anime-style nameplate HP strip (screen edge / floating plate).</summary>
     public partial class CombatantPanel : PanelContainer
     {
         private Label nameLabel = null!;
@@ -20,42 +21,51 @@ namespace GhettoBeasts.UI
 
         public override void _Ready()
         {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill;
-            CustomMinimumSize = new Vector2(220f, 0f);
+            SizeFlagsHorizontal = SizeFlags.ShrinkBegin;
+            CustomMinimumSize = new Vector2(240f, 0f);
+            AddThemeStyleboxOverride("panel", UiKit.Box(new Color(0.06f, 0.07f, 0.1f, 0.55f), Palette.PanelBorder, 1, 8, 8));
 
             var root = new VBoxContainer();
-            root.AddThemeConstantOverride("separation", 4);
+            root.AddThemeConstantOverride("separation", 2);
             AddChild(root);
 
             var header = new HBoxContainer();
-            nameLabel = UiKit.Label("—", 17, Colors.White);
+            nameLabel = UiKit.Label("—", 15, Colors.White);
             nameLabel.SizeFlagsHorizontal = SizeFlags.ExpandFill;
             nameLabel.ClipText = true;
-            rarityLabel = UiKit.Label("", 12, Palette.TextDim, HorizontalAlignment.Right);
+            rarityLabel = UiKit.Label("", 11, Palette.TextDim, HorizontalAlignment.Right);
             header.AddChild(nameLabel);
             header.AddChild(rarityLabel);
             root.AddChild(header);
 
             var hpRow = new HBoxContainer();
-            hpRow.AddChild(UiKit.Label("HP", 12, Palette.TextDim));
-            hpBar = UiKit.Bar(Palette.NeonGreen, 16f);
+            hpRow.AddThemeConstantOverride("separation", 6);
+            hpBar = UiKit.Bar(Palette.NeonGreen, 9f);
             hpRow.AddChild(hpBar);
-            hpLabel = UiKit.Label("0/0", 13, Colors.White, HorizontalAlignment.Right);
-            hpLabel.CustomMinimumSize = new Vector2(70f, 0f);
+            hpLabel = UiKit.Label("0/0", 11, Colors.White, HorizontalAlignment.Right);
+            hpLabel.CustomMinimumSize = new Vector2(56f, 0f);
             hpRow.AddChild(hpLabel);
             root.AddChild(hpRow);
 
             var genRow = new HBoxContainer();
-            genRow.AddChild(UiKit.Label("GEN", 12, Palette.TextDim));
-            instabilityBar = UiKit.Bar(Palette.NeonPurple, 8f);
+            genRow.AddThemeConstantOverride("separation", 6);
+            instabilityBar = UiKit.Bar(Palette.NeonPurple, 4f);
             genRow.AddChild(instabilityBar);
-            instabilityLabel = UiKit.Label("0%", 12, Palette.NeonPurple, HorizontalAlignment.Right);
-            instabilityLabel.CustomMinimumSize = new Vector2(70f, 0f);
+            instabilityLabel = UiKit.Label("0%", 10, Palette.TextDim, HorizontalAlignment.Right);
+            instabilityLabel.CustomMinimumSize = new Vector2(40f, 0f);
             genRow.AddChild(instabilityLabel);
             root.AddChild(genRow);
 
-            statusLabel = new RichTextLabel { BbcodeEnabled = true, FitContent = true, ScrollActive = false, CustomMinimumSize = new Vector2(0f, 20f) };
-            statusLabel.AddThemeFontSizeOverride("normal_font_size", 12);
+            statusLabel = new RichTextLabel
+            {
+                BbcodeEnabled = true,
+                FitContent = true,
+                ScrollActive = false,
+                CustomMinimumSize = new Vector2(0f, 16f),
+                MouseFilter = MouseFilterEnum.Ignore
+            };
+            statusLabel.AddThemeFontSizeOverride("normal_font_size", 11);
+            if (UiKit.Font is { } font) statusLabel.AddThemeFontOverride("normal_font", font);
             root.AddChild(statusLabel);
         }
 
@@ -85,7 +95,7 @@ namespace GhettoBeasts.UI
         public void SetInstability(int value)
         {
             instabilityBar.Value = value;
-            var color = value >= 100 ? Palette.Danger : value > InstabilityResolver.CriticalThreshold ? new Color(1f, 0.4f, 0.2f)
+            var color = value >= 100 ? Palette.Danger : value > InstabilityResolver.CriticalThreshold ? new Color(0.9f, 0.45f, 0.28f)
                 : value > InstabilityResolver.ConfusionThreshold ? Palette.NeonPink : Palette.NeonPurple;
             UiKit.SetBarColor(instabilityBar, color);
             instabilityLabel.Text = $"{value}%";
@@ -101,10 +111,10 @@ namespace GhettoBeasts.UI
             if (combatant.HasMutated) parts.Insert(0, $"[color=#{UiKit.Hex(Palette.NeonPurple)}]MUTIERT[/color]");
 
             string skill = combatant.SkillReady
-                ? $"[color=#{UiKit.Hex(Palette.NeonCyan)}]{combatant.Definition.AbilityName} bereit[/color]"
+                ? $"[color=#{UiKit.Hex(Palette.NeonCyan)}]{combatant.Definition.AbilityName}[/color]"
                 : $"[color=#{UiKit.Hex(Palette.TextDim)}]{combatant.Definition.AbilityName}: {combatant.SkillCooldown}[/color]";
             parts.Add(skill);
-            statusLabel.Text = string.Join("  ·  ", parts);
+            statusLabel.Text = string.Join(" · ", parts);
         }
 
         private void UpdateHpVisual(int hp)

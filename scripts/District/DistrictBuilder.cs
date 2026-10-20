@@ -33,7 +33,7 @@ namespace GhettoBeasts.District
         public required List<Vector3> CopSpawns { get; init; }
     }
 
-    /// <summary>One procedural alley block — asphalt, buildings, neon, hotspot pads.</summary>
+    /// <summary>One procedural alley block — asphalt, buildings, soft neon, hotspot pads.</summary>
     public static class DistrictBuilder
     {
         public static DistrictRefs Build(Node3D parent)
@@ -76,54 +76,40 @@ namespace GhettoBeasts.District
 
         private static void BuildEnvironment(Node3D root)
         {
-            var environment = new Godot.Environment
-            {
-                BackgroundMode = Godot.Environment.BGMode.Color,
-                BackgroundColor = Palette.Background,
-                AmbientLightSource = Godot.Environment.AmbientSource.Color,
-                AmbientLightColor = new Color(0.28f, 0.2f, 0.42f),
-                AmbientLightEnergy = 0.5f,
-                TonemapMode = Godot.Environment.ToneMapper.Filmic,
-                GlowEnabled = true,
-                GlowIntensity = 0.7f,
-                FogEnabled = true,
-                FogLightColor = new Color(0.1f, 0.04f, 0.18f),
-                FogDensity = 0.02f
-            };
-            root.AddChild(new WorldEnvironment { Environment = environment });
+            SceneEnvironmentFactory.Attach(root);
             root.AddChild(new DirectionalLight3D
             {
-                LightColor = new Color(0.75f, 0.7f, 1f),
-                LightEnergy = 1.0f,
-                RotationDegrees = new Vector3(-50f, 40f, 0f)
+                LightColor = new Color(0.82f, 0.8f, 0.9f),
+                LightEnergy = 0.95f,
+                ShadowEnabled = true,
+                RotationDegrees = new Vector3(-48f, 35f, 0f)
             });
-            root.AddChild(new OmniLight3D { LightColor = Palette.NeonPink, LightEnergy = 2f, OmniRange = 12f, Position = new Vector3(-4f, 4f, 0f) });
-            root.AddChild(new OmniLight3D { LightColor = Palette.NeonCyan, LightEnergy = 1.8f, OmniRange = 12f, Position = new Vector3(4f, 4f, 2f) });
+            root.AddChild(new OmniLight3D { LightColor = Palette.NeonPink, LightEnergy = 1.0f, OmniRange = 12f, Position = new Vector3(-4f, 4f, 0f) });
+            root.AddChild(new OmniLight3D { LightColor = Palette.NeonCyan, LightEnergy = 0.9f, OmniRange = 12f, Position = new Vector3(4f, 4f, 2f) });
         }
 
         private static void BuildGround(Node3D root)
         {
-            Shapes.Toon(root, Shapes.Box(28f, 0.15f, 28f), new Vector3(0f, -0.08f, 0f), new Color(0.12f, 0.1f, 0.14f), outline: 0.01f);
-            // alley stripes
+            Shapes.Toon(root, Shapes.Box(28f, 0.15f, 28f), new Vector3(0f, -0.08f, 0f), Palette.Ground, outline: 0.008f);
             for (int i = -3; i <= 3; i++)
-                Shapes.Toon(root, Shapes.Box(0.18f, 0.02f, 22f), new Vector3(i * 2.2f, 0.01f, 0f), new Color(0.35f, 0.32f, 0.2f), outline: 0f);
+                Shapes.Toon(root, Shapes.Box(0.18f, 0.02f, 22f), new Vector3(i * 2.2f, 0.01f, 0f), new Color(0.38f, 0.36f, 0.28f), outline: 0.006f);
         }
 
         private static void BuildBuildings(Node3D root)
         {
             void Block(Vector3 pos, Vector3 size, Color color, Color neon)
             {
-                Shapes.Toon(root, Shapes.Box(size.X, size.Y, size.Z), pos + new Vector3(0f, size.Y * 0.5f, 0f), color, outline: 0.025f);
+                Shapes.Toon(root, Shapes.Box(size.X, size.Y, size.Z), pos + new Vector3(0f, size.Y * 0.5f, 0f), color, outline: 0.016f);
                 Shapes.Part(root, Shapes.Box(size.X * 0.9f, 0.12f, 0.08f), pos + new Vector3(0f, size.Y * 0.7f, size.Z * 0.5f + 0.05f),
-                    MaterialFactory.Emissive(neon, 2.2f));
+                    MaterialFactory.Emissive(neon, 1.4f));
             }
 
-            Block(new Vector3(-12f, 0f, -8f), new Vector3(5f, 6f, 4f), new Color(0.18f, 0.1f, 0.22f), Palette.NeonPurple);
-            Block(new Vector3(12f, 0f, -8f), new Vector3(5f, 5f, 4f), new Color(0.15f, 0.12f, 0.2f), Palette.NeonCyan);
-            Block(new Vector3(-12f, 0f, 8f), new Vector3(5f, 4.5f, 4f), new Color(0.2f, 0.08f, 0.12f), Palette.NeonPink);
-            Block(new Vector3(12f, 0f, 8f), new Vector3(5f, 5.5f, 4f), new Color(0.1f, 0.14f, 0.18f), Palette.NeonGreen);
-            Block(new Vector3(0f, 0f, -14f), new Vector3(8f, 7f, 3f), new Color(0.12f, 0.06f, 0.16f), Palette.NeonPink);
-            Block(new Vector3(0f, 0f, 14f), new Vector3(6f, 4f, 3f), new Color(0.08f, 0.1f, 0.16f), Palette.Diamond);
+            Block(new Vector3(-12f, 0f, -8f), new Vector3(5f, 6f, 4f), Palette.Building, Palette.NeonPurple);
+            Block(new Vector3(12f, 0f, -8f), new Vector3(5f, 5f, 4f), Palette.BuildingAlt, Palette.NeonCyan);
+            Block(new Vector3(-12f, 0f, 8f), new Vector3(5f, 4.5f, 4f), new Color(0.3f, 0.24f, 0.26f), Palette.NeonPink);
+            Block(new Vector3(12f, 0f, 8f), new Vector3(5f, 5.5f, 4f), new Color(0.22f, 0.28f, 0.3f), Palette.NeonGreen);
+            Block(new Vector3(0f, 0f, -14f), new Vector3(8f, 7f, 3f), new Color(0.26f, 0.24f, 0.3f), Palette.NeonPink);
+            Block(new Vector3(0f, 0f, 14f), new Vector3(6f, 4f, 3f), new Color(0.22f, 0.26f, 0.32f), Palette.Diamond);
         }
 
         private static void BuildProps(Node3D root)
@@ -131,11 +117,12 @@ namespace GhettoBeasts.District
             for (int i = 0; i < 6; i++)
             {
                 float x = -8f + i * 3.2f;
-                Shapes.Toon(root, Shapes.Cylinder(0.12f, 0.12f, 3.2f), new Vector3(x, 1.6f, -4.5f), new Color(0.25f, 0.25f, 0.3f));
-                Shapes.Part(root, Shapes.Sphere(0.25f), new Vector3(x, 3.3f, -4.5f), MaterialFactory.Emissive(i % 2 == 0 ? Palette.NeonPink : Palette.NeonCyan, 3f));
+                Shapes.Toon(root, Shapes.Cylinder(0.12f, 0.12f, 3.2f), new Vector3(x, 1.6f, -4.5f), Palette.Metal);
+                Shapes.Part(root, Shapes.Sphere(0.25f), new Vector3(x, 3.3f, -4.5f),
+                    MaterialFactory.Emissive(i % 2 == 0 ? Palette.NeonPink : Palette.NeonCyan, 1.8f));
             }
-            Shapes.Toon(root, Shapes.Box(1.2f, 1.0f, 0.8f), new Vector3(-3f, 0.5f, 2f), new Color(0.2f, 0.35f, 0.25f));
-            Shapes.Toon(root, Shapes.Box(0.9f, 0.7f, 0.9f), new Vector3(4f, 0.35f, -1f), new Color(0.3f, 0.2f, 0.15f));
+            Shapes.Toon(root, Shapes.Box(1.2f, 1.0f, 0.8f), new Vector3(-3f, 0.5f, 2f), new Color(0.28f, 0.36f, 0.3f));
+            Shapes.Toon(root, Shapes.Box(0.9f, 0.7f, 0.9f), new Vector3(4f, 0.35f, -1f), new Color(0.36f, 0.3f, 0.26f));
         }
 
         private static void BuildHotspotPad(Node3D root, HotspotDef hs)
@@ -143,15 +130,15 @@ namespace GhettoBeasts.District
             var pad = new Node3D { Name = $"Hotspot_{hs.Kind}", Position = hs.Position };
             root.AddChild(pad);
             Shapes.Part(pad, new CylinderMesh { TopRadius = 1.3f, BottomRadius = 1.3f, Height = 0.04f, RadialSegments = 24 },
-                Vector3.Zero, MaterialFactory.Emissive(hs.Color, 1.4f));
+                Vector3.Zero, MaterialFactory.Emissive(hs.Color, 0.9f));
             var label = new Label3D
             {
                 Text = hs.Label,
                 Position = new Vector3(0f, 1.6f, 0f),
-                FontSize = 48,
-                Modulate = hs.Color,
-                OutlineSize = 8,
-                OutlineModulate = new Color(0.02f, 0f, 0.05f),
+                FontSize = 42,
+                Modulate = hs.Color.Lightened(0.1f),
+                OutlineSize = 6,
+                OutlineModulate = Palette.Outline,
                 Billboard = BaseMaterial3D.BillboardModeEnum.Enabled
             };
             pad.AddChild(label);

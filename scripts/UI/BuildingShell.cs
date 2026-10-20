@@ -13,14 +13,14 @@ namespace GhettoBeasts.UI
 
         protected abstract string Title { get; }
         protected abstract string Subtitle { get; }
-        protected virtual Color Accent => Palette.NeonPink;
+        protected virtual Color Accent => Palette.NeonCyan;
 
         public override void _Ready()
         {
             SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
             Theme = UiKit.CreateTheme();
 
-            var bg = new ColorRect { Color = new Color(0.03f, 0.015f, 0.07f, 1f), MouseFilter = MouseFilterEnum.Ignore };
+            var bg = new ColorRect { Color = Palette.Background, MouseFilter = MouseFilterEnum.Ignore };
             bg.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
             AddChild(bg);
 
@@ -33,20 +33,20 @@ namespace GhettoBeasts.UI
             AddChild(margin);
 
             var root = new VBoxContainer();
-            root.AddThemeConstantOverride("separation", 12);
+            root.AddThemeConstantOverride("separation", 10);
             margin.AddChild(root);
 
             var header = new HBoxContainer();
             header.AddThemeConstantOverride("separation", 12);
             root.AddChild(header);
             var titles = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
-            titles.AddChild(UiKit.Label(Title, 32, Accent));
-            var sub = UiKit.Label(Subtitle, 14, Palette.TextDim);
+            titles.AddChild(UiKit.Label(Title, 28, Accent));
+            var sub = UiKit.Label(Subtitle, 13, Palette.TextDim);
             sub.AutowrapMode = TextServer.AutowrapMode.WordSmart;
             titles.AddChild(sub);
             header.AddChild(titles);
-            var back = UiKit.Button("← Hub", "Zurück zum District-Hub");
-            back.CustomMinimumSize = new Vector2(140f, 44f);
+            var back = UiKit.CompactButton("← Hub", "Zurück zum District-Hub");
+            back.CustomMinimumSize = new Vector2(110f, 34f);
             back.Pressed += () => GameManager.Instance.GoTo(GameManager.HubScene);
             header.AddChild(back);
 
@@ -54,14 +54,14 @@ namespace GhettoBeasts.UI
             root.AddChild(Wallet);
 
             var panel = new PanelContainer { SizeFlagsVertical = SizeFlags.ExpandFill };
-            panel.AddThemeStyleboxOverride("panel", UiKit.Box(new Color(0.04f, 0.02f, 0.09f, 0.92f), Accent.Darkened(0.25f), 2, 10, 16));
+            panel.AddThemeStyleboxOverride("panel", UiKit.Box(new Color(0.07f, 0.08f, 0.11f, 0.72f), Accent.Darkened(0.4f), 1, 12, 14));
             root.AddChild(panel);
 
             Body = new VBoxContainer();
-            Body.AddThemeConstantOverride("separation", 10);
+            Body.AddThemeConstantOverride("separation", 8);
             panel.AddChild(Body);
 
-            StatusLabel = UiKit.Label("", 13, Palette.NeonCyan);
+            StatusLabel = UiKit.Label("", 12, Palette.NeonCyan);
             StatusLabel.AutowrapMode = TextServer.AutowrapMode.WordSmart;
             root.AddChild(StatusLabel);
 

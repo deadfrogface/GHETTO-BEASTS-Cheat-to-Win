@@ -122,23 +122,23 @@ namespace GhettoBeasts.District
             top.OffsetBottom = 120;
             root.AddChild(top);
 
-            top.AddChild(UiKit.Label("DISTRICT · STEALTH", 22, Palette.NeonCyan));
+            top.AddChild(UiKit.Label("DISTRICT · STEALTH", 18, Colors.White));
             top.AddChild(new WalletBar());
-            status = UiKit.Label("Bleib außerhalb der blauen Sichtkegel.", 13, Palette.TextDim);
+            status = UiKit.Label("Bleib außerhalb der blauen Sichtkegel.", 12, Palette.TextDim);
             top.AddChild(status);
 
-            prompt = UiKit.Label("", 16, Palette.NeonYellow, HorizontalAlignment.Center);
+            prompt = UiKit.Label("", 14, Palette.NeonYellow, HorizontalAlignment.Center);
             prompt.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.BottomWide);
             prompt.OffsetTop = -70;
             prompt.OffsetBottom = -30;
             root.AddChild(prompt);
 
-            var hubBtn = UiKit.Button("← Hub");
+            var hubBtn = UiKit.CompactButton("← Hub");
             hubBtn.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.TopRight);
-            hubBtn.OffsetLeft = -150;
+            hubBtn.OffsetLeft = -130;
             hubBtn.OffsetTop = 12;
-            hubBtn.OffsetRight = -16;
-            hubBtn.OffsetBottom = 56;
+            hubBtn.OffsetRight = -14;
+            hubBtn.OffsetBottom = 48;
             hubBtn.Pressed += () => Game.GoTo(GameManager.HubScene);
             root.AddChild(hubBtn);
 

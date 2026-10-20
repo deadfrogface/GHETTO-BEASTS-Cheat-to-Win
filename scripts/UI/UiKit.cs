@@ -5,32 +5,49 @@ namespace GhettoBeasts.UI
 {
     public static class UiKit
     {
+        public const string FontPath = "res://assets/fonts/Outfit-Regular.ttf";
+
+        private static FontFile? uiFont;
+
+        public static FontFile? Font
+        {
+            get
+            {
+                if (uiFont is not null) return uiFont;
+                if (ResourceLoader.Exists(FontPath))
+                    uiFont = ResourceLoader.Load<FontFile>(FontPath);
+                return uiFont;
+            }
+        }
+
         public static Theme CreateTheme()
         {
-            var theme = new Theme { DefaultFontSize = 15 };
+            var theme = new Theme { DefaultFontSize = 14 };
+            if (Font is { } font) theme.DefaultFont = font;
 
-            theme.SetStylebox("panel", "PanelContainer", Box(Palette.PanelBg, Palette.NeonPurple.Darkened(0.2f), 2, 8, 12));
-            theme.SetStylebox("panel", "PopupMenu", Box(new Color(0.06f, 0.03f, 0.12f, 0.98f), Palette.NeonPink, 2, 6, 6));
+            theme.SetStylebox("panel", "PanelContainer", Box(Palette.PanelBg, Palette.PanelBorder, 1, 10, 10));
+            theme.SetStylebox("panel", "PopupMenu", Box(new Color(0.08f, 0.09f, 0.12f, 0.95f), Palette.NeonCyan.Darkened(0.35f), 1, 8, 6));
             theme.SetColor("font_color", "Label", Colors.White);
             theme.SetColor("default_color", "RichTextLabel", Colors.White);
 
             foreach (var type in new[] { "Button", "OptionButton" })
             {
-                theme.SetStylebox("normal", type, Box(new Color(0.12f, 0.05f, 0.2f, 0.95f), Palette.NeonPink.Darkened(0.25f), 2, 6, 10));
-                theme.SetStylebox("hover", type, Box(new Color(0.22f, 0.07f, 0.32f, 0.98f), Palette.NeonPink, 2, 6, 10));
-                theme.SetStylebox("pressed", type, Box(new Color(0.35f, 0.08f, 0.4f, 1f), Palette.NeonCyan, 2, 6, 10));
-                theme.SetStylebox("focus", type, Box(new Color(0f, 0f, 0f, 0f), Palette.NeonCyan, 2, 6, 10));
-                theme.SetStylebox("disabled", type, Box(new Color(0.08f, 0.06f, 0.1f, 0.8f), new Color(0.3f, 0.25f, 0.35f), 1, 6, 10));
+                theme.SetStylebox("normal", type, Box(Palette.ButtonBg, Palette.PanelBorder, 1, 10, 8));
+                theme.SetStylebox("hover", type, Box(new Color(0.16f, 0.18f, 0.24f, 0.92f), Palette.NeonCyan.Darkened(0.2f), 1, 10, 8));
+                theme.SetStylebox("pressed", type, Box(new Color(0.2f, 0.24f, 0.3f, 0.95f), Palette.NeonCyan, 1, 10, 8));
+                theme.SetStylebox("focus", type, Box(new Color(0f, 0f, 0f, 0f), Palette.NeonCyan, 1, 10, 8));
+                theme.SetStylebox("disabled", type, Box(new Color(0.1f, 0.1f, 0.12f, 0.7f), new Color(0.3f, 0.3f, 0.35f), 1, 10, 8));
                 theme.SetColor("font_color", type, Colors.White);
                 theme.SetColor("font_hover_color", type, Colors.White);
                 theme.SetColor("font_pressed_color", type, Palette.NeonCyan);
-                theme.SetColor("font_disabled_color", type, new Color(0.5f, 0.45f, 0.55f));
-                theme.SetFontSize("font_size", type, 15);
+                theme.SetColor("font_disabled_color", type, new Color(0.45f, 0.46f, 0.5f));
+                theme.SetFontSize("font_size", type, 14);
+                if (Font is { } f) theme.SetFont("font", type, f);
             }
 
-            theme.SetStylebox("background", "ProgressBar", Box(new Color(0.02f, 0.01f, 0.05f, 0.9f), new Color(0.25f, 0.2f, 0.35f), 1, 4, 0));
-            theme.SetStylebox("fill", "ProgressBar", Box(Palette.NeonGreen, Palette.NeonGreen, 0, 4, 0));
-            theme.SetStylebox("panel", "TooltipPanel", Box(new Color(0.05f, 0.02f, 0.1f, 0.97f), Palette.NeonCyan, 1, 4, 8));
+            theme.SetStylebox("background", "ProgressBar", Box(new Color(0.05f, 0.05f, 0.07f, 0.85f), new Color(0.28f, 0.3f, 0.35f, 0.6f), 1, 5, 0));
+            theme.SetStylebox("fill", "ProgressBar", Box(Palette.NeonGreen, Palette.NeonGreen.Lightened(0.15f), 0, 5, 0));
+            theme.SetStylebox("panel", "TooltipPanel", Box(new Color(0.07f, 0.08f, 0.11f, 0.96f), Palette.NeonCyan.Darkened(0.3f), 1, 6, 8));
             return theme;
         }
 
@@ -43,17 +60,18 @@ namespace GhettoBeasts.UI
             return box;
         }
 
-        public static Label Label(string text, int size = 15, Color? color = null, HorizontalAlignment align = HorizontalAlignment.Left)
+        public static Label Label(string text, int size = 14, Color? color = null, HorizontalAlignment align = HorizontalAlignment.Left)
         {
             var label = new Label { Text = text, HorizontalAlignment = align, VerticalAlignment = VerticalAlignment.Center };
             label.AddThemeFontSizeOverride("font_size", size);
+            if (Font is { } font) label.AddThemeFontOverride("font", font);
             if (color.HasValue) label.AddThemeColorOverride("font_color", color.Value);
-            label.AddThemeConstantOverride("outline_size", size >= 24 ? 6 : 0);
-            label.AddThemeColorOverride("font_outline_color", new Color(0.02f, 0f, 0.05f));
+            label.AddThemeConstantOverride("outline_size", size >= 28 ? 5 : 0);
+            label.AddThemeColorOverride("font_outline_color", Palette.Outline);
             return label;
         }
 
-        public static ProgressBar Bar(Color fill, float height = 14f)
+        public static ProgressBar Bar(Color fill, float height = 10f)
         {
             var bar = new ProgressBar
             {
@@ -70,7 +88,7 @@ namespace GhettoBeasts.UI
         }
 
         public static void SetBarColor(ProgressBar bar, Color fill) =>
-            bar.AddThemeStyleboxOverride("fill", Box(fill, fill.Lightened(0.3f), 0, 4, 0));
+            bar.AddThemeStyleboxOverride("fill", Box(fill, fill.Lightened(0.2f), 0, 5, 0));
 
         public static Button Button(string text, string tooltip = "")
         {
@@ -78,9 +96,21 @@ namespace GhettoBeasts.UI
             {
                 Text = text,
                 TooltipText = tooltip,
-                CustomMinimumSize = new Vector2(150f, 44f),
+                CustomMinimumSize = new Vector2(128f, 36f),
                 FocusMode = Control.FocusModeEnum.None
             };
+        }
+
+        public static Button CompactButton(string text, string tooltip = "")
+        {
+            var button = Button(text, tooltip);
+            button.CustomMinimumSize = new Vector2(108f, 34f);
+            button.AddThemeFontSizeOverride("font_size", 13);
+            button.AddThemeStyleboxOverride("normal", Box(new Color(0.1f, 0.11f, 0.15f, 0.78f), Palette.PanelBorder, 1, 12, 6));
+            button.AddThemeStyleboxOverride("hover", Box(new Color(0.15f, 0.17f, 0.22f, 0.88f), Palette.NeonCyan.Darkened(0.15f), 1, 12, 6));
+            button.AddThemeStyleboxOverride("pressed", Box(new Color(0.18f, 0.22f, 0.28f, 0.92f), Palette.NeonCyan, 1, 12, 6));
+            button.AddThemeStyleboxOverride("disabled", Box(new Color(0.08f, 0.08f, 0.1f, 0.55f), new Color(0.25f, 0.25f, 0.3f), 1, 12, 6));
+            return button;
         }
 
         public static string Hex(Color color) => color.ToHtml(false);

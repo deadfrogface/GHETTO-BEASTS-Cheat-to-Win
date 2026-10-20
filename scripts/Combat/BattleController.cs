@@ -48,12 +48,12 @@ namespace GhettoBeasts.Combat
                 return;
             }
 
-            camera = new CameraRig { Name = "Camera", Fov = 48f, Position = new Vector3(0f, 4.4f, 8.6f), Current = true };
+            camera = new CameraRig { Name = "Camera", Fov = CameraRig.CombatFov, Current = true };
             AddChild(camera);
-            camera.LookAt(new Vector3(0f, 0.7f, 0f));
 
             arena = ArenaBuilder.Build(this);
             if (HasNode("Arena")) VisualManager.EnforceCelShading(GetNode("Arena"));
+            camera.PlaceCombatCamera(arena.PlayerSpot, arena.EnemySpot, arena.PlayerTrainer.GlobalPosition);
 
             var crtLayer = new CanvasLayer { Name = "CrtLayer", Layer = 0 };
             AddChild(crtLayer);
@@ -188,7 +188,7 @@ namespace GhettoBeasts.Combat
 
             busy = true;
             hud.DisableActions();
-            await hud.ShowBannerAsync("FIGHT!", Palette.NeonPink, 0.4);
+            await hud.ShowBannerAsync("FIGHT!", Palette.NeonCyan, 0.4);
             engine.Start();
             await PlayPendingAsync();
             busy = false;
@@ -343,6 +343,7 @@ namespace GhettoBeasts.Combat
             if (side == Side.Player) playerBeast = beast;
             else enemyBeast = beast;
             await beast.SpawnAsync();
+            camera.PlaceCombatCamera(arena.PlayerSpot, arena.EnemySpot, arena.PlayerTrainer.GlobalPosition);
         }
 
         private async Task PlayCheatAsync(CheatType cheat, bool success)

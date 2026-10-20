@@ -17,7 +17,7 @@ namespace GhettoBeasts.District
             AddChild(col);
             model = new Node3D { Name = "Model" };
             AddChild(model);
-            Visuals.Shapes.Humanoid(model, new Color(0.15f, 0.45f, 0.55f), new Color(0.9f, 0.75f, 0.65f), Visuals.Palette.NeonCyan);
+            Visuals.Shapes.Humanoid(model, new Color(0.22f, 0.4f, 0.46f), Visuals.Palette.Skin, Visuals.Palette.NeonCyan);
             Core.VisualManager.EnforceCelShading(model);
         }
 

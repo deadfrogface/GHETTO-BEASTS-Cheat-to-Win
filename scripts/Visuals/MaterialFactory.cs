@@ -11,15 +11,17 @@ namespace GhettoBeasts.Visuals
         private static Shader? cardShader;
         private static Shader? crtShader;
 
-        public static ShaderMaterial Toon(Color albedo, float outlineWidth = 0.02f, Color? rimColor = null) =>
+        public static ShaderMaterial Toon(Color albedo, float outlineWidth = VisualManager.DefaultOutlineWidth, Color? rimColor = null) =>
             VisualManager.CreateToonMaterial(albedo, outlineWidth, rimColor);
 
-        public static StandardMaterial3D Emissive(Color color, float energy = 2.5f) => new()
+        /// <summary>Accent emissive only — keep energy modest so the world stays muted.</summary>
+        public static StandardMaterial3D Emissive(Color color, float energy = 1.6f) => new()
         {
             AlbedoColor = color,
             EmissionEnabled = true,
             Emission = color,
-            EmissionEnergyMultiplier = energy
+            EmissionEnergyMultiplier = energy,
+            ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded
         };
 
         public static ShaderMaterial HoloCard(Color frame, Color inner)
@@ -36,7 +38,13 @@ namespace GhettoBeasts.Visuals
         {
             crtShader ??= ResourceLoader.Load<Shader>(CrtShaderPath);
             if (crtShader is null) GD.PrintErr($"[MaterialFactory] Shader fehlt: {CrtShaderPath}");
-            return new ShaderMaterial { Shader = crtShader ?? new Shader() };
+            var material = new ShaderMaterial { Shader = crtShader ?? new Shader() };
+            // Near-invisible grading only — no heavy 2000s CRT look.
+            material.SetShaderParameter("scanline_strength", 0.02f);
+            material.SetShaderParameter("vignette", 0.22f);
+            material.SetShaderParameter("aberration", 0.0003f);
+            material.SetShaderParameter("glitch", 0f);
+            return material;
         }
     }
 }
