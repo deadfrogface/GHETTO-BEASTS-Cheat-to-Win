@@ -42,11 +42,9 @@ namespace GhettoBeasts.District
                 return;
             }
 
+            // Autobattle: GameManager already CallDeferred → combat; do not build the district.
             if (WantsAutoBattle())
-            {
-                Game.EnterCombat(GameManager.MainDistrictScene);
                 return;
-            }
 
             StreetProgression.EnsureDefaults(Game.Save);
             refs = DistrictBuilder.Build(this, Game.Save);

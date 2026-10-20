@@ -366,11 +366,15 @@ namespace GhettoBeasts.Combat
                 {
                     Vector3 enemyHead = arena.EnemyTrainer.GlobalPosition + Vector3.Up * 1.75f;
                     Vector3 target = success ? enemyHead : enemyHead + new Vector3(1.4f, -1.2f, -1.5f);
+                    Audio.AudioBus.Play("whoosh");
                     await Vfx.ThrowAsync(this, Shapes.Box(0.24f, 0.1f, 0.12f), MaterialFactory.Toon(new Color(0.62f, 0.22f, 0.14f), 0.01f),
                         trainerHand, target, 2.2f, 0.65);
+                    Audio.AudioBus.PlaySpatial(this, "hit", target);
                     Vfx.Burst(this, target, success ? new Color(1f, 0.45f, 0.2f) : new Color(0.6f, 0.5f, 0.45f), success ? 80 : 25, 5f, 0.7f);
                     if (success)
                     {
+                        CameraJuice.HitStop(this, 0.09, 0.3f);
+                        CameraJuice.PulseSpeedlines(speedlines, 0.85f, 0.35);
                         camera.Shake(0.35f, 0.5);
                         Vfx.Flash(this, target, new Color(1f, 0.5f, 0.2f), 10f);
                         Vfx.FloatingText(this, enemyHead + Vector3.Up * 0.6f, "K.O.!", Palette.NeonYellow, 110);
@@ -387,11 +391,15 @@ namespace GhettoBeasts.Combat
                 }
 
                 case CheatType.Doping when playerBeast is not null:
+                    Audio.AudioBus.Play("whoosh");
                     await Vfx.ThrowAsync(this, Shapes.Cylinder(0.03f, 0.03f, 0.34f), MaterialFactory.Emissive(Palette.NeonGreen, 3f),
                         trainerHand, playerBeast.HeadGlobalPosition, 0.8f, 0.4, 20f);
+                    Audio.AudioBus.Play("pack");
                     playerBeast.PlayHeal();
+                    Vfx.Burst(this, playerBeast.HeadGlobalPosition, Palette.NeonGreen, 40, 3.5f, 0.55f);
                     Vfx.FloatingText(this, playerBeast.HeadGlobalPosition + Vector3.Up * 0.6f, "GEDOPT!", Palette.NeonGreen, 80);
                     camera.Shake(0.1f);
+                    camera.Punch(-3f);
                     await Vfx.Delay(this, 0.3);
                     break;
 
@@ -400,6 +408,7 @@ namespace GhettoBeasts.Combat
                     Vector3 refHand = arena.Referee.GlobalPosition + Vector3.Up * 1.3f;
                     var coin = Shapes.Cylinder(0.07f, 0.07f, 0.015f);
                     var gold = MaterialFactory.Emissive(Palette.NeonYellow, 2.5f);
+                    Audio.AudioBus.Play("ui");
                     for (int i = 0; i < 4; i++)
                     {
                         _ = Vfx.ThrowAsync(this, coin, gold, trainerHand, refHand, 1.4f, 0.5, 25f);
@@ -408,11 +417,15 @@ namespace GhettoBeasts.Combat
                     await Vfx.Delay(this, 0.45);
                     if (success)
                     {
+                        Audio.AudioBus.Play("pack");
                         Vfx.Burst(this, refHand, Palette.NeonYellow, 50, 3f, 0.8f, 0.04f, -3f);
                         Vfx.FloatingText(this, refHand + Vector3.Up * 1f, "$$$", Palette.NeonYellow, 90);
+                        camera.Punch(-2f);
                     }
                     else
                     {
+                        Audio.AudioBus.Play("raid");
+                        PulseGlitch(0.55f, 0.5);
                         Vfx.Flash(this, refHand, Palette.Danger, 8f);
                         Vfx.FloatingText(this, refHand + Vector3.Up * 1f, "VERPFIFFEN!", Palette.Danger, 72);
                         camera.Shake(0.15f);

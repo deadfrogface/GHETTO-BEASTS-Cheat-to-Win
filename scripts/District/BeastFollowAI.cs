@@ -145,7 +145,7 @@ namespace GhettoBeasts.District
         private void RebuildVisual(string cardId)
         {
             foreach (var child in model.GetChildren())
-                child.QueueFree();
+                child.CallDeferred(Node.MethodName.QueueFree);
 
             // Prefer catalog GLB via AssetPipeline when present; else Beast3D procedural toon.
             var pipe = AssetPipeline.Instance;
