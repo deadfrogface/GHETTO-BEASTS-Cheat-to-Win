@@ -1,3 +1,4 @@
+using GhettoBeasts.Data;
 using Godot;
 
 namespace GhettoBeasts.Core
@@ -21,7 +22,9 @@ namespace GhettoBeasts.Core
         public override void _Ready()
         {
             LoadState(SaveSystem.Load());
+            var catalog = DatabaseCatalog.Instance.Snapshot();
             GD.Print($"[GameManager] Spielstand geladen: {Economy.DirtyCash} $ dirty, {Economy.CleanCash} $ clean, {Economy.Diamonds} Diamonds.");
+            GD.Print($"[GameManager] DatabaseCatalog: {catalog.Cards} Karten ({catalog.Beasts} Bestien / {catalog.Npcs} NPCs), {catalog.Mutations} Mutationen.");
         }
 
         public void Persist()

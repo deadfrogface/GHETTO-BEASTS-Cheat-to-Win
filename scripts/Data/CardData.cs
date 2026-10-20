@@ -27,6 +27,8 @@ namespace GhettoBeasts.Data
         [Export(PropertyHint.Range, "0.2,3,0.05")] public float ModelScale { get; set; } = 1f;
         [Export] public Texture2D? Artwork { get; set; }
         [Export] public PackedScene? ModelScene { get; set; }
+        /// <summary>Optional explicit path like <c>res://assets/3d_models/beasts/cyber_pit.glb</c>. Empty = auto-resolve by CatalogId.</summary>
+        [Export(PropertyHint.File, "*.glb,*.gltf")] public string ModelPath { get; set; } = string.Empty;
 
         public CardDefinition? Definition
         {

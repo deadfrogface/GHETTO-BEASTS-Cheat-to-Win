@@ -13,6 +13,8 @@ Dieser Stand ist das **spielbare Fundament** (Fahrplan-Schritte 1–2, Schritt 3
 | Wirtschaft | $ Dirty Cash, $ Clean Cash, 💎 Dirty Diamonds, Waschsalon (20 % Gebühr), Beschlagnahmung bei Razzia |
 | Speichern | JSON via `Newtonsoft.Json` (`user://savegame.json`); optional `LiteDbSaveStore` für NoSQL |
 | Visuals | `VisualManager` erzwingt Cel-Shader auf Meshes; Holo-Karten-Summon, Neon-Arena, CRT-Overlay |
+| Asset-Pipeline | Autoload `AssetPipeline` lädt `res://assets/3d_models/**/*.glb`, Mixamo-Anims, Cel-Pass, Placeholder-Fallback |
+| Katalog | `DatabaseCatalog` – Registry über 100+ Einheiten (Lookup nach Id/Rarity/Kategorie) |
 | Knast | Grid-Tunnel-Escape nach SWAT-Raid (Graben, Werkzeuge, Wärter, Diamond-Bestechung) |
 
 Noch nicht enthalten (nächste Schritte): Oberwelt & Stealth, Gacha-Pack-Opening, Audio, Touch-Steuerung, echte 3D-Modelle, 2v2-Kämpfe.
@@ -62,11 +64,13 @@ res://
 ├── scripts/                  # Godot-C#: Data-Resources, GameManager, Combat, Entities, UI, Visuals
 ├── scenes/combat/            # combat.tscn (Hauptszene)
 ├── data/cards/               # BeastData/NpcData-.tres pro Karte (Farben, Form, Skalierung, eigenes Modell)
+├── assets/3d_models/         # Meshy/Tripo/Mixamo .glb Drops (beasts/, npcs/, …) – siehe README dort
 ├── shaders/                  # toon_cel, outline, holo_card, crt_overlay
 └── tools/                    # auto-sync.ps1 / .bat
 ```
 
-Die Spielwerte (HP, Angriff, Skills) stehen in `src/GhettoBeasts.Core/Data/ContentCatalog.cs`. Das Aussehen jeder Karte steuerst du im Godot-Inspector über `data/cards/<id>.tres` – dort kannst du unter **Model Scene** auch ein echtes `.glb`/`.tscn`-Modell einhängen, das den Platzhalter ersetzt.
+Die Spielwerte (HP, Angriff, Skills) stehen in `src/GhettoBeasts.Core/Data/ContentCatalog.cs` und werden über `DatabaseCatalog` indexiert.  
+**3D-Modelle:** `.glb` als `<catalogId>.glb` nach `assets/3d_models/beasts/` oder `npcs/` legen – `AssetPipeline` erkennt sie beim Start, weist den Cel-Shader zu und spielt Idle-Clips. Fehlt eine Datei, entsteht ein toon-Platzhalter. Details: [`assets/3d_models/README.md`](assets/3d_models/README.md).
 
 ## Tests & Build (Kommandozeile)
 

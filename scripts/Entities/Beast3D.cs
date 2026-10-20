@@ -39,20 +39,15 @@ namespace GhettoBeasts.Entities
             AddChild(model);
 
             var mutationList = mutations.ToList();
-            if (data.ModelScene is not null)
-            {
-                var instance = data.ModelScene.Instantiate();
-                if (instance is Node3D node3D) model.AddChild(node3D);
-                else
-                {
-                    GD.PrintErr($"[Beast3D] ModelScene von '{definition.Id}' ist kein Node3D – nutze Platzhalter.");
-                    instance.QueueFree();
-                    BuildPlaceholder(definition, data, mutationList);
-                }
-            }
-            else
+            if (!TryAttachImportedModel(definition, data))
             {
                 BuildPlaceholder(definition, data, mutationList);
+            }
+            else if (mutationList.Count > 0)
+            {
+                // Keep CRISPR visual markers even on imported AI meshes.
+                Vector3[] paws = { new(-0.2f, 0.1f, 0.35f), new(0.2f, 0.1f, 0.35f) };
+                foreach (var mutation in mutationList) AddMutationParts(mutation, paws);
             }
 
             VisualManager.EnforceCelShading(model);
@@ -158,10 +153,64 @@ namespace GhettoBeasts.Entities
             }
         }
 
+        private bool TryAttachImportedModel(CardDefinition definition, CardData data)
+        {
+            if (data.ModelScene is not null)
+            {
+                var instance = data.ModelScene.Instantiate();
+                if (instance is Node3D node3D)
+                {
+                    model.AddChild(node3D);
+                    AssetPipeline.TryPlayIdle(node3D);
+                    EstimateHead(node3D);
+                    return true;
+                }
+                GD.PrintErr($"[Beast3D] ModelScene von '{definition.Id}' ist kein Node3D.");
+                instance.QueueFree();
+            }
+
+            if (!string.IsNullOrWhiteSpace(data.ModelPath) && ResourceLoader.Exists(data.ModelPath))
+            {
+                var packed = ResourceLoader.Load<PackedScene>(data.ModelPath);
+                if (packed?.Instantiate() is Node3D fromPath)
+                {
+                    model.AddChild(fromPath);
+                    VisualManager.EnforceCelShading(fromPath);
+                    AssetPipeline.TryPlayIdle(fromPath);
+                    EstimateHead(fromPath);
+                    return true;
+                }
+            }
+
+            if (AssetPipeline.Instance is { } pipeline)
+            {
+                var imported = pipeline.InstantiateModel(definition.Id);
+                if (imported is not null)
+                {
+                    model.AddChild(imported);
+                    EstimateHead(imported);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void EstimateHead(Node3D root)
+        {
+            float maxY = 1.2f;
+            foreach (var node in root.GetChildren())
+            {
+                if (node is VisualInstance3D visual)
+                    maxY = Mathf.Max(maxY, visual.GetAabb().End.Y);
+            }
+            headLocal = new Vector3(0f, maxY * 0.9f, 0.2f);
+        }
+
         private void CollectToonMaterials(Node node)
         {
             if (node is MeshInstance3D mesh && mesh.MaterialOverride is ShaderMaterial shader &&
-                shader.Shader is not null && shader.Shader.ResourcePath.EndsWith("toon_cel.gdshader"))
+                VisualManager.IsToonMaterial(shader))
             {
                 toonMaterials.Add(shader);
             }
