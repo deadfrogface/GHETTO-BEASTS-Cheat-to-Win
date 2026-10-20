@@ -111,6 +111,8 @@ namespace GhettoBeasts.Combat
             }
 
             await Vfx.Delay(this, 1.0);
+            if (outcome == BattleOutcome.Raid) await AutoEscapeAsync();
+
             int code = outcome switch
             {
                 BattleOutcome.Victory => 0,
@@ -118,6 +120,24 @@ namespace GhettoBeasts.Combat
                 _ => 2
             };
             FinishAutoBattle(options, code, $"{outcome} nach {turn} Zügen, Schmutzgeld {Game.Economy.DirtyCash} $");
+        }
+
+        /// <summary>Continues into the prison tunnel and digs with simulated arrow keys until the minigame ends.</summary>
+        private async Task AutoEscapeAsync()
+        {
+            int? prisonOutcome = null;
+            void OnFinished(int o) => prisonOutcome = o;
+            prison.Finished += OnFinished;
+            OnContinuePressed();
+
+            Key[] keys = { Key.Up, Key.Right, Key.Up, Key.Left, Key.Down };
+            for (int i = 0; prisonOutcome is null && i < 200; i++)
+            {
+                Input.ParseInputEvent(new InputEventKey { Keycode = keys[(i + (int)(Game.Random.NextDouble() * 3)) % keys.Length], Pressed = true });
+                await Vfx.Delay(this, 0.05);
+            }
+            prison.Finished -= OnFinished;
+            GD.Print($"[AutoBattle] Knast: {(prisonOutcome is { } o ? ((PrisonOutcome)o).ToString() : "kein Ergebnis nach 200 Zügen")}");
         }
 
         private void FinishAutoBattle(AutoBattleOptions options, int exitCode, string summary)
