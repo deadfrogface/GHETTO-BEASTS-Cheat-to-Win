@@ -9,12 +9,15 @@ public class CatalogAndEconomyTests
     [Fact]
     public void Catalog_contains_full_design_roster()
     {
-        Assert.Equal(8, ContentCatalog.Beasts.Count);
-        Assert.Equal(7, ContentCatalog.Npcs.Count);
-        Assert.Equal(9, ContentCatalog.Mutations.Count);
+        Assert.True(ContentCatalog.Beasts.Count >= 50);
+        Assert.True(ContentCatalog.Npcs.Count >= 50);
+        Assert.True(ContentCatalog.Mutations.Count >= 9);
+        Assert.Equal("kanalratte", ContentCatalog.Beasts[0].Id);
+        Assert.Equal("el_capo", ContentCatalog.Npcs[6].Id);
         foreach (MutationSlot slot in Enum.GetValues<MutationSlot>())
-            Assert.Equal(3, ContentCatalog.MutationsForSlot(slot).Count());
+            Assert.True(ContentCatalog.MutationsForSlot(slot).Count() >= 3);
         Assert.Equal(ContentCatalog.AllCards.Count(), ContentCatalog.AllCards.Select(c => c.Id).Distinct().Count());
+        Assert.True(ContentCatalog.AllCards.Count() >= 100);
     }
 
     [Fact]

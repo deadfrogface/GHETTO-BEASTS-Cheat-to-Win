@@ -3,6 +3,10 @@ using Godot;
 
 namespace GhettoBeasts.Core
 {
+    /// <summary>
+    /// JSON savegames via Newtonsoft.Json (fast, human-readable).
+    /// For a LiteDB NoSQL file use <see cref="LiteDbSaveStore"/> from GhettoBeasts.Core.
+    /// </summary>
     public static class SaveSystem
     {
         public const string SavePath = "user://savegame.json";

@@ -5,9 +5,11 @@ using System.Threading.Tasks;
 using GhettoBeasts.Core;
 using GhettoBeasts.Data;
 using GhettoBeasts.Entities;
+using GhettoBeasts.Minigames;
 using GhettoBeasts.UI;
 using GhettoBeasts.Visuals;
 using Godot;
+using Side = GhettoBeasts.Combat.Side;
 
 namespace GhettoBeasts.Combat
 {
@@ -26,12 +28,14 @@ namespace GhettoBeasts.Combat
         private ArenaRefs arena = null!;
         private BattleHud hud = null!;
         private SetupPanel setup = null!;
+        private PrisonEscapeView prison = null!;
         private ShaderMaterial crt = null!;
         private BattleEngine? engine;
         private Beast3D? playerBeast;
         private Beast3D? enemyBeast;
         private Tween? raidTween;
         private bool busy;
+        private bool pendingPrison;
 
         private static GameManager Game => GameManager.Instance;
 
@@ -48,6 +52,7 @@ namespace GhettoBeasts.Combat
             camera.LookAt(new Vector3(0f, 0.7f, 0f));
 
             arena = ArenaBuilder.Build(this);
+            if (HasNode("Arena")) VisualManager.EnforceCelShading(GetNode("Arena"));
 
             var crtLayer = new CanvasLayer { Name = "CrtLayer", Layer = 0 };
             AddChild(crtLayer);
@@ -62,12 +67,28 @@ namespace GhettoBeasts.Combat
             uiLayer.AddChild(hud);
             setup = new SetupPanel { Name = "SetupPanel" };
             uiLayer.AddChild(setup);
+            prison = new PrisonEscapeView { Name = "PrisonEscape" };
+            uiLayer.AddChild(prison);
 
             hud.AttackPressed += () => Run(() => PerformAsync(e => e.PlayerAttack()));
             hud.SkillPressed += () => Run(() => PerformAsync(e => e.PlayerSkill()));
             hud.CheatPressed += cheat => Run(() => PerformAsync(e => e.PlayerCheat((CheatType)cheat)));
-            hud.ContinuePressed += ReturnToSetup;
+            hud.ContinuePressed += OnContinuePressed;
+            prison.Finished += OnPrisonFinished;
             setup.StartRequested += (cardId, mutationIds, opponentId) => Run(() => StartBattleAsync(cardId, mutationIds, opponentId));
+
+            AutoBattleOptions? autoBattle;
+            try
+            {
+                autoBattle = ParseAutoBattleArgs();
+            }
+            catch (ArgumentException ex)
+            {
+                GD.PrintErr($"[AutoBattle] Ungültige Argumente: {ex.Message}");
+                GetTree().Quit(3);
+                return;
+            }
+            if (autoBattle is not null) Run(() => AutoBattleAsync(autoBattle));
         }
 
         public override void _UnhandledInput(InputEvent @event)
@@ -424,7 +445,8 @@ namespace GhettoBeasts.Combat
                     break;
                 default:
                     save.Raids++;
-                    details = "Das SWAT-Team hat die Arena gestürmt und dein gesamtes Schmutzgeld beschlagnahmt.\nAb in den Knast – das Tunnel-Minispiel folgt in einem späteren Schritt.";
+                    pendingPrison = true;
+                    details = "Das SWAT-Team hat die Arena gestürmt und dein gesamtes Schmutzgeld beschlagnahmt.\nWeiter → Knast-Tunnel Escape.";
                     break;
             }
             Game.Persist();
@@ -432,10 +454,41 @@ namespace GhettoBeasts.Combat
             hud.ShowResult(outcome, details);
         }
 
+        private void OnContinuePressed()
+        {
+            if (pendingPrison)
+            {
+                pendingPrison = false;
+                hud.Visible = false;
+                ClearBattlefield();
+                prison.Begin(Game.Economy, Game.Random);
+                return;
+            }
+            ReturnToSetup();
+        }
+
+        private void OnPrisonFinished(int outcome)
+        {
+            var result = (PrisonOutcome)outcome;
+            if (result == PrisonOutcome.Escaped || result == PrisonOutcome.Bribed)
+            {
+                Game.Economy.Add(Currency.CleanCash, 25);
+                GD.Print($"[Prison] Ausbruch ({result}). +25 $ Clean Cash.");
+            }
+            else
+            {
+                GD.Print("[Prison] Erwischt. Zurück in die Gasse ohne Bonus.");
+            }
+            Game.Persist();
+            prison.Visible = false;
+            ReturnToSetup();
+        }
+
         private void ReturnToSetup()
         {
             ClearBattlefield();
             hud.Visible = false;
+            prison.Visible = false;
             setup.Visible = true;
             setup.Refresh();
         }

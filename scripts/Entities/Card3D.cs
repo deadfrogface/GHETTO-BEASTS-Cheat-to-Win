@@ -20,6 +20,8 @@ namespace GhettoBeasts.Entities
             Name = $"Card_{definition.Id}";
             frameColor = Palette.ForRarity(definition.Rarity);
             material = MaterialFactory.HoloCard(frameColor, data.PrimaryColor.Darkened(0.78f));
+            material.SetShaderParameter("glow", 1.6f);
+            material.SetShaderParameter("dissolve", 0f);
 
             AddChild(new MeshInstance3D { Mesh = new QuadMesh { Size = CardSize }, MaterialOverride = material });
 
@@ -55,12 +57,15 @@ namespace GhettoBeasts.Entities
         public async Task SummonAsync(Vector3 handPosition, Vector3 fieldPosition, Camera3D camera, CameraRig? rig = null)
         {
             GlobalPosition = handPosition;
-            LookAt(camera.GlobalPosition, Vector3.Up, true);
+            Vector3 lookTarget = camera.GlobalPosition;
+            if (GlobalPosition.DistanceSquaredTo(lookTarget) > 0.0001f)
+                LookAt(lookTarget, Vector3.Up, true);
             Scale = Vector3.One * 0.05f;
+            material.SetShaderParameter("glow", 5f);
 
             var reveal = CreateTween().SetParallel();
             reveal.TweenProperty(this, "scale", Vector3.One, 0.3).SetTrans(Tween.TransitionType.Back).SetEase(Tween.EaseType.Out);
-            reveal.TweenProperty(material, "shader_parameter/glow", 1.6f, 0.4).From(5f);
+            reveal.TweenMethod(Callable.From<float>(g => material.SetShaderParameter("glow", g)), 5f, 1.6f, 0.4);
             await ToSignal(reveal, Tween.SignalName.Finished);
             await Vfx.Delay(this, 0.3);
 
@@ -76,15 +81,18 @@ namespace GhettoBeasts.Entities
             await ToSignal(slam, Tween.SignalName.Finished);
 
             var parent = GetParent();
-            Vfx.Burst(parent, fieldPosition + Vector3.Up * 0.1f, frameColor, 90, 7f, 0.9f, 0.05f);
-            Vfx.Burst(parent, fieldPosition + Vector3.Up * 0.1f, Colors.White, 40, 10f, 0.4f, 0.025f, -2f);
-            Vfx.Smoke(parent, fieldPosition);
-            Vfx.Flash(parent, fieldPosition + Vector3.Up * 0.8f, frameColor, 10f, 0.5f);
+            if (parent is not null)
+            {
+                Vfx.Burst(parent, fieldPosition + Vector3.Up * 0.1f, frameColor, 90, 7f, 0.9f, 0.05f);
+                Vfx.Burst(parent, fieldPosition + Vector3.Up * 0.1f, Colors.White, 40, 10f, 0.4f, 0.025f, -2f);
+                Vfx.Smoke(parent, fieldPosition);
+                Vfx.Flash(parent, fieldPosition + Vector3.Up * 0.8f, frameColor, 10f, 0.5f);
+            }
             rig?.Shake(0.22f, 0.35);
             rig?.Punch();
 
             var dissolve = CreateTween().SetParallel();
-            dissolve.TweenProperty(material, "shader_parameter/dissolve", 1f, 0.55);
+            dissolve.TweenMethod(Callable.From<float>(d => material.SetShaderParameter("dissolve", d)), 0f, 1f, 0.55);
             dissolve.TweenProperty(this, "scale", Vector3.One * 1.25f, 0.55);
             foreach (var label in labels)
             {

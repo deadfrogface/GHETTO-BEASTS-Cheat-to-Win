@@ -6,15 +6,16 @@ Dieser Stand ist das **spielbare Fundament** (Fahrplan-Schritte 1–2, Schritt 3
 
 | Bereich | Stand |
 | --- | --- |
-| Daten-Systeme | 8 Bestien, 7 NPCs, 9 CRISPR-Mutationen, Seltenheiten, Kategorien |
+| Daten-Systeme | **50+ Bestien, 50+ NPCs** (15 Helden + Straßen-Roster), 15 CRISPR-Mutationen, Seltenheiten, Kategorien |
 | Kampf-Engine | `Stateless`-Zustandsmaschine (Summon → PlayerTurn ⇄ CheatPhase → Resolving → EnemyTurn → Victory/Defeat/Raid) |
 | Sabotage | Backstein-Wurf, Illegale Injektion, Schiri-Bestechung, SWAT-Verdachts-Meter mit Razzia bei 100 % |
 | CRISPR | Kopf/Gliedmaßen/Haut-Slots, Gen-Instabilität (>50 % Verwirrung, >80 % Zellausfall/Zorn, 100 % Mutation/Kollaps) |
 | Wirtschaft | $ Dirty Cash, $ Clean Cash, 💎 Dirty Diamonds, Waschsalon (20 % Gebühr), Beschlagnahmung bei Razzia |
-| Speichern | JSON-Savegame via `Newtonsoft.Json` unter `user://savegame.json` |
-| Visuals | Toon-Shader + Outline, Holo-Karten-Summon mit Partikel-Burst & Screen-Shake, Neon-Hinterhof-Arena, CRT-Overlay |
+| Speichern | JSON via `Newtonsoft.Json` (`user://savegame.json`); optional `LiteDbSaveStore` für NoSQL |
+| Visuals | `VisualManager` erzwingt Cel-Shader auf Meshes; Holo-Karten-Summon, Neon-Arena, CRT-Overlay |
+| Knast | Grid-Tunnel-Escape nach SWAT-Raid (Graben, Werkzeuge, Wärter, Diamond-Bestechung) |
 
-Noch nicht enthalten (nächste Schritte): Oberwelt & Stealth, Gacha-Pack-Opening, Knast-Tunnel-Minispiel, LiteDB, Audio, Touch-Steuerung, echte 3D-Modelle.
+Noch nicht enthalten (nächste Schritte): Oberwelt & Stealth, Gacha-Pack-Opening, Audio, Touch-Steuerung, echte 3D-Modelle, 2v2-Kämpfe.
 
 ---
 

@@ -9,6 +9,14 @@ namespace GhettoBeasts.Visuals
         public static void Burst(Node parent, Vector3 position, Color color, int amount = 70, float speed = 5f,
             float lifetime = 0.9f, float size = 0.05f, float gravity = -7f, float spread = 180f)
         {
+            if (parent is null) return;
+            // Headless/dummy renderer: skip mesh particles (mesh_get_surface_count null).
+            if (DisplayServer.GetName() == "headless")
+            {
+                Flash(parent, position, color, 4f, 0.25f, 3f);
+                return;
+            }
+
             var particles = new CpuParticles3D
             {
                 OneShot = true,
@@ -35,6 +43,7 @@ namespace GhettoBeasts.Visuals
 
         public static void Smoke(Node parent, Vector3 position)
         {
+            if (parent is null || DisplayServer.GetName() == "headless") return;
             var smoke = new StandardMaterial3D
             {
                 AlbedoColor = new Color(0.55f, 0.5f, 0.65f, 0.55f),

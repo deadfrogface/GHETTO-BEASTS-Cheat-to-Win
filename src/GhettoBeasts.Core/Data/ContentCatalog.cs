@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace GhettoBeasts.Data
 {
-    public static class ContentCatalog
+    public static partial class ContentCatalog
     {
         public const string CategoryRodents = "Urbane Nager & Parasiten";
         public const string CategoryPredators = "Hinterhof-Raubtiere & Kampfhunde";
@@ -15,7 +15,10 @@ namespace GhettoBeasts.Data
         public const string CategoryBouncers = "Türsteher & Schwerverbrecher";
         public const string CategoryBosses = "Syndikat-Bosse & Kartell-Legenden";
 
-        public static IReadOnlyList<CardDefinition> Beasts { get; } = new List<CardDefinition>
+        public const int TargetBeastCount = 50;
+        public const int TargetNpcCount = 50;
+
+        private static readonly IReadOnlyList<CardDefinition> HeroBeasts = new List<CardDefinition>
         {
             new("kanalratte", "Räudige Kanalratte", CardKind.Beast, Rarity.Common, CategoryRodents,
                 new Stats(95, 42, 15, 80, 10, 8),
@@ -53,7 +56,7 @@ namespace GhettoBeasts.Data
                 CardTraits.Biological | CardTraits.Regenerates, 20)
         };
 
-        public static IReadOnlyList<CardDefinition> Npcs { get; } = new List<CardDefinition>
+        private static readonly IReadOnlyList<CardDefinition> HeroNpcs = new List<CardDefinition>
         {
             new("hinterhof_crackhead", "Hinterhof-Crackhead", CardKind.Npc, Rarity.Common, CategoryCrooks,
                 new Stats(100, 48, 15, 60, 10, 10),
@@ -85,6 +88,9 @@ namespace GhettoBeasts.Data
                 "Ruft bewaffnete Leibwächter und besticht das SWAT-Team im laufenden Kampf.")
         };
 
+        public static IReadOnlyList<CardDefinition> Beasts { get; } = BuildStreetBeasts(HeroBeasts, TargetBeastCount);
+        public static IReadOnlyList<CardDefinition> Npcs { get; } = BuildStreetNpcs(HeroNpcs, TargetNpcCount);
+
         public static IReadOnlyList<MutationDefinition> Mutations { get; } = new List<MutationDefinition>
         {
             new("gorilla_kiefer", "Gorilla-Kiefer", MutationSlot.Head,
@@ -96,6 +102,12 @@ namespace GhettoBeasts.Data
             new("fledermaus_sonar", "Fledermaus-Sonarsystem", MutationSlot.Head,
                 Stats.Zero, 15, MutationEffect.TrueStrike,
                 "Trefferchance 100%, umgeht Ausweichen."),
+            new("wolfs_nase", "Wolfs-Nase", MutationSlot.Head,
+                new Stats(0, 0, 0, 10, 5, 0), 10, MutationEffect.None,
+                "+10 Initiative und +5% Ausweichen."),
+            new("stier_hoerner", "Stier-Hörner", MutationSlot.Head,
+                new Stats(10, 10, 0, 0, 0, 5), 18, MutationEffect.None,
+                "+10 HP, +10 Angriff, +5% Krit."),
             new("klingen_pranken", "Klingen-Pranken", MutationSlot.Limbs,
                 new Stats(0, 22, 0, 0, 0, 10), 30, MutationEffect.CritDamage,
                 "+22 Angriffskraft, extrem hoher kritischer Schaden, aber stark instabil."),
@@ -105,6 +117,12 @@ namespace GhettoBeasts.Data
             new("skorpion_stachel", "Skorpion-Stachel", MutationSlot.Limbs,
                 Stats.Zero, 20, MutationEffect.PoisonOnHit,
                 "Treffer injizieren Nervengift für 3 Runden."),
+            new("krabben_scheren", "Krabben-Scheren", MutationSlot.Limbs,
+                new Stats(0, 12, 8, 0, 0, 0), 16, MutationEffect.None,
+                "+12 Angriff und +8 Verteidigung."),
+            new("spinne_beine", "Spinnen-Beine", MutationSlot.Limbs,
+                new Stats(0, 0, 0, 15, 20, 0), 22, MutationEffect.None,
+                "+20% Ausweichen und +15 Initiative."),
             new("chitin_panzer", "Chitin-Panzer", MutationSlot.Skin,
                 new Stats(0, 0, 20, 0, 0, 0), 15, MutationEffect.None,
                 "+20 Verteidigung, reduziert physischen Schaden."),
@@ -113,10 +131,17 @@ namespace GhettoBeasts.Data
                 "Teilt Elektroschock-Konterschaden aus, wenn das Biest getroffen wird."),
             new("chamaeleon_tarnhaut", "Chamäleon-Tarnhaut", MutationSlot.Skin,
                 Stats.Zero, 20, MutationEffect.CamouflageFirstRound,
-                "In der ersten Kampfrunde unsichtbar für Angriffe.")
+                "In der ersten Kampfrunde unsichtbar für Angriffe."),
+            new("titan_platten", "Titan-Platten", MutationSlot.Skin,
+                new Stats(30, 0, 25, -5, 0, 0), 25, MutationEffect.None,
+                "+30 HP, +25 Verteidigung, aber -5 Initiative."),
+            new("neon_adern", "Neon-Adern", MutationSlot.Skin,
+                new Stats(0, 8, 0, 8, 0, 8), 18, MutationEffect.None,
+                "+8 Angriff, Initiative und Krit – leuchtet wie Gift.")
         };
 
         public static IEnumerable<CardDefinition> AllCards => Beasts.Concat(Npcs);
+        public static IReadOnlyList<CardDefinition> Heroes => HeroBeasts.Concat(HeroNpcs).ToList();
 
         public static CardDefinition GetCard(string id) =>
             AllCards.FirstOrDefault(c => c.Id == id)

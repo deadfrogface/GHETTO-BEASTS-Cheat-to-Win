@@ -161,10 +161,16 @@ namespace GhettoBeasts.UI
 
         private static void FillCardPicker(OptionButton picker)
         {
-            picker.AddSeparator("Bestien");
-            foreach (var card in ContentCatalog.Beasts) AddCard(picker, card);
-            picker.AddSeparator("NPC-Söldner");
-            foreach (var card in ContentCatalog.Npcs) AddCard(picker, card);
+            AddGrouped(picker, "★ Hero-Bestien", ContentCatalog.Beasts.Take(8));
+            AddGrouped(picker, "Straßen-Bestien", ContentCatalog.Beasts.Skip(8));
+            AddGrouped(picker, "★ Hero-NPCs", ContentCatalog.Npcs.Take(7));
+            AddGrouped(picker, "Straßen-Söldner", ContentCatalog.Npcs.Skip(7));
+        }
+
+        private static void AddGrouped(OptionButton picker, string title, IEnumerable<CardDefinition> cards)
+        {
+            picker.AddSeparator(title);
+            foreach (var card in cards) AddCard(picker, card);
         }
 
         private static void AddCard(OptionButton picker, CardDefinition card)

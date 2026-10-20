@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using GhettoBeasts.Combat;
+using GhettoBeasts.Core;
 using GhettoBeasts.Data;
 using GhettoBeasts.Visuals;
 using Godot;
@@ -53,6 +54,7 @@ namespace GhettoBeasts.Entities
                 BuildPlaceholder(definition, data, mutationList);
             }
 
+            VisualManager.EnforceCelShading(model);
             model.Scale = Vector3.One * 0.001f;
             statusLight = new OmniLight3D { LightEnergy = 0f, OmniRange = 2.6f, Position = new Vector3(0f, 0.9f, 0f) };
             AddChild(statusLight);
