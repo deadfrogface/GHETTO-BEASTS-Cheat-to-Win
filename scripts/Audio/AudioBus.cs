@@ -15,6 +15,7 @@ namespace GhettoBeasts.Audio
         public static AudioBus? Instance { get; private set; }
 
         private readonly Dictionary<string, AudioStreamPlayer> players = new();
+        private readonly List<AudioStreamPlayer3D> ambients = new();
         private AudioStreamPlayer? musicA;
         private AudioStreamPlayer? musicB;
         private bool musicOnA = true;
@@ -24,11 +25,15 @@ namespace GhettoBeasts.Audio
         private static readonly Dictionary<string, string> FileHints = new()
         {
             ["hit"] = "res://assets/audio/hit.ogg",
+            ["hit_bass"] = "res://assets/audio/hit_bass.ogg",
+            ["hit_crack"] = "res://assets/audio/hit_crack.ogg",
             ["summon"] = "res://assets/audio/summon.ogg",
             ["raid"] = "res://assets/audio/raid_siren.ogg",
             ["ui"] = "res://assets/audio/ui_click.ogg",
             ["pack"] = "res://assets/audio/pack_open.ogg",
-            ["whoosh"] = "res://assets/audio/whoosh.ogg"
+            ["whoosh"] = "res://assets/audio/whoosh.ogg",
+            ["ambient_alley"] = "res://assets/audio/ambient_alley.ogg",
+            ["ambient_neon"] = "res://assets/audio/ambient_neon.ogg"
         };
 
         private static readonly Dictionary<string, string> MusicFiles = new()
@@ -72,11 +77,34 @@ namespace GhettoBeasts.Audio
         public static void Play(string key)
         {
             if (Instance is null) return;
-            if (!Instance.players.TryGetValue(key, out var player)) return;
+            if (!Instance.players.TryGetValue(key, out var player))
+            {
+                // Lazy stub for layered keys not registered at boot.
+                var stub = new AudioStreamPlayer { Name = $"Sfx_{key}", Bus = "SFX", Stream = MakeBlip(key) };
+                Instance.AddChild(stub);
+                Instance.players[key] = stub;
+                player = stub;
+            }
             if (player.Stream is null) player.Stream = MakeBlip(key);
             player.PitchScale = 0.92f + (float)GD.Randf() * 0.16f;
             player.Play();
         }
+
+        /// <summary>Layered attack SFX: whoosh wind-up + impact (+ optional heavy bass/crack).</summary>
+        public static void PlayAttackLayered(bool critical = false, bool heavy = false)
+        {
+            Play("whoosh");
+            Play("hit");
+            if (critical || heavy) Play("hit_crack");
+            if (heavy) Play("hit_bass");
+        }
+
+        /// <summary>Explore → battle BGM helper (crossfade into combat pad).</summary>
+        public static void CrossfadeExploreToBattle(double duration = 0.7) =>
+            CrossfadeMusic("combat", duration);
+
+        public static void CrossfadeBattleToExplore(double duration = 1.0) =>
+            CrossfadeMusic("district", duration);
 
         public static void PlayMusic(string key = "district")
         {
@@ -143,6 +171,44 @@ namespace GhettoBeasts.Audio
             return player;
         }
 
+        /// <summary>Looping <see cref="AudioStreamPlayer3D"/> ambient bed (alley / neon stubs).</summary>
+        public static AudioStreamPlayer3D AttachAmbient(Node parent, string key, Vector3 position, float unitSize = 14f)
+        {
+            var player = new AudioStreamPlayer3D
+            {
+                Name = $"Ambient_{key}",
+                Bus = "SFX",
+                UnitSize = unitSize,
+                MaxDistance = 40f,
+                VolumeDb = -18f,
+                AttenuationFilterCutoffHz = 3500f
+            };
+            parent.AddChild(player);
+            player.GlobalPosition = position;
+            if (Instance is not null && Instance.players.TryGetValue(key, out var src) && src.Stream is not null)
+                player.Stream = src.Stream;
+            else
+                player.Stream = MakeLoop(key.Contains("neon") ? "district" : "district");
+            // Soft procedural bed when no dedicated ambient file.
+            if (player.Stream is AudioStreamWav wav)
+            {
+                wav.LoopMode = AudioStreamWav.LoopModeEnum.Forward;
+            }
+            player.Play();
+            Instance?.ambients.Add(player);
+            return player;
+        }
+
+        public static void ClearAmbients()
+        {
+            if (Instance is null) return;
+            foreach (var a in Instance.ambients)
+            {
+                if (GodotObject.IsInstanceValid(a)) a.QueueFree();
+            }
+            Instance.ambients.Clear();
+        }
+
         private static void AssignMusic(AudioStreamPlayer player, string key)
         {
             if (MusicFiles.TryGetValue(key, out var path) && TryAssignStream(player, path))
@@ -189,10 +255,14 @@ namespace GhettoBeasts.Audio
             float freq = key switch
             {
                 "hit" => 180f,
+                "hit_bass" => 90f,
+                "hit_crack" => 920f,
                 "summon" => 520f,
                 "raid" => 740f,
                 "pack" => 360f,
                 "whoosh" => 220f,
+                "ambient_alley" => 140f,
+                "ambient_neon" => 410f,
                 _ => 440f
             };
 

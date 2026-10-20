@@ -68,11 +68,13 @@ namespace GhettoBeasts.Entities
 
         public async Task LungeAsync(Vector3 targetGlobal)
         {
+            JuiceTweens.AttackWindup(model, baseScale);
             Vector3 home = Position;
             Vector3 towards = (targetGlobal - GlobalPosition) with { Y = 0f };
             Vector3 strike = home + towards * 0.38f;
             var tween = CreateTween();
             tween.TweenProperty(this, "position", strike, 0.13).SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.In);
+            tween.TweenCallback(Callable.From(() => JuiceTweens.SquashStretch(model, baseScale)));
             tween.TweenProperty(this, "position", home, 0.2).SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.Out);
             await ToSignal(tween, Tween.SignalName.Finished);
         }
@@ -80,6 +82,7 @@ namespace GhettoBeasts.Entities
         public void PlayHit(bool critical)
         {
             Flash(critical ? Palette.NeonYellow : Colors.White, critical ? 5f : 3f, 0.35);
+            JuiceTweens.SquashStretch(model, baseScale, heavy: critical);
             Vector3 back = -GlobalTransform.Basis.Z.Normalized() * (critical ? 0.35f : 0.18f);
             var tween = CreateTween();
             tween.TweenProperty(model, "position", back with { Y = 0f }, 0.06);
@@ -90,6 +93,7 @@ namespace GhettoBeasts.Entities
         public void PlayHeal()
         {
             Flash(Palette.NeonGreen, 2.5f, 0.6);
+            JuiceTweens.HealPulse(model, baseScale);
             Vfx.Burst(GetParent(), GlobalPosition + Vector3.Up * 0.3f, Palette.NeonGreen, 40, 3f, 1f, 0.04f, 2f, 40f);
         }
 
@@ -105,6 +109,7 @@ namespace GhettoBeasts.Entities
         public async Task FaintAsync()
         {
             Flash(Palette.Danger, 4f, 0.8);
+            JuiceTweens.FaintCollapse(model, baseScale);
             var tween = CreateTween().SetParallel();
             tween.TweenProperty(model, "rotation_degrees:z", 90f, 0.5).SetTrans(Tween.TransitionType.Bounce).SetEase(Tween.EaseType.Out);
             tween.TweenProperty(model, "scale", Vector3.One * baseScale * 0.75f, 0.5);

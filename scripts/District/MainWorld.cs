@@ -16,7 +16,7 @@ namespace GhettoBeasts.District
         private DistrictRefs refs = null!;
         private PlayerController player = null!;
         private CompanionFollow companion = null!;
-        private Camera3D cam = null!;
+        private CameraRig cam = null!;
         private BurnerPhone phone = null!;
         private Label prompt = null!;
         private Label status = null!;
@@ -49,11 +49,11 @@ namespace GhettoBeasts.District
             StreetProgression.EnsureDefaults(Game.Save);
             refs = DistrictBuilder.Build(this, Game.Save);
 
-            cam = new Camera3D
+            cam = new CameraRig
             {
                 Name = "ChaseCam",
                 Projection = Camera3D.ProjectionType.Perspective,
-                Fov = 48f,
+                Fov = CameraRig.DistrictFov,
                 Current = true
             };
             AddChild(cam);
@@ -62,6 +62,7 @@ namespace GhettoBeasts.District
             AddChild(player);
             player.GlobalPosition = refs.PlayerSpawn.GlobalPosition;
             player.SetPlayBounds(refs.PlayBounds);
+            cam.BeginDistrictFollow(player, camYaw);
 
             companion = new CompanionFollow { Name = "Companion" };
             AddChild(companion);
@@ -81,6 +82,8 @@ namespace GhettoBeasts.District
             phone.BindWorld(this);
 
             Audio.AudioBus.PlayMusic("district");
+            Audio.AudioBus.AttachAmbient(this, "ambient_alley", refs.PlayerSpawn.GlobalPosition + new Vector3(0f, 1.2f, 2f));
+            Audio.AudioBus.AttachAmbient(this, "ambient_neon", refs.PlayerSpawn.GlobalPosition + new Vector3(6f, 2.5f, -4f), 18f);
             SetProcess(true);
             SetPhysicsProcess(true);
         }
@@ -99,11 +102,7 @@ namespace GhettoBeasts.District
             if (Input.IsKeyPressed(Key.R)) camYaw -= 1.4f * (float)delta;
 
             player.SetCameraYaw(camYaw);
-
-            Vector3 back = Basis.FromEuler(new Vector3(0f, camYaw, 0f)) * Vector3.Back;
-            Vector3 target = player.GlobalPosition + back * 7.2f + Vector3.Up * 4.2f;
-            cam.GlobalPosition = cam.GlobalPosition.Lerp(target, 1f - Mathf.Exp(-4.5f * (float)delta));
-            cam.LookAt(player.GlobalPosition + Vector3.Up * 1.2f, Vector3.Up);
+            cam.SetDistrictYaw(camYaw);
 
             nearBuilding = null;
             foreach (var b in refs.Buildings)
@@ -314,7 +313,7 @@ namespace GhettoBeasts.District
             status.Text = "ERWISCHT! SWAT zieht dich in den Käfig…";
             status.AddThemeColorOverride("font_color", Palette.Danger);
             Audio.AudioBus.Play("raid");
-            Audio.AudioBus.CrossfadeMusic("combat", 0.6);
+            Audio.AudioBus.CrossfadeExploreToBattle(0.6);
             if (Game.Save.StreetHeat >= 100)
                 SpawnSwatVan(rollIn: true);
 
@@ -335,7 +334,7 @@ namespace GhettoBeasts.District
             status.Text = $"Wildkontakt: {opponentId}!";
             status.AddThemeColorOverride("font_color", Palette.NeonPink);
             Audio.AudioBus.Play("hit");
-            Audio.AudioBus.CrossfadeMusic("combat", 0.5);
+            Audio.AudioBus.CrossfadeExploreToBattle(0.5);
             GetTree().CreateTimer(0.35).Timeout += () =>
                 Game.EnterCombat(GameManager.MainDistrictScene, opponentId);
         }
@@ -355,7 +354,7 @@ namespace GhettoBeasts.District
             Audio.AudioBus.Play("ui");
             if (building.Kind == HotspotKind.Arena)
             {
-                Audio.AudioBus.CrossfadeMusic("combat", 0.7);
+                Audio.AudioBus.CrossfadeExploreToBattle(0.7);
                 Game.EnterCombat(GameManager.MainDistrictScene);
             }
             else

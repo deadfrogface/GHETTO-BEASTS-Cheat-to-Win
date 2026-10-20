@@ -8,7 +8,7 @@ Prefer MIT/CC0 addons; when vendoring would fight the C#-only + toon pipeline, w
 | Third-person controller (C#) | [vaporvee/gd-net-thirdpersoncontroller](https://github.com/vaporvee/gd-net-thirdpersoncontroller) · [Asset Library #1603](https://godotengine.org/asset-library/asset/1603) | MIT | **Inspired** — camera-relative move + smooth mesh yaw in `PlayerController.cs`. |
 | Companion / pet follow | [KidsCanCode — Pet Following](https://kidscancode.org/godot_recipes/4.x/ai/pet_following/index.html) | Recipe | **Inspired** — lag point + `BeastFollowAI` (`NavigationAgent3D` when a nav map exists). |
 | Pause / overlay UI | [Godot docs — Pausing games](https://docs.godotengine.org/en/latest/tutorials/scripting/pausing_games.html) | Docs | **Inspired** — `BurnerPhone` CanvasLayer + `ProcessMode.WhenPaused`. |
-| Cinematic camera | [Phantom Camera](https://github.com/ramokz/phantom-camera) | MIT | **Not vendored** — `CameraRig` + `CameraJuice` (shake, FOV punch, dramatic action, hit-stop). |
+| Cinematic camera | [Phantom Camera](https://github.com/ramokz/phantom-camera) | MIT | **Not vendored** — `CameraRig` (district follow, over-shoulder combat, action cuts) + `CameraJuice` / `TimeScaleManager` (directional shake, hit-pause, speedlines, KO flash). |
 | Cel / toon shading | Community toon shaders (Godot Shaders) | Varies / CC0 | **In-tree** — `shaders/toon_cel.gdshader` + `outline.gdshader` via `VisualManager`. |
 | Character animations | [Mixamo](https://www.mixamo.com/) | Adobe Mixamo ToS | Optional GLB pipeline (`AssetPipeline`); procedural humanoids until licensed clips land. |
 | Urban props / kits | [Kenney](https://kenney.nl/) City Kit / Props | CC0 | **Preferred** — drop GLBs into `assets/3d_models/props/`; procedural blocks until pack is vendored. |
@@ -19,7 +19,7 @@ Prefer MIT/CC0 addons; when vendoring would fight the C#-only + toon pipeline, w
 
 ## Audio buses
 
-`AudioBus` (autoload) creates **Music** and **SFX** child buses under Master, supports volume apply from Burner Settings, BGM crossfade (`CrossfadeMusic`), procedural loop pads, and `PlaySpatial` (`AudioStreamPlayer3D`).
+`AudioBus` / AudioManager (autoload) creates **Music** and **SFX** child buses under Master, supports volume apply from Burner Settings, BGM crossfade (`CrossfadeMusic` / explore→battle helpers), layered attack stubs (`PlayAttackLayered`), procedural loop pads, `PlaySpatial`, and looping `AttachAmbient` (`AudioStreamPlayer3D`).
 
 ## Mobile / Vulkan Mobile
 

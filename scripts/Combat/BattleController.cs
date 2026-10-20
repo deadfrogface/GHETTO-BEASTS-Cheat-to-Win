@@ -38,6 +38,7 @@ namespace GhettoBeasts.Combat
         private bool busy;
         private bool pendingPrison;
         private ColorRect? speedlines;
+        private ColorRect? koFlash;
 
         private static GameManager Game => GameManager.Instance;
 
@@ -54,7 +55,7 @@ namespace GhettoBeasts.Combat
 
             arena = ArenaBuilder.Build(this);
             if (HasNode("Arena")) VisualManager.EnforceCelShading(GetNode("Arena"));
-            camera.PlaceCombatCamera(arena.PlayerSpot, arena.EnemySpot, arena.PlayerTrainer.GlobalPosition);
+            camera.BeginCombatFollow(arena.PlayerSpot, arena.EnemySpot, arena.PlayerTrainer.GlobalPosition);
 
             var crtLayer = new CanvasLayer { Name = "CrtLayer", Layer = 0 };
             AddChild(crtLayer);
@@ -66,6 +67,7 @@ namespace GhettoBeasts.Combat
             var uiLayer = new CanvasLayer { Name = "UiLayer", Layer = 1 };
             AddChild(uiLayer);
             speedlines = CameraJuice.AttachSpeedlines(uiLayer, new Color(0.85f, 0.9f, 1f, 0.5f));
+            koFlash = CameraJuice.AttachInvertedImpact(uiLayer);
             hud = new BattleHud { Name = "BattleHud", Visible = false };
             uiLayer.AddChild(hud);
             setup = new SetupPanel { Name = "SetupPanel" };
@@ -176,7 +178,7 @@ namespace GhettoBeasts.Combat
             Game.Save.LastOpponentId = opponentId;
             Game.Persist();
             Audio.AudioBus.Play("summon");
-            Audio.AudioBus.CrossfadeMusic("combat", 0.8);
+            Audio.AudioBus.CrossfadeExploreToBattle(0.8);
 
             ClearBattlefield();
             engine = new BattleEngine(player, enemy, Game.Economy, Game.Random, Game.CombatMods);
@@ -241,48 +243,59 @@ namespace GhettoBeasts.Combat
                     break;
 
                 case BattleEventType.Attack when beast is not null:
+                    Audio.AudioBus.PlayAttackLayered();
                     await beast.LungeAsync(OpponentOf(beast)?.GlobalPosition ?? Vector3.Zero);
                     break;
 
                 case BattleEventType.SkillUsed when beast is not null:
-                    Vfx.Flash(this, beast.HeadGlobalPosition, Palette.NeonCyan, 6f, 0.5f);
-                    _ = hud.ShowBannerAsync(SkillName(e.Target), Palette.NeonCyan, 0.5);
-                    await beast.LungeAsync(OpponentOf(beast)?.GlobalPosition ?? Vector3.Zero);
+                    await PlaySkillCinematicAsync(e.Target!.Value, beast);
                     break;
 
                 case BattleEventType.Damage when beast is not null:
+                {
+                    bool selfHit = e.Message.Contains("sich selbst", StringComparison.OrdinalIgnoreCase)
+                                   || e.Message.Contains("ZELLAUSFALL", StringComparison.OrdinalIgnoreCase);
                     beast.PlayHit(e.Critical);
-                    Audio.AudioBus.Play("hit");
-                    Vfx.FloatingCombatText(this, beast.HeadGlobalPosition + Vector3.Up * 0.4f, $"-{e.Amount}",
-                        e.Critical ? Palette.NeonYellow : Colors.White, e.Critical ? 96 : 68);
+                    Audio.AudioBus.PlayAttackLayered(critical: e.Critical, heavy: e.Amount >= 40 || e.ValueAfter <= 0);
+                    FloatingTextManager.Damage(this, beast.HeadGlobalPosition + Vector3.Up * 0.4f, e.Amount, e.Critical, selfHit);
                     hud.SetHp(e.Target!.Value, e.ValueAfter);
-                    if (e.Critical || e.Amount >= 40) camera.Shake(e.Critical ? 0.28f : 0.14f);
+                    Vector3 impulse = (beast.GlobalPosition - (OpponentOf(beast)?.GlobalPosition ?? beast.GlobalPosition + Vector3.Forward)).Normalized();
+                    if (e.Critical || e.Amount >= 40)
+                        camera.DirectionalShake(impulse + Vector3.Up * 0.3f, e.Critical ? 0.32f : 0.16f, 0.32);
                     if (e.Critical)
                     {
                         camera.Punch(-4f);
-                        CameraJuice.HitStop(this, 0.07, 0.2f);
+                        TimeScaleManager.HitPause(this, heavy: false);
                         CameraJuice.PulseSpeedlines(speedlines, 0.9f, 0.4);
-                        CameraJuice.DramaticAction(camera, beast.HeadGlobalPosition, -12f, 0.4);
+                        camera.ActionCut(beast.HeadGlobalPosition, -12f, 0.35);
                     }
+                    else if (e.Amount >= 50)
+                        TimeScaleManager.HitPause(this, heavy: false);
                     await Vfx.Delay(this, EventDelay);
-                    if (e.ValueAfter <= 0) await beast.FaintAsync();
+                    if (e.ValueAfter <= 0)
+                    {
+                        CameraJuice.PulseKoFlash(this, koFlash, Palette.Danger);
+                        CameraJuice.PulseSpeedlines(speedlines, 1.05f, 0.55);
+                        Vfx.Shockwave(this, beast.GlobalPosition, Palette.Danger, 2.8f, 0.4);
+                        await beast.FaintAsync();
+                    }
                     break;
+                }
 
                 case BattleEventType.Heal when beast is not null:
                     beast.PlayHeal();
-                    Vfx.FloatingText(this, beast.HeadGlobalPosition + Vector3.Up * 0.4f, $"+{e.Amount}", Palette.NeonGreen);
+                    Vfx.FloatingCombatText(this, beast.HeadGlobalPosition + Vector3.Up * 0.4f, $"+{e.Amount}", Palette.NeonGreen, 72);
                     hud.SetHp(e.Target!.Value, e.ValueAfter);
                     await Vfx.Delay(this, EventDelay);
                     break;
 
                 case BattleEventType.Miss when beast is not null:
-                    Vfx.FloatingText(this, beast.HeadGlobalPosition + Vector3.Up * 0.4f, "MISS", Palette.TextDim, 56);
+                    FloatingTextManager.Show(this, beast.HeadGlobalPosition + Vector3.Up * 0.4f, "MISS", CombatTextKind.Normal);
                     await beast.DodgeAsync();
                     break;
 
                 case BattleEventType.StatusApplied when beast is not null && e.Status.HasValue:
-                    Vfx.FloatingText(this, beast.HeadGlobalPosition + Vector3.Up * 0.7f,
-                        Palette.StatusName(e.Status.Value).ToUpperInvariant(), Palette.ForStatus(e.Status.Value), 52);
+                    FloatingTextManager.Status(this, beast.HeadGlobalPosition + Vector3.Up * 0.7f, e.Status.Value);
                     await Vfx.Delay(this, EventDelay * 0.8);
                     break;
 
@@ -373,11 +386,14 @@ namespace GhettoBeasts.Combat
                     Vfx.Burst(this, target, success ? new Color(1f, 0.45f, 0.2f) : new Color(0.6f, 0.5f, 0.45f), success ? 80 : 25, 5f, 0.7f);
                     if (success)
                     {
-                        CameraJuice.HitStop(this, 0.09, 0.3f);
+                        TimeScaleManager.HitPause(this, heavy: true);
+                        CameraJuice.PulseKoFlash(this, koFlash, new Color(1f, 0.55f, 0.35f));
                         CameraJuice.PulseSpeedlines(speedlines, 0.85f, 0.35);
-                        camera.Shake(0.35f, 0.5);
+                        camera.DirectionalShake(Vector3.Forward + Vector3.Up, 0.4f, 0.5);
+                        camera.ActionCut(enemyHead, -14f, 0.45);
                         Vfx.Flash(this, target, new Color(1f, 0.5f, 0.2f), 10f);
-                        Vfx.FloatingText(this, enemyHead + Vector3.Up * 0.6f, "K.O.!", Palette.NeonYellow, 110);
+                        Vfx.Shockwave(this, target, new Color(1f, 0.45f, 0.2f), 2.6f, 0.35);
+                        FloatingTextManager.Show(this, enemyHead + Vector3.Up * 0.6f, "K.O.!", CombatTextKind.Crit);
                         var fall = CreateTween();
                         fall.TweenProperty(arena.EnemyTrainer, "rotation_degrees:x", -85f, 0.45)
                             .SetTrans(Tween.TransitionType.Bounce).SetEase(Tween.EaseType.Out);
@@ -440,7 +456,8 @@ namespace GhettoBeasts.Combat
         {
             hud.DisableActions();
             Audio.AudioBus.Play("raid");
-            CameraJuice.HitStop(this, 0.12, 0.25f);
+            TimeScaleManager.HitPause(this, heavy: true);
+            CameraJuice.PulseKoFlash(this, koFlash, Palette.PoliceBlue);
             CameraJuice.PulseSpeedlines(speedlines, 1.1f, 0.7);
             PulseGlitch(1f, 1.4);
             camera.Shake(0.35f, 0.8);
@@ -546,6 +563,8 @@ namespace GhettoBeasts.Combat
             ClearBattlefield();
             hud.Visible = false;
             prison.Visible = false;
+            TimeScaleManager.Reset();
+            Audio.AudioBus.CrossfadeBattleToExplore(0.9);
 
             // Full loop: leave combat back to hub/district when we entered from there.
             string returnPath = Game.ReturnScenePath;
@@ -597,5 +616,62 @@ namespace GhettoBeasts.Combat
         private string SkillName(Side? side) =>
             engine is null || side is null ? string.Empty
                 : (side == Side.Player ? engine.Player : engine.Enemy).Definition.AbilityName.ToUpperInvariant();
+
+        private AbilityId? SkillAbility(Side side) =>
+            engine is null ? null : (side == Side.Player ? engine.Player : engine.Enemy).Definition.Ability;
+
+        private async Task PlaySkillCinematicAsync(Side side, Beast3D beast)
+        {
+            var ability = SkillAbility(side) ?? AbilityId.Frenzy;
+            var kind = SkillCinematics.Classify(ability);
+            string banner = SkillName(side);
+            Color bannerColor = kind switch
+            {
+                SkillCinematicKind.Poison => FloatingTextManager.Poison,
+                SkillCinematicKind.Charm => FloatingTextManager.Charm,
+                SkillCinematicKind.Support => Palette.NeonGreen,
+                SkillCinematicKind.Stun => Palette.NeonYellow,
+                SkillCinematicKind.Special => Palette.NeonPurple,
+                _ => Palette.NeonCyan
+            };
+
+            _ = hud.ShowBannerAsync(banner, bannerColor, 0.55);
+            Vfx.Flash(this, beast.HeadGlobalPosition, bannerColor, 6f, 0.45f);
+            Audio.AudioBus.PlayAttackLayered(heavy: kind is SkillCinematicKind.Special or SkillCinematicKind.MultiHit);
+
+            switch (kind)
+            {
+                case SkillCinematicKind.Support:
+                    beast.PlayHeal();
+                    FloatingTextManager.Show(this, beast.HeadGlobalPosition + Vector3.Up * 0.5f, "SUPPORT", CombatTextKind.Normal);
+                    camera.Punch(-3f);
+                    await Vfx.Delay(this, 0.35);
+                    break;
+
+                case SkillCinematicKind.Charm:
+                    Vfx.Burst(this, beast.HeadGlobalPosition, FloatingTextManager.Charm, 50, 3.5f, 0.7f, 0.04f, 1f, 60f);
+                    FloatingTextManager.Show(this, beast.HeadGlobalPosition + Vector3.Up * 0.6f, "BETÖRT", CombatTextKind.Charm);
+                    camera.ActionCut(OpponentOf(beast)?.HeadGlobalPosition ?? beast.HeadGlobalPosition, -8f, 0.35);
+                    await beast.LungeAsync(OpponentOf(beast)?.GlobalPosition ?? Vector3.Zero);
+                    break;
+
+                case SkillCinematicKind.Poison:
+                    Vfx.Burst(this, OpponentOf(beast)?.HeadGlobalPosition ?? beast.HeadGlobalPosition,
+                        FloatingTextManager.Poison, 40, 3f, 0.6f, 0.035f);
+                    FloatingTextManager.Show(this, beast.HeadGlobalPosition + Vector3.Up * 0.55f, "TOXIN", CombatTextKind.Poison);
+                    await beast.LungeAsync(OpponentOf(beast)?.GlobalPosition ?? Vector3.Zero);
+                    break;
+
+                case SkillCinematicKind.Stun:
+                    TimeScaleManager.HitPause(this, heavy: false);
+                    CameraJuice.PulseSpeedlines(speedlines, 0.7f, 0.3);
+                    await beast.LungeAsync(OpponentOf(beast)?.GlobalPosition ?? Vector3.Zero);
+                    break;
+
+                default:
+                    await beast.LungeAsync(OpponentOf(beast)?.GlobalPosition ?? Vector3.Zero);
+                    break;
+            }
+        }
     }
 }

@@ -115,7 +115,7 @@ namespace GhettoBeasts.Visuals
             tween.Chain().TweenCallback(Callable.From(label.QueueFree));
         }
 
-        /// <summary>Expanding ring shockwave used on card slam / heavy hits.</summary>
+        /// <summary>Expanding ring shockwave used on card slam / heavy hits (+ radial particle burst).</summary>
         public static void Shockwave(Node parent, Vector3 position, Color color, float maxRadius = 3.2f, double duration = 0.35)
         {
             if (parent is null) return;
@@ -134,6 +134,34 @@ namespace GhettoBeasts.Visuals
             tween.TweenProperty(ring, "transparency", 1f, duration);
             tween.Chain().TweenCallback(Callable.From(ring.QueueFree));
             Flash(parent, position + Vector3.Up * 0.4f, color, 6f, (float)duration, maxRadius * 1.5f);
+
+            // Radial ground dust / spark ring for card slam impact.
+            if (DisplayServer.GetName() != "headless")
+            {
+                var sparks = new CpuParticles3D
+                {
+                    OneShot = true,
+                    Emitting = false,
+                    Amount = 48,
+                    Lifetime = duration * 0.9,
+                    Explosiveness = 1f,
+                    Mesh = new SphereMesh { Radius = 0.04f, Height = 0.08f, RadialSegments = 4, Rings = 2, Material = MaterialFactory.Emissive(color, 4f) },
+                    Direction = Vector3.Up,
+                    Spread = 180f,
+                    Flatness = 0.85f,
+                    InitialVelocityMin = maxRadius * 1.2f,
+                    InitialVelocityMax = maxRadius * 2.4f,
+                    Gravity = new Vector3(0f, -2f, 0f),
+                    ScaleAmountMin = 0.5f,
+                    ScaleAmountMax = 1.3f,
+                    DampingMin = 3f,
+                    DampingMax = 6f
+                };
+                parent.AddChild(sparks);
+                sparks.GlobalPosition = position + Vector3.Up * 0.08f;
+                sparks.Emitting = true;
+                sparks.Finished += sparks.QueueFree;
+            }
         }
 
         /// <summary>Moves <paramref name="node"/> along a parabolic arc and awaits arrival.</summary>
