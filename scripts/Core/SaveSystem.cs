@@ -13,13 +13,13 @@ namespace GhettoBeasts.Core
 
         public static SaveData Load()
         {
-            if (!FileAccess.FileExists(SavePath)) return new SaveData();
+            if (!FileAccess.FileExists(SavePath)) return SaveData.CreateDefault();
 
             using var file = FileAccess.Open(SavePath, FileAccess.ModeFlags.Read);
             if (file is null)
             {
                 GD.PrintErr($"[SaveSystem] Kann {SavePath} nicht lesen: {FileAccess.GetOpenError()}");
-                return new SaveData();
+                return SaveData.CreateDefault();
             }
 
             try
@@ -29,7 +29,7 @@ namespace GhettoBeasts.Core
             catch (InvalidOperationException ex)
             {
                 GD.PrintErr($"[SaveSystem] {ex.Message} Starte mit neuem Spielstand.");
-                return new SaveData();
+                return SaveData.CreateDefault();
             }
         }
 

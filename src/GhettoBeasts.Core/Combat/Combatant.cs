@@ -84,6 +84,10 @@ namespace GhettoBeasts.Combat
         public static int PreviewInstability(CardDefinition definition, IEnumerable<MutationDefinition> mutations) =>
             Math.Min(MaxInstability, definition.BaseInstability + mutations.Sum(m => m.Instability));
 
+        /// <summary>Used by CRISPR lab stabilizers after construction.</summary>
+        public void ForceInstability(int value) =>
+            Instability = Math.Max(0, Math.Min(MaxInstability, value));
+
         public bool HasEffect(MutationEffect effect) => mutations.Values.Any(m => m.Effect == effect);
 
         public bool Has(StatusType status) => statuses.TryGetValue(status, out int turns) && turns > 0;
