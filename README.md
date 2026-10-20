@@ -23,23 +23,33 @@ Noch nicht enthalten (nächste Schritte): Oberwelt & Stealth, Gacha-Pack-Opening
 
 ## Voraussetzungen
 
-- **Godot 4.3+ .NET-Edition** (die Variante mit C#-Support): <https://godotengine.org/download>
+- **Godot 4.3+ .NET-Edition** (die Variante mit C#-Support): <https://godotengine.org/download/windows/>
 - **.NET 8 SDK**: <https://dotnet.microsoft.com/download/dotnet/8.0>
 - Git
+
+## Direkt in Godot öffnen (Windows)
+
+Kurzfassung — Details und Troubleshooting: **[LAUNCH.md](LAUNCH.md)**.
+
+```powershell
+cd C:\Users\Lenovo\Documents
+git clone https://github.com/deadfrogface/GHETTO-BEASTS-Cheat-to-Win.git ghetto-beasts
+cd ghetto-beasts
+```
+
+1. **Godot 4.3+ .NET** starten → `project.godot` öffnen/importieren.
+2. Oben rechts **Build** (Hammer) klicken.
+3. **F5** → Setup-Screen → Karte summieren → Kampf. Tasten **1–5** für Schnellwahl.
+
+Optional: `tools\open-in-godot.bat` (öffnet den Ordner bzw. Godot, wenn `GODOT` gesetzt ist).
 
 ## Live-Testen auf deinem Laptop (Auto-Sync)
 
 Die Entwicklung läuft in einem Cloud-Agenten, der jeden fertigen Teilschritt committet und pusht. Damit du den Fortschritt **on the fly** in Godot siehst:
 
-1. Repository klonen (oder deinen leeren Godot-Ordner ersetzen):
-   ```powershell
-   cd C:\Users\Lenovo\Documents
-   git clone <REPO-URL> ghetto-beasts
-   ```
-   Falls der Ordner `ghetto-beasts` schon existiert (leeres Godot-Projekt): Inhalt vorher löschen bzw. in einen Backup-Ordner verschieben – das Repo bringt ein eigenes `project.godot` und `GhettoBeasts.csproj` mit.
+1. Repo wie oben nach `C:\Users\Lenovo\Documents\ghetto-beasts` klonen (oder dort `git pull`).
 2. **Auto-Sync starten**: `tools\auto-sync.bat` doppelklicken. Das Fenster offen lassen – es holt alle 10 Sekunden neue Commits (`git pull --ff-only`) und piept bei jedem Update.
-3. **Godot öffnen** → *Importieren* → `ghetto-beasts/project.godot`. Beim ersten Start oben rechts **Build** (Hammer) klicken.
-4. **F5** startet das Spiel. Nach einem Update vom Auto-Sync einfach Godot fokussieren (Szenen/Ressourcen werden neu geladen) und erneut **F5** drücken – C# wird beim Start automatisch neu kompiliert.
+3. Nach einem Update Godot fokussieren und erneut **F5** – C# wird beim Start neu kompiliert.
 
 > Tipp: Bearbeite Dateien, die der Agent gerade ändert, lokal nicht parallel – sonst schlägt der Fast-Forward-Pull fehl. Eigene Experimente am besten in neuen Dateien oder einem eigenen Branch.
 
@@ -66,8 +76,10 @@ res://
 ├── data/cards/               # BeastData/NpcData-.tres pro Karte (Farben, Form, Skalierung, eigenes Modell)
 ├── assets/3d_models/         # Meshy/Tripo/Mixamo .glb Drops (beasts/, npcs/, …) – siehe README dort
 ├── shaders/                  # toon_cel, outline, holo_card, crt_overlay
-└── tools/                    # auto-sync.ps1 / .bat
+└── tools/                    # auto-sync, open-in-godot.bat
 ```
+
+Windows-Schnellstart: [`LAUNCH.md`](LAUNCH.md)
 
 Die Spielwerte (HP, Angriff, Skills) stehen in `src/GhettoBeasts.Core/Data/ContentCatalog.cs` und werden über `DatabaseCatalog` indexiert.  
 **3D-Modelle:** `.glb` als `<catalogId>.glb` nach `assets/3d_models/beasts/` oder `npcs/` legen – `AssetPipeline` erkennt sie beim Start, weist den Cel-Shader zu und spielt Idle-Clips. Fehlt eine Datei, entsteht ein toon-Platzhalter. Details: [`assets/3d_models/README.md`](assets/3d_models/README.md).
