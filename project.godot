@@ -1,0 +1,44 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="Ghetto Beasts: DNA & Corruption"
+config/description="Cel-shaded Cyberpunk-Rundenkampf mit Yu-Gi-Oh-Karten-Summons, CRISPR-Mutationen und Trainer-Sabotage."
+run/main_scene="res://scenes/combat/combat.tscn"
+config/features=PackedStringArray("4.3", "C#", "Forward Plus")
+
+[autoload]
+
+GameManager="*res://scripts/Core/GameManager.cs"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation=4
+
+[dotnet]
+
+project/assembly_name="GhettoBeasts"
+
+[editor]
+
+run/main_run_args=""
+
+[input_devices]
+
+pointing/emulate_touch_from_mouse=true
+
+[rendering]
+
+anti_aliasing/quality/msaa_3d=2

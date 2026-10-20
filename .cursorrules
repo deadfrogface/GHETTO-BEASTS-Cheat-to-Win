@@ -1,0 +1,35 @@
+# GHETTO BEASTS: DNA & CORRUPTION - CURSOR AI RULES
+
+# Context & Stack
+- Engine: Godot 4.x
+- Language: C# (.NET 8 / Mono)
+- Architecture: Component-Based, Event-Driven, Data-Driven via Resources
+- Theme: Cyberpunk, Anime Cel-Shaded, Yu-Gi-Oh Card Summons, Turn-Based Pokémon-style Battle with Sabotage Mechanics
+
+# General Coding Standards
+- ALWAYS write clean, idiomatic C# code following standard Microsoft Naming Conventions (PascalCase for methods/properties, camelCase for fields/parameters).
+- ALWAYS derive Godot scripts from their respective node types (e.g., `public partial class BattleEngine : Node`).
+- Use C# Events or Godot Signals (`[Signal] public delegate void...`) for loose coupling between UI, Logic, and 3D Visuals.
+- Keep business logic (Combat, Economy, Mutations) completely separated from UI and Visual nodes.
+- Prefer async/await over continuous `_Process` polling where applicable (e.g., UI transitions, card animations, turn delays).
+
+# Optimization & Open Source Policy
+- PRIORITIZE reusing existing open-source libraries or Godot community add-ons over custom implementations.
+- Use `Newtonsoft.Json` or `LiteDB` for saving/loading data states.
+- Use `Stateless` for complex turn-based combat state machines.
+- Use built-in Godot `Resource` types (`[GlobalClass]`) for data objects like CardData, BeastData, and MutationData.
+
+# Game Mechanics Context
+- Currency System: 3 currencies ($Dirty Cash,$ Clean Cash, 💎 Dirty Diamonds).
+- Combat: Turn-based 1v1 with Trainer Sabotage (Brick throw, Doping, Bribe referee).
+- SWAT Suspicion: Cheating increases suspicion (0-100%). At 100%, trigger Prison Raid / Tunnel Minigame.
+- CRISPR System: Slots (Head, Limbs, Skin) add stats but increase Gen-Instability (0-100%).
+
+# Code Generation Instructions
+- Do NOT generate GDScript unless explicitly requested; ALWAYS use C#.
+- Provide complete, copy-pasteable C# classes with appropriate namespaces (`GhettoBeasts.Core`, `GhettoBeasts.Combat`, etc.).
+- Include proper error handling and `GD.PrintErr` logs for missing nodes or invalid state transitions.
+
+# Project Layout
+- `src/GhettoBeasts.Core/` contains pure C# game logic (no Godot dependency) and is unit-tested in `tests/`.
+- `scripts/` contains Godot nodes/resources that consume the Core library.
