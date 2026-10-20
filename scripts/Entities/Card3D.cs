@@ -87,9 +87,13 @@ namespace GhettoBeasts.Entities
                 Vfx.Burst(parent, fieldPosition + Vector3.Up * 0.1f, Colors.White, 40, 10f, 0.4f, 0.025f, -2f);
                 Vfx.Smoke(parent, fieldPosition);
                 Vfx.Flash(parent, fieldPosition + Vector3.Up * 0.8f, frameColor, 10f, 0.5f);
+                Vfx.Shockwave(parent, fieldPosition, frameColor, 3.4f, 0.4);
+                CameraJuice.HitStop(parent, 0.08, 0.22f);
             }
             rig?.Shake(0.22f, 0.35);
             rig?.Punch();
+            if (rig is not null)
+                CameraJuice.DramaticAction(rig, fieldPosition + Vector3.Up * 1.2f, -8f, 0.35);
 
             var dissolve = CreateTween().SetParallel();
             dissolve.TweenShaderParameter(material, "dissolve", 1f, 0.55, from: 0f);

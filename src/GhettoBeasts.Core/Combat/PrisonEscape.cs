@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using GhettoBeasts.Core;
+using GhettoBeasts.Data;
 
 namespace GhettoBeasts.Combat
 {
@@ -14,7 +15,9 @@ namespace GhettoBeasts.Combat
         Exit,
         Guard,
         Tool,
-        Vent
+        Vent,
+        LootDiamond,
+        LootGene
     }
 
     public enum PrisonOutcome
@@ -39,20 +42,27 @@ namespace GhettoBeasts.Combat
         public const int DefaultHeight = 9;
         public const int BribeDiamondCost = 1;
         public const int MaxNoise = 100;
+        public const int MaxStamina = 100;
+        public const int StaminaPerDig = 8;
+        public const int StaminaPerRock = 14;
+        public const int StaminaRestGain = 22;
 
         private readonly IRandom random;
         private readonly Economy economy;
+        private readonly SaveData? save;
         private readonly PrisonTile[,] tiles;
         private readonly HashSet<(int X, int Y)> revealed = new();
         private readonly List<(int X, int Y)> guards = new();
 
-        public PrisonEscapeEngine(Economy economy, IRandom? random = null, int? seed = null)
+        public PrisonEscapeEngine(Economy economy, IRandom? random = null, int? seed = null, SaveData? save = null)
         {
             this.economy = economy ?? throw new ArgumentNullException(nameof(economy));
             this.random = random ?? new SystemRandom(seed);
+            this.save = save;
             Width = DefaultWidth;
             Height = DefaultHeight;
             tiles = new PrisonTile[Width, Height];
+            Stamina = MaxStamina;
             Generate();
         }
 
@@ -65,7 +75,11 @@ namespace GhettoBeasts.Combat
         public int PlayerY { get; private set; }
         public int Noise { get; private set; }
         public int Tools { get; private set; }
+        public int Stamina { get; private set; }
         public int Moves { get; private set; }
+        public int LootDiamonds { get; private set; }
+        public int LootGenes { get; private set; }
+        public int DirtyLostOnFail { get; private set; }
         public PrisonOutcome Outcome { get; private set; } = PrisonOutcome.Ongoing;
         public bool IsOver => Outcome != PrisonOutcome.Ongoing;
 
@@ -73,9 +87,27 @@ namespace GhettoBeasts.Combat
 
         public bool IsRevealed(int x, int y) => revealed.Contains((x, y));
 
+        public bool TryRest()
+        {
+            if (IsOver) return false;
+            Stamina = Math.Min(MaxStamina, Stamina + StaminaRestGain);
+            RaiseNoise(3);
+            Emit("Du rastest im Tunnel. Atem geht, Lärm steigt leicht.");
+            PatrolGuards();
+            Changed?.Invoke();
+            return true;
+        }
+
         public bool TryMove(DigDirection direction)
         {
             if (IsOver) return false;
+            if (Stamina < StaminaPerDig)
+            {
+                Emit("Keine Kraft mehr. Raste (Rest) oder warte.");
+                Changed?.Invoke();
+                return false;
+            }
+
             var (dx, dy) = Offset(direction);
             int nx = PlayerX + dx;
             int ny = PlayerY + dy;
@@ -92,6 +124,7 @@ namespace GhettoBeasts.Combat
                 {
                     Emit("Fels. Du brauchst ein Werkzeug.");
                     RaiseNoise(12);
+                    Stamina = Math.Max(0, Stamina - StaminaPerDig / 2);
                     PatrolGuards();
                     Changed?.Invoke();
                     return false;
@@ -101,13 +134,16 @@ namespace GhettoBeasts.Combat
                 tiles[nx, ny] = PrisonTile.Tunnel;
                 Emit("Werkzeug knackt den Fels.");
                 RaiseNoise(8);
+                Stamina = Math.Max(0, Stamina - StaminaPerRock);
+            }
+            else
+            {
+                Stamina = Math.Max(0, Stamina - StaminaPerDig);
             }
 
             if (tiles[nx, ny] == PrisonTile.Guard)
             {
-                Emit("Ein Wärter packt dich am Kragen!");
-                Outcome = PrisonOutcome.Caught;
-                Changed?.Invoke();
+                FailCaught("Ein Wärter packt dich am Kragen!");
                 return true;
             }
 
@@ -115,9 +151,10 @@ namespace GhettoBeasts.Combat
             Moves++;
             RevealAround(PlayerX, PlayerY);
             RaiseNoise(tile == PrisonTile.Vent ? 4 : 6);
+            if (IsOver) return true;
             PatrolGuards();
 
-            if (tiles[PlayerX, PlayerY] == PrisonTile.Exit)
+            if (!IsOver && tiles[PlayerX, PlayerY] == PrisonTile.Exit)
             {
                 Outcome = PrisonOutcome.Escaped;
                 Emit("FREI! Du kriechst in die Gasse.");
@@ -168,14 +205,47 @@ namespace GhettoBeasts.Combat
                 Emit("Lüftungsschacht – leiser und schneller.");
                 tiles[x, y] = PrisonTile.Tunnel;
             }
+            else if (tile == PrisonTile.LootDiamond)
+            {
+                LootDiamonds++;
+                economy.Add(Currency.Diamonds, 1);
+                tiles[x, y] = PrisonTile.Tunnel;
+                Emit("Versteckter Dirty Diamond! (+1 ◆)");
+            }
+            else if (tile == PrisonTile.LootGene)
+            {
+                LootGenes++;
+                tiles[x, y] = PrisonTile.Tunnel;
+                if (save is not null && ContentCatalog.Mutations.Count > 0)
+                {
+                    var gene = ContentCatalog.Mutations[random.Range(0, ContentCatalog.Mutations.Count)];
+                    bool neu = Roster.TryAwardMutation(save, gene.Id);
+                    Emit(neu ? $"Vergrabene CRISPR-Ampulle: {gene.Name}!" : $"Ampulle {gene.Name} (schon im Inventar).");
+                }
+                else
+                {
+                    Emit("Vergrabene CRISPR-Ampulle gefunden.");
+                }
+            }
         }
 
         private void RaiseNoise(int amount)
         {
             Noise = Math.Min(MaxNoise, Noise + amount);
             if (Noise < MaxNoise) return;
+            FailCaught("Alarm! Die Wärter haben den Tunnel gehört.");
+        }
+
+        private void FailCaught(string message)
+        {
+            if (IsOver) return;
             Outcome = PrisonOutcome.Caught;
-            Emit("Alarm! Die Wärter haben den Tunnel gehört.");
+            DirtyLostOnFail = economy.ConfiscateHalfDirtyCash();
+            Emit(message);
+            Emit(DirtyLostOnFail > 0
+                ? $"Bei der Festnahme: −{DirtyLostOnFail} $ Dirty (50%)."
+                : "Kein Schmutzgeld zum Abnehmen.");
+            Changed?.Invoke();
         }
 
         private void PatrolGuards()
@@ -199,10 +269,9 @@ namespace GhettoBeasts.Combat
 
                 if (nx == PlayerX && ny == PlayerY)
                 {
-                    Outcome = PrisonOutcome.Caught;
-                    Emit("Ein patrouillierender Wärter erwischt dich!");
                     guards[i] = (nx, ny);
                     tiles[nx, ny] = PrisonTile.Guard;
+                    FailCaught("Ein patrouillierender Wärter erwischt dich!");
                     return;
                 }
 
@@ -236,9 +305,11 @@ namespace GhettoBeasts.Combat
             Place(PrisonTile.Rock, 14);
             Place(PrisonTile.Tool, 4);
             Place(PrisonTile.Vent, 5);
+            Place(PrisonTile.LootDiamond, 3);
+            Place(PrisonTile.LootGene, 2);
             PlaceGuards(3);
             RevealAround(PlayerX, PlayerY);
-            Emit("Du liegst im Knast-Keller. Grabe dich zur EXIT-Zelle. Werkzeuge knacken Fels.");
+            Emit("Knast-Keller. Grabe zur EXIT-Zelle. Werkzeuge = Fels, Stamina = Züge, Loot = ◆/Gene. Fail = 50% Dirty weg.");
         }
 
         private void Place(PrisonTile tile, int count)

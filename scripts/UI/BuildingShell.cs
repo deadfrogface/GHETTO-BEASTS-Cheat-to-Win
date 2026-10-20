@@ -45,9 +45,9 @@ namespace GhettoBeasts.UI
             sub.AutowrapMode = TextServer.AutowrapMode.WordSmart;
             titles.AddChild(sub);
             header.AddChild(titles);
-            var back = UiKit.CompactButton("← Hub", "Zurück zum District-Hub");
+            var back = UiKit.CompactButton("← Gasse", "Zurück in die Main District Alley");
             back.CustomMinimumSize = new Vector2(110f, 34f);
-            back.Pressed += () => GameManager.Instance.GoTo(GameManager.HubScene);
+            back.Pressed += () => GameManager.Instance.GoTo(GameManager.MainDistrictScene);
             header.AddChild(back);
 
             Wallet = new WalletBar();

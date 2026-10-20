@@ -23,12 +23,14 @@ namespace GhettoBeasts.Combat
         private readonly Economy economy;
         private readonly SuspicionMeter suspicion;
         private readonly IRandom random;
+        private readonly CombatModifiers modifiers;
 
-        public CheatManager(Economy economy, SuspicionMeter suspicion, IRandom random)
+        public CheatManager(Economy economy, SuspicionMeter suspicion, IRandom random, CombatModifiers? modifiers = null)
         {
             this.economy = economy ?? throw new ArgumentNullException(nameof(economy));
             this.suspicion = suspicion ?? throw new ArgumentNullException(nameof(suspicion));
             this.random = random ?? throw new ArgumentNullException(nameof(random));
+            this.modifiers = modifiers ?? CombatModifiers.None;
         }
 
         public static int CostOf(CheatType cheat) => cheat switch
@@ -47,10 +49,29 @@ namespace GhettoBeasts.Combat
             _ => cheat.ToString()
         };
 
-        public bool CanAfford(CheatType cheat) => economy.CanAfford(Currency.DirtyCash, CostOf(cheat));
+        public bool CanAfford(CheatType cheat)
+        {
+            if (cheat == CheatType.Bribe && modifiers.RefFlatrate)
+                return economy.CanAfford(Currency.CleanCash, modifiers.RefFlatrateCleanCost);
+            return economy.CanAfford(Currency.DirtyCash, CostOf(cheat));
+        }
 
         public CheatResult Execute(CheatType cheat, Combatant player, Combatant enemy, Action<BattleEvent> emit)
         {
+            if (cheat == CheatType.Bribe && modifiers.RefFlatrate)
+            {
+                if (!economy.TrySpend(Currency.CleanCash, modifiers.RefFlatrateCleanCost))
+                {
+                    emit(new BattleEvent(BattleEventType.Log,
+                        $"Zu wenig Clean-Cash für Schiri-Flatrate ({modifiers.RefFlatrateCleanCost} $)."));
+                    return new CheatResult(false, false, false);
+                }
+                emit(new BattleEvent(BattleEventType.Cash,
+                    $"-{modifiers.RefFlatrateCleanCost} $ Clean (Flatrate)",
+                    Side.Player, -modifiers.RefFlatrateCleanCost, economy.CleanCash));
+                return BribeReferee(emit);
+            }
+
             if (!economy.TrySpend(Currency.DirtyCash, CostOf(cheat)))
             {
                 emit(new BattleEvent(BattleEventType.Log, $"Zu wenig Schmutzgeld für {DisplayName(cheat)} ({CostOf(cheat)} $)."));
@@ -113,9 +134,11 @@ namespace GhettoBeasts.Combat
 
         private void RaiseSuspicion(int amount, Action<BattleEvent> emit)
         {
+            int scaled = Math.Max(1, (int)Math.Round(amount * modifiers.SuspicionGainScale));
             int before = suspicion.Value;
-            suspicion.Add(amount);
-            emit(new BattleEvent(BattleEventType.Suspicion, $"SWAT-Verdacht +{suspicion.Value - before}%",
+            suspicion.Add(scaled);
+            string note = modifiers.SuspicionGainScale < 1.0 ? " (Anwalt)" : "";
+            emit(new BattleEvent(BattleEventType.Suspicion, $"SWAT-Verdacht +{suspicion.Value - before}%{note}",
                 null, suspicion.Value - before, suspicion.Value));
         }
     }

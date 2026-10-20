@@ -15,7 +15,7 @@ namespace GhettoBeasts.Core
 
     public sealed class SaveData
     {
-        public const int CurrentVersion = 2;
+        public const int CurrentVersion = 3;
 
         public int Version { get; set; } = CurrentVersion;
         public int DirtyCash { get; set; } = 300;
@@ -48,12 +48,23 @@ namespace GhettoBeasts.Core
         public int Raids { get; set; }
         public int PacksOpened { get; set; }
 
+        /// <summary>Street heat 0–100; at 100 a SWAT van rolls into the district.</summary>
+        public int StreetHeat { get; set; }
+
+        public bool LawyerUnlocked { get; set; }
+        public bool RefUnlocked { get; set; }
+        public LaundryJob Laundry { get; set; } = new();
+        public PhoneSettings Phone { get; set; } = new();
+
         public static SaveData CreateDefault()
         {
             var data = new SaveData();
             Roster.EnsureDefaults(data);
             return data;
         }
+
+        /// <summary>Lawyer contact shrinks SWAT suspicion gains.</summary>
+        public double SuspicionGainScale => LawyerUnlocked ? ContactsService.LawyerSuspicionScale : 1.0;
     }
 
     public static class SaveSerializer
@@ -73,6 +84,9 @@ namespace GhettoBeasts.Core
             try
             {
                 var data = JsonConvert.DeserializeObject<SaveData>(json, Settings) ?? new SaveData();
+                data.Laundry ??= new LaundryJob();
+                data.Phone ??= new PhoneSettings();
+                data.Loadouts ??= new Dictionary<string, BeastLoadout>(StringComparer.Ordinal);
                 Roster.EnsureDefaults(data);
                 return data;
             }

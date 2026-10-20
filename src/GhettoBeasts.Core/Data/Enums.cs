@@ -9,7 +9,9 @@ namespace GhettoBeasts.Data
         Rare,
         Epic,
         Legendary,
-        Boss
+        Boss,
+        /// <summary>Darknet glitch tier — ultra-rare corrupted DNA pulls.</summary>
+        GenCorrupted
     }
 
     public enum CardKind
@@ -75,6 +77,7 @@ namespace GhettoBeasts.Data
             Rarity.Epic => "Epic",
             Rarity.Legendary => "Legendary",
             Rarity.Boss => "Boss",
+            Rarity.GenCorrupted => "Gen-Corrupted",
             _ => rarity.ToString()
         };
 

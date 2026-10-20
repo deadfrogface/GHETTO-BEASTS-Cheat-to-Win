@@ -29,11 +29,12 @@ namespace GhettoBeasts.Core
 
         private static readonly (Rarity Rarity, double Weight)[] RarityWeights =
         {
-            (Rarity.Common, 45),
-            (Rarity.Uncommon, 28),
-            (Rarity.Rare, 16),
+            (Rarity.Common, 44),
+            (Rarity.Uncommon, 27),
+            (Rarity.Rare, 15),
             (Rarity.Epic, 8),
-            (Rarity.Legendary, 3)
+            (Rarity.Legendary, 3),
+            (Rarity.GenCorrupted, 1.2)
         };
 
         public static Rarity RollRarity(IRandom random)
@@ -63,7 +64,7 @@ namespace GhettoBeasts.Core
             bool rollMutation = random.Chance(30);
             if (rollMutation)
             {
-                var genes = ContentCatalog.Mutations.Where(m => true).ToList();
+                var genes = ContentCatalog.Mutations.ToList();
                 var gene = genes[random.Range(0, genes.Count)];
                 bool isNew = Roster.TryAwardMutation(save, gene.Id);
                 int bonus = 0;
@@ -73,28 +74,37 @@ namespace GhettoBeasts.Core
                     economy.Add(Currency.Diamonds, bonus);
                 }
                 save.PacksOpened++;
+                // Gen pulls inherit the rolled pack rarity for glow (incl. Gen-Corrupted)
                 return new GachaResult(true, isNew ? $"Neues Gen: {gene.Name}" : $"Duplikat-Gen → +{bonus} ◆",
                     new GachaPull(isNew ? GachaRewardKind.Mutation : GachaRewardKind.DuplicateDiamonds,
                         gene.Id, gene.Name, rarity, isNew, bonus));
             }
 
             var pool = ContentCatalog.AllCards.Where(c => c.Rarity == rarity).ToList();
+            if (pool.Count == 0 && rarity == Rarity.GenCorrupted)
+            {
+                // No dedicated GenCorrupted cards yet — upgrade a Legendary/Boss into a corrupted pull.
+                pool = ContentCatalog.AllCards.Where(c => c.Rarity is Rarity.Legendary or Rarity.Boss or Rarity.Epic).ToList();
+            }
             if (pool.Count == 0)
                 pool = ContentCatalog.AllCards.Where(c => c.Rarity == Rarity.Common).ToList();
+
             var card = pool[random.Range(0, pool.Count)];
+            var displayRarity = rarity == Rarity.GenCorrupted ? Rarity.GenCorrupted : card.Rarity;
             bool newCard = Roster.TryAwardCard(save, card.Id);
             int dupeBonus = 0;
             if (!newCard)
             {
-                dupeBonus = RarityDupeRefund(card.Rarity);
+                dupeBonus = RarityDupeRefund(displayRarity);
                 economy.Add(Currency.Diamonds, dupeBonus);
             }
             save.PacksOpened++;
+            string rarityTag = displayRarity.DisplayName();
             return new GachaResult(true,
-                newCard ? $"Neue Karte: {card.Name} [{card.Rarity.DisplayName()}]"
+                newCard ? $"Neue Karte: {card.Name} [{rarityTag}]"
                     : $"Duplikat {card.Name} → +{dupeBonus} ◆",
                 new GachaPull(newCard ? GachaRewardKind.Card : GachaRewardKind.DuplicateDiamonds,
-                    card.Id, card.Name, card.Rarity, newCard, dupeBonus));
+                    card.Id, card.Name, displayRarity, newCard, dupeBonus));
         }
 
         public static int RarityDupeRefund(Rarity rarity) => rarity switch
@@ -105,6 +115,7 @@ namespace GhettoBeasts.Core
             Rarity.Epic => 3,
             Rarity.Legendary => 5,
             Rarity.Boss => 8,
+            Rarity.GenCorrupted => 10,
             _ => 1
         };
 

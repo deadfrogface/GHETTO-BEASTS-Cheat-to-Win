@@ -37,6 +37,7 @@ namespace GhettoBeasts.Combat
         private Tween? raidTween;
         private bool busy;
         private bool pendingPrison;
+        private ColorRect? speedlines;
 
         private static GameManager Game => GameManager.Instance;
 
@@ -64,6 +65,7 @@ namespace GhettoBeasts.Combat
 
             var uiLayer = new CanvasLayer { Name = "UiLayer", Layer = 1 };
             AddChild(uiLayer);
+            speedlines = CameraJuice.AttachSpeedlines(uiLayer, new Color(0.85f, 0.9f, 1f, 0.5f));
             hud = new BattleHud { Name = "BattleHud", Visible = false };
             uiLayer.AddChild(hud);
             setup = new SetupPanel { Name = "SetupPanel" };
@@ -77,7 +79,7 @@ namespace GhettoBeasts.Combat
             hud.ContinuePressed += OnContinuePressed;
             prison.Finished += OnPrisonFinished;
             setup.StartRequested += (cardId, mutationIds, opponentId) => Run(() => StartBattleAsync(cardId, mutationIds, opponentId));
-            setup.BackRequested += () => Game.GoTo(string.IsNullOrEmpty(Game.ReturnScenePath) ? GameManager.HubScene : Game.ReturnScenePath);
+            setup.BackRequested += () => Game.GoTo(string.IsNullOrEmpty(Game.ReturnScenePath) ? GameManager.MainDistrictScene : Game.ReturnScenePath);
 
             AutoBattleOptions? autoBattle;
             try
@@ -176,7 +178,7 @@ namespace GhettoBeasts.Combat
             Audio.AudioBus.Play("summon");
 
             ClearBattlefield();
-            engine = new BattleEngine(player, enemy, Game.Economy, Game.Random);
+            engine = new BattleEngine(player, enemy, Game.Economy, Game.Random, Game.CombatMods);
             engine.EventRaised += pendingEvents.Enqueue;
             engine.InvalidAction += OnInvalidAction;
             engine.StateChanged += state => GD.Print($"[BattleEngine] → {state}");
@@ -248,11 +250,17 @@ namespace GhettoBeasts.Combat
                 case BattleEventType.Damage when beast is not null:
                     beast.PlayHit(e.Critical);
                     Audio.AudioBus.Play("hit");
-                    Vfx.FloatingText(this, beast.HeadGlobalPosition + Vector3.Up * 0.4f, $"-{e.Amount}",
+                    Vfx.FloatingCombatText(this, beast.HeadGlobalPosition + Vector3.Up * 0.4f, $"-{e.Amount}",
                         e.Critical ? Palette.NeonYellow : Colors.White, e.Critical ? 96 : 68);
                     hud.SetHp(e.Target!.Value, e.ValueAfter);
                     if (e.Critical || e.Amount >= 40) camera.Shake(e.Critical ? 0.28f : 0.14f);
-                    if (e.Critical) camera.Punch(-4f);
+                    if (e.Critical)
+                    {
+                        camera.Punch(-4f);
+                        CameraJuice.HitStop(this, 0.07, 0.2f);
+                        CameraJuice.PulseSpeedlines(speedlines, 0.9f, 0.4);
+                        CameraJuice.DramaticAction(camera, beast.HeadGlobalPosition, -12f, 0.4);
+                    }
                     await Vfx.Delay(this, EventDelay);
                     if (e.ValueAfter <= 0) await beast.FaintAsync();
                     break;
@@ -416,6 +424,8 @@ namespace GhettoBeasts.Combat
         {
             hud.DisableActions();
             Audio.AudioBus.Play("raid");
+            CameraJuice.HitStop(this, 0.12, 0.25f);
+            CameraJuice.PulseSpeedlines(speedlines, 1.1f, 0.7);
             PulseGlitch(1f, 1.4);
             camera.Shake(0.35f, 0.8);
 

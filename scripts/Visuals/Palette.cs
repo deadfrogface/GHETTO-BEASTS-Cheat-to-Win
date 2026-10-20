@@ -47,6 +47,7 @@ namespace GhettoBeasts.Visuals
             Rarity.Epic => new Color(0.62f, 0.42f, 0.78f),
             Rarity.Legendary => new Color(0.88f, 0.7f, 0.35f),
             Rarity.Boss => new Color(0.85f, 0.35f, 0.4f),
+            Rarity.GenCorrupted => new Color(0.55f, 0.95f, 0.35f),
             _ => Colors.White
         };
 

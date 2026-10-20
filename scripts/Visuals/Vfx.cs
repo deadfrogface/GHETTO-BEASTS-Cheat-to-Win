@@ -85,7 +85,11 @@ namespace GhettoBeasts.Visuals
             tween.TweenCallback(Callable.From(light.QueueFree));
         }
 
-        public static void FloatingText(Node parent, Vector3 position, string text, Color color, int fontSize = 64)
+        public static void FloatingText(Node parent, Vector3 position, string text, Color color, int fontSize = 64) =>
+            FloatingCombatText(parent, position, text, color, fontSize);
+
+        /// <summary>Floating combat text (FCT) with slight punch scale.</summary>
+        public static void FloatingCombatText(Node parent, Vector3 position, string text, Color color, int fontSize = 64)
         {
             var label = new Label3D
             {
@@ -96,17 +100,40 @@ namespace GhettoBeasts.Visuals
                 Modulate = color,
                 Billboard = BaseMaterial3D.BillboardModeEnum.Enabled,
                 NoDepthTest = true,
-                PixelSize = 0.006f
+                PixelSize = 0.006f,
+                Scale = Vector3.One * 0.35f
             };
             parent.AddChild(label);
             label.GlobalPosition = position;
 
             var tween = label.CreateTween().SetParallel();
+            tween.TweenProperty(label, "scale", Vector3.One, 0.12).SetTrans(Tween.TransitionType.Back).SetEase(Tween.EaseType.Out);
             tween.TweenProperty(label, "global_position", position + new Vector3((float)GD.RandRange(-0.3, 0.3), 1.1f, 0f), 1.0)
                 .SetTrans(Tween.TransitionType.Cubic).SetEase(Tween.EaseType.Out);
             tween.TweenProperty(label, "modulate:a", 0f, 0.5).SetDelay(0.55);
             tween.TweenProperty(label, "outline_modulate:a", 0f, 0.5).SetDelay(0.55);
             tween.Chain().TweenCallback(Callable.From(label.QueueFree));
+        }
+
+        /// <summary>Expanding ring shockwave used on card slam / heavy hits.</summary>
+        public static void Shockwave(Node parent, Vector3 position, Color color, float maxRadius = 3.2f, double duration = 0.35)
+        {
+            if (parent is null) return;
+            var ring = new MeshInstance3D
+            {
+                Mesh = new TorusMesh { InnerRadius = 0.05f, OuterRadius = 0.12f, Rings = 12, RingSegments = 24 },
+                MaterialOverride = MaterialFactory.Emissive(color, 3.5f),
+                Scale = Vector3.One * 0.2f
+            };
+            parent.AddChild(ring);
+            ring.GlobalPosition = position + Vector3.Up * 0.05f;
+            ring.RotationDegrees = new Vector3(90f, 0f, 0f);
+            var tween = ring.CreateTween().SetParallel();
+            tween.TweenProperty(ring, "scale", Vector3.One * maxRadius, duration)
+                .SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.Out);
+            tween.TweenProperty(ring, "transparency", 1f, duration);
+            tween.Chain().TweenCallback(Callable.From(ring.QueueFree));
+            Flash(parent, position + Vector3.Up * 0.4f, color, 6f, (float)duration, maxRadius * 1.5f);
         }
 
         /// <summary>Moves <paramref name="node"/> along a parabolic arc and awaits arrival.</summary>

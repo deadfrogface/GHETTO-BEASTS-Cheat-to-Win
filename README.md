@@ -1,27 +1,29 @@
 # GHETTO BEASTS: DNA & Corruption
 
-Cel-shaded Cyberpunk-Rundenkampf für **Godot 4 (.NET / C#)**: Bestien und Ghetto-NPCs als Hologramm-Karten, CRISPR-Mutationen, Trainer-Sabotage, Stealth-Gasse, Waschsalon, Darknet-Gacha – bis das SWAT-Team die Arena stürmt.
+Cel-shaded Cyberpunk-Kreaturenkampf für **Godot 4 (.NET / C#)**: physische 3D-Gasse, Burner-Phone-Menü, Companion-Bestie, CRISPR, Darknet-Gacha, Trainer-Sabotage – bis das SWAT-Team die Arena stürmt.
 
-## Spielbarer Full Loop (F5)
+## Spielbarer Slice (F5)
 
 ```text
-Hub → Gasse (Stealth) → Gebäude / Arena → Kampf + Sabotage
-  → Raid → Knast-Escape  ODER  Sieg
-  → CRISPR Lab / Waschsalon / Darknet Gacha / Shops → Save
+Main District (3D Alley)
+  → Companion folgt · Wildtiere / Cops
+  → E an Gebäude (CRISPR / Wash / Darknet / DOPE / WEAP / ARENA)
+  → ESC Burner Phone (Käfig / Darknet / GPS / Wallet)
+  → Kampf + Sabotage → Raid → Knast-Escape ODER Sieg → zurück in die Gasse
 ```
 
 | Modul | Inhalt |
 | --- | --- |
-| **Hub** | Hauptszene (`scenes/hub/hub.tscn`) – Navigation zu allem |
-| **District** | Isometrische Gasse, Player, Cop-Sichtkegel, Hotspots |
-| **Arena** | Bestehender Kampf mit Setup, Summon, Sabotage, Raid |
-| **CRISPR Lab** | Head/Limbs/Skin an Roster-Bestien, Stabilisatoren (Clean $) |
-| **Waschsalon** | Dirty → Clean (20 % Gebühr, `Economy.Launder`) |
-| **Darknet Gacha** | Packs für Diamonds, Seltenheits-Gewichte, 3D-Pack-VFX |
-| **DOPE / WEAP** | Einfache Shop-Stubs → Inventar-Items |
-| **Roster** | Owned cards/genes + Loadouts in `SaveData` |
-| **Audio** | Autoload `AudioBus` – Dateien optional, sonst Prozedural-Blips |
-| **Tests** | xUnit Core inkl. Gacha/Lab/Roster (~43) |
+| **Main District** | Hauptszene (`scenes/district/main_district.tscn`) – Third-Person-Gasse |
+| **Burner Phone** | ESC/TAB – diegetisches Meta-UI (Roster, Gacha, GPS, Wallet) |
+| **Companion** | Aktive Roster-Bestie folgt dem Spieler |
+| **Gebäude** | `Area3D`-Zonen, zu Fuß + **E** (keine 2D-Hub-Buttons) |
+| **Arena** | Kampf mit Setup, Summon, Sabotage, Raid |
+| **CRISPR / Wash / Shops** | Bestehende Building-Szenen als Interiors |
+| **Audio** | Autoload `AudioBus` – Dateien optional, sonst Blips |
+| **Tests** | xUnit Core inkl. Gacha/Lab/Roster |
+
+Open-Source-Referenzen (Controller, Pet-Follow, Pause-UI): **[OPEN_SOURCE.md](OPEN_SOURCE.md)**.
 
 ---
 
@@ -44,7 +46,7 @@ git pull
 
 1. **Godot 4.3+ .NET** → `project.godot` öffnen.
 2. **Build** (Hammer).
-3. **F5** → **District Hub**. Von dort Gasse, Arena, Lab, Wash, Gacha, Shops.
+3. **F5** → **Main District** (3D-Gasse). ESC = Burner Phone.
 
 Live-Sync: `tools\auto-sync.bat` (pull alle 10 s).
 
@@ -52,8 +54,8 @@ Live-Sync: `tools\auto-sync.bat` (pull alle 10 s).
 
 | Kontext | Input |
 | --- | --- |
-| Hub / Menüs | Maus / Touch |
-| Gasse | **WASD** / Pfeile, virtueller Stick (unten links), **E** Hotspot |
+| Gasse | **WASD** / Stick, **Q/R** Kamera, RMB Orbit, **E** Gebäude |
+| Phone | **ESC** / **TAB** – Käfig, Darknet, GPS, Wallet |
 | Kampf | **1** Angriff · **2** Skill · **3** Backstein · **4** Doping · **5** Schiri |
 | Knast | Pfeiltasten graben |
 
@@ -63,7 +65,7 @@ Live-Sync: `tools\auto-sync.bat` (pull alle 10 s).
 dotnet test tests/GhettoBeasts.Core.Tests
 dotnet build GhettoBeasts.sln
 
-# Autobattle (Hub leitet --autobattle automatisch in die Arena um):
+# Autobattle (GameManager leitet --autobattle früh in die Arena um):
 godot --path . --headless -- --autobattle
 godot --path . --headless -- --autobattle --card=kupferstecher_pitbull --cheats=none --stay
 ```
@@ -72,15 +74,15 @@ godot --path . --headless -- --autobattle --card=kupferstecher_pitbull --cheats=
 
 ```text
 res://
-├── scenes/hub/          # Hauptszene (F5)
-├── scenes/district/     # Stealth-Oberwelt
+├── scenes/district/     # Main District (F5) + legacy district
 ├── scenes/combat/       # Arena + Setup + Prison
 ├── scenes/buildings/    # CRISPR, Wash, Darknet, DOPE, WEAP
-├── scripts/             # Godot-C#
-├── src/GhettoBeasts.Core/   # Pure C# (Roster, Gacha, Lab, Battle…)
+├── scenes/hub/          # Stub → redirect zur Gasse
+├── scripts/District/    # MainWorld, Player, Companion, WildBeast, Buildings
+├── scripts/UI/          # BurnerPhone, HUD, BuildingShell
+├── src/GhettoBeasts.Core/
 ├── tests/
-├── assets/3d_models/    # optionale .glb
-├── assets/audio/        # optionale SFX (sonst Blips)
+├── assets/
 └── shaders/             # toon_cel, outline, holo_card, crt
 ```
 

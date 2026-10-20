@@ -34,24 +34,26 @@ Optional Live-Updates vom Cloud-Agent: `tools\auto-sync.bat` doppelklicken (Fens
 
 Schnellhilfe: `tools\open-in-godot.bat` doppelklicken (öffnet den Projektordner; mit gesetzter `GODOT`-Umgebungsvariable startet es Godot direkt).
 
-## 4. Was du sehen solltest (Full Loop)
+## 4. Was du sehen solltest (Playable Slice)
 
-1. **District Hub** – Titel, Wallet, Buttons zu Gasse / Arena / Lab / Wash / Gacha / Shops.
-2. **Gasse (Stealth)** – isometrische Alley, blaue Cop-Sichtkegel meiden, Hotspot-Pads mit **E** betreten.
-3. **Arena-Setup** – nur **Roster**-Karten (Starter + Gacha), Gene aus dem Lab, Gegner wählen → Summon.
-4. **Kampf** – Sabotage / Angriff / Skill; bei 100 % Verdacht → SWAT → Knast-Tunnel.
-5. **CRISPR / Wash / Darknet** – Gene + Stabilisatoren, Dirty waschen, Packs für Diamonds.
+1. **Main District** – 3D-Cyberpunk-Gasse, Companion-Bestie folgt dir.
+2. **Gebäude** – an neon Pads heranlaufen, **E** → CRISPR / Wash / Darknet / DOPE / WEAP / ARENA.
+3. **Burner Phone** – **ESC** / **TAB**: Käfig (Roster), Darknet-Packs, GPS-Minimapa, Wallet.
+4. **Wildtiere / Cops** – Kontakt → nahtloser Kampf; bei Cop-Sichtkegel → SWAT/Raid-Flow.
+5. **Arena-Setup** – Roster-Karten, Gene, Gegner → Summon → Sabotage / Knast.
 
-Nach Kampf/Knast kehrst du zum Hub (oder zur Gasse) zurück. Spielstand: automatisch + Hub-Button „Speichern“.
+Nach Kampf kehrst du in die Gasse zurück. Speichern: Phone → Save & Sync (oder automatisch bei Transitions).
 
 ## 5. Tasten (Kurz)
 
 | Taste | Aktion |
 | --- | --- |
-| **WASD / Stick** | Gasse bewegen |
-| **E** | Hotspot betreten |
+| **WASD / Stick** | Gasse bewegen (kamera-relativ) |
+| **Q / R** · RMB | Kamera drehen |
+| **E** | Gebäude betreten |
+| **ESC / TAB** | Burner Phone |
 | **1–5** | Kampf-Aktionen |
-| **F5** | Spiel starten (Editor) → Hub |
+| **F5** | Spiel starten (Editor) → Main District |
 
 Bei Problemen: Godot-.NET-Edition prüfen (nicht Standard), erneut **Build**, dann F5.  
 `git pull` (oder `tools\auto-sync.bat`), falls der Cloud-Agent neue Commits gepusht hat.

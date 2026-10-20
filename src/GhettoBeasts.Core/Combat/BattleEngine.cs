@@ -65,7 +65,8 @@ namespace GhettoBeasts.Combat
         private bool cheatUsedThisTurn;
         private int actionsTaken;
 
-        public BattleEngine(Combatant player, Combatant enemy, Economy economy, IRandom? random = null)
+        public BattleEngine(Combatant player, Combatant enemy, Economy economy, IRandom? random = null,
+            CombatModifiers? modifiers = null)
         {
             Player = player ?? throw new ArgumentNullException(nameof(player));
             Enemy = enemy ?? throw new ArgumentNullException(nameof(enemy));
@@ -75,7 +76,7 @@ namespace GhettoBeasts.Combat
             this.economy = economy ?? throw new ArgumentNullException(nameof(economy));
             this.random = random ?? new SystemRandom();
             Suspicion = new SuspicionMeter();
-            cheats = new CheatManager(economy, Suspicion, this.random);
+            cheats = new CheatManager(economy, Suspicion, this.random, modifiers);
 
             machine = new StateMachine<BattleState, Trigger>(BattleState.Idle, FiringMode.Queued);
             ConfigureStateMachine();

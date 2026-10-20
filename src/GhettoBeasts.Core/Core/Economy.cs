@@ -77,6 +77,13 @@ namespace GhettoBeasts.Core
 
         public int ConfiscateDirtyCash() => TakeUpTo(Currency.DirtyCash, dirtyCash);
 
+        /// <summary>Jail fail / partial bust — loses half of current dirty cash (rounded up).</summary>
+        public int ConfiscateHalfDirtyCash()
+        {
+            int half = (dirtyCash + 1) / 2;
+            return TakeUpTo(Currency.DirtyCash, half);
+        }
+
         private void Set(Currency currency, int value)
         {
             switch (currency)

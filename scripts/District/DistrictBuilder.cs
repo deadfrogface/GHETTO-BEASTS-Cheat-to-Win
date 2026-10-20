@@ -30,10 +30,12 @@ namespace GhettoBeasts.District
         public required Node3D Root { get; init; }
         public required Node3D PlayerSpawn { get; init; }
         public required List<HotspotDef> Hotspots { get; init; }
+        public required List<InteractableBuilding> Buildings { get; init; }
         public required List<Vector3> CopSpawns { get; init; }
+        public required Node3D SwatSpawn { get; init; }
     }
 
-    /// <summary>One procedural alley block — asphalt, buildings, soft neon, hotspot pads.</summary>
+    /// <summary>One procedural alley block — asphalt, physical buildings with Area3D doors, neon pads.</summary>
     public static class DistrictBuilder
     {
         public static DistrictRefs Build(Node3D parent)
@@ -43,8 +45,7 @@ namespace GhettoBeasts.District
 
             BuildEnvironment(root);
             BuildGround(root);
-            BuildBuildings(root);
-            BuildProps(root);
+            BuildPhysicalBlocks(root);
 
             var hotspots = new List<HotspotDef>
             {
@@ -53,15 +54,24 @@ namespace GhettoBeasts.District
                 new() { Kind = HotspotKind.Wash, Label = "WASH", Position = new Vector3(9f, 0.02f, -2f), Color = Palette.CleanCash, ScenePath = GameManager.WashScene },
                 new() { Kind = HotspotKind.Dope, Label = "DOPE", Position = new Vector3(-9f, 0.02f, 6f), Color = Palette.NeonGreen, ScenePath = GameManager.DopeScene },
                 new() { Kind = HotspotKind.Weap, Label = "WEAP", Position = new Vector3(9f, 0.02f, 6f), Color = Palette.Danger, ScenePath = GameManager.WeapScene },
-                new() { Kind = HotspotKind.Darknet, Label = "DARKNET", Position = new Vector3(0f, 0.02f, 10f), Color = Palette.Diamond, ScenePath = GameManager.GachaScene },
-                new() { Kind = HotspotKind.Hub, Label = "HUB", Position = new Vector3(0f, 0.02f, 0f), Color = Palette.NeonYellow, ScenePath = GameManager.HubScene }
+                new() { Kind = HotspotKind.Darknet, Label = "DARKNET", Position = new Vector3(0f, 0.02f, 10f), Color = Palette.Diamond, ScenePath = GameManager.GachaScene }
+                // Hub pad removed — meta UI lives on the Burner Phone (ESC), not a 2D hub button.
             };
 
+            var buildings = new List<InteractableBuilding>();
             foreach (var hs in hotspots)
+            {
                 BuildHotspotPad(root, hs);
+                buildings.Add(AttachDoor(root, hs));
+            }
+
+            BuildProps(root);
 
             var spawn = new Node3D { Name = "PlayerSpawn", Position = new Vector3(0f, 0f, 3f) };
             root.AddChild(spawn);
+
+            var swatSpawn = new Node3D { Name = "SwatSpawn", Position = new Vector3(0f, 0f, -8f) };
+            root.AddChild(swatSpawn);
 
             var cops = new List<Vector3>
             {
@@ -71,7 +81,34 @@ namespace GhettoBeasts.District
             };
 
             VisualManager.EnforceCelShading(root);
-            return new DistrictRefs { Root = root, PlayerSpawn = spawn, Hotspots = hotspots, CopSpawns = cops };
+            return new DistrictRefs
+            {
+                Root = root,
+                PlayerSpawn = spawn,
+                Hotspots = hotspots,
+                Buildings = buildings,
+                CopSpawns = cops,
+                SwatSpawn = swatSpawn
+            };
+        }
+
+        private static InteractableBuilding AttachDoor(Node3D root, HotspotDef hs)
+        {
+            var door = new InteractableBuilding
+            {
+                Name = $"Door_{hs.Kind}",
+                Position = hs.Position + new Vector3(0f, 0.5f, 0f),
+                BuildingLabel = hs.Label,
+                ScenePath = hs.ScenePath,
+                Kind = hs.Kind,
+                Accent = hs.Color
+            };
+            door.AddChild(new CollisionShape3D
+            {
+                Shape = new SphereShape3D { Radius = 1.55f }
+            });
+            root.AddChild(door);
+            return door;
         }
 
         private static void BuildEnvironment(Node3D root)
@@ -95,13 +132,20 @@ namespace GhettoBeasts.District
                 Shapes.Toon(root, Shapes.Box(0.18f, 0.02f, 22f), new Vector3(i * 2.2f, 0.01f, 0f), new Color(0.38f, 0.36f, 0.28f), outline: 0.006f);
         }
 
-        private static void BuildBuildings(Node3D root)
+        private static void BuildPhysicalBlocks(Node3D root)
         {
             void Block(Vector3 pos, Vector3 size, Color color, Color neon)
             {
                 Shapes.Toon(root, Shapes.Box(size.X, size.Y, size.Z), pos + new Vector3(0f, size.Y * 0.5f, 0f), color, outline: 0.016f);
                 Shapes.Part(root, Shapes.Box(size.X * 0.9f, 0.12f, 0.08f), pos + new Vector3(0f, size.Y * 0.7f, size.Z * 0.5f + 0.05f),
                     MaterialFactory.Emissive(neon, 1.4f));
+                // Static collision so player bumps into facades
+                var body = new StaticBody3D { Position = pos + new Vector3(0f, size.Y * 0.5f, 0f) };
+                body.AddChild(new CollisionShape3D
+                {
+                    Shape = new BoxShape3D { Size = size }
+                });
+                root.AddChild(body);
             }
 
             Block(new Vector3(-12f, 0f, -8f), new Vector3(5f, 6f, 4f), Palette.Building, Palette.NeonPurple);

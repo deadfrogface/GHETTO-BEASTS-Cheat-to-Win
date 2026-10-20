@@ -43,7 +43,7 @@ namespace GhettoBeasts.Minigames
             panel.AddChild(box);
 
             box.AddChild(UiKit.Label("KNAST-TUNNEL", 32, Palette.PoliceBlue.Lightened(0.3f), HorizontalAlignment.Center));
-            box.AddChild(UiKit.Label("Grabe dich zur EXIT-Zelle. Pfeiltasten / WASD. Werkzeuge knacken Fels.", 13, Palette.TextDim, HorizontalAlignment.Center));
+            box.AddChild(UiKit.Label("Werkzeuge · Stamina · Lärm · Loot (◆/Gene). Fail = 50% Dirty weg. Pfeiltasten / WASD.", 13, Palette.TextDim, HorizontalAlignment.Center));
 
             statusLabel = UiKit.Label("", 14, Colors.White, HorizontalAlignment.Center);
             box.AddChild(statusLabel);
@@ -64,6 +64,9 @@ namespace GhettoBeasts.Minigames
             bribeButton = UiKit.Button($"Wärter schmieren ({PrisonEscapeEngine.BribeDiamondCost} ◆)");
             bribeButton.Pressed += () => engine?.TryBribeGuard();
             controls.AddChild(bribeButton);
+            var rest = UiKit.Button("Rest");
+            rest.Pressed += () => engine?.TryRest();
+            controls.AddChild(rest);
             box.AddChild(controls);
 
             log = new RichTextLabel { BbcodeEnabled = true, CustomMinimumSize = new Vector2(0f, 90f), ScrollFollowing = true };
@@ -97,7 +100,7 @@ namespace GhettoBeasts.Minigames
                 engine.Changed -= Refresh;
             }
 
-            engine = new PrisonEscapeEngine(economy, random);
+            engine = new PrisonEscapeEngine(economy, random, save: GameManager.Instance?.Save);
             engine.Log += OnLog;
             engine.Changed += Refresh;
             finishedEmitted = false;
@@ -135,7 +138,8 @@ namespace GhettoBeasts.Minigames
         private void Refresh()
         {
             if (engine is null) return;
-            statusLabel.Text = $"Lärm {engine.Noise}%   ·   Werkzeuge {engine.Tools}   ·   Züge {engine.Moves}   ·   ◆ {GameManager.Instance.Economy.Diamonds}";
+            statusLabel.Text =
+                $"Lärm {engine.Noise}% · Stamina {engine.Stamina}/{PrisonEscapeEngine.MaxStamina} · Tools {engine.Tools} · Züge {engine.Moves} · Loot ◆{engine.LootDiamonds}/G{engine.LootGenes}";
             bribeButton.Disabled = engine.IsOver || GameManager.Instance.Economy.Diamonds < PrisonEscapeEngine.BribeDiamondCost;
 
             foreach (var (pos, panel) in cells)
@@ -168,6 +172,8 @@ namespace GhettoBeasts.Minigames
                         PrisonTile.Guard => (Palette.Danger, "W"),
                         PrisonTile.Tool => (Palette.NeonYellow, "T"),
                         PrisonTile.Vent => (Palette.NeonPurple, "V"),
+                        PrisonTile.LootDiamond => (Palette.Diamond, "◆"),
+                        PrisonTile.LootGene => (Palette.NeonGreen, "G"),
                         _ => (new Color(0.2f, 0.16f, 0.12f), ",")
                     };
                 }

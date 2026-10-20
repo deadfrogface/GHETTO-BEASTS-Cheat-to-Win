@@ -12,7 +12,7 @@ config_version=5
 
 config/name="Ghetto Beasts: DNA & Corruption"
 config/description="Cel-shaded Cyberpunk-Rundenkampf mit Yu-Gi-Oh-Karten-Summons, CRISPR-Mutationen und Trainer-Sabotage."
-run/main_scene="res://scenes/hub/hub.tscn"
+run/main_scene="res://scenes/district/main_district.tscn"
 config/features=PackedStringArray("4.3", "C#", "Forward Plus")
 
 [autoload]

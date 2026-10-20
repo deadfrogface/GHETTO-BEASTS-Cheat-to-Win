@@ -86,25 +86,35 @@ namespace GhettoBeasts.Buildings
 
             Persist();
             Audio.AudioBus.Play("pack");
-            await PlayOpenVfx();
             var pull = result.Pull!;
-            string color = UiKit.Hex(Palette.ForRarity(pull.Rarity));
+            Color glow = Palette.ForRarity(pull.Rarity);
+            await PlayOpenVfx(glow, pull.Rarity == Rarity.GenCorrupted);
+            string color = UiKit.Hex(glow);
+            string tag = pull.Rarity == Rarity.GenCorrupted ? "GEN-CORRUPTED" : pull.Rarity.DisplayName();
             resultLabel.Text =
-                $"[color=#{color}][b]{pull.DisplayName}[/b][/color]  ·  {pull.Rarity.DisplayName()}\n" +
+                $"[color=#{color}][b]{pull.DisplayName}[/b][/color]  ·  {tag}\n" +
                 $"{result.Message}\n" +
                 $"Packs geöffnet: {GameManager.Instance.Save.PacksOpened}";
             SetStatus(result.Message);
         }
 
-        private async System.Threading.Tasks.Task PlayOpenVfx()
+        private async System.Threading.Tasks.Task PlayOpenVfx(Color accent, bool corrupted)
         {
+            BuildPackMesh();
+            foreach (var child in packRoot.GetChildren())
+            {
+                if (child is MeshInstance3D { MaterialOverride: StandardMaterial3D mat } && mat.EmissionEnabled)
+                    mat.Emission = accent;
+            }
             var tween = CreateTween();
-            tween.TweenProperty(packRoot, "rotation_degrees:y", 360f, 0.55)
+            tween.TweenProperty(packRoot, "rotation_degrees:y", corrupted ? 720f : 360f, corrupted ? 0.75 : 0.55)
                 .SetTrans(Tween.TransitionType.Back).SetEase(Tween.EaseType.Out);
             tween.Parallel().TweenProperty(packRoot, "scale", new Vector3(1.25f, 1.25f, 1.25f), 0.35);
             tween.TweenProperty(packRoot, "scale", Vector3.One, 0.2);
             await ToSignal(tween, Tween.SignalName.Finished);
             packRoot.RotationDegrees = Vector3.Zero;
+            if (corrupted)
+                Visuals.CameraJuice.HitStop(this, 0.1, 0.3f);
         }
     }
 }

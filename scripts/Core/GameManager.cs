@@ -7,7 +7,9 @@ namespace GhettoBeasts.Core
     public partial class GameManager : Node
     {
         public const string HubScene = "res://scenes/hub/hub.tscn";
-        public const string DistrictScene = "res://scenes/district/district.tscn";
+        public const string MainDistrictScene = "res://scenes/district/main_district.tscn";
+        public const string DistrictScene = MainDistrictScene;
+        public const string LegacyDistrictScene = "res://scenes/district/district.tscn";
         public const string CombatScene = "res://scenes/combat/combat.tscn";
         public const string LabScene = "res://scenes/buildings/crispr_lab.tscn";
         public const string WashScene = "res://scenes/buildings/wash.tscn";
@@ -23,8 +25,8 @@ namespace GhettoBeasts.Core
         public SaveData Save { get; private set; } = SaveData.CreateDefault();
         public IRandom Random { get; } = new SystemRandom();
 
-        /// <summary>Scene to return to after combat (hub or district).</summary>
-        public string ReturnScenePath { get; set; } = HubScene;
+        /// <summary>Scene to return to after combat (Main District alley).</summary>
+        public string ReturnScenePath { get; set; } = MainDistrictScene;
 
         /// <summary>Optional forced opponent when entering combat from stealth detection.</summary>
         public string? PendingOpponentId { get; set; }
@@ -37,6 +39,7 @@ namespace GhettoBeasts.Core
         public override void _Ready()
         {
             LoadState(SaveSystem.Load());
+            ApplyPhoneSettings();
             var catalog = DatabaseCatalog.Instance.Snapshot();
             GD.Print($"[GameManager] Spielstand geladen: {Economy.DirtyCash} $ dirty, {Economy.CleanCash} $ clean, {Economy.Diamonds} Diamonds.");
             GD.Print($"[GameManager] Roster: {Save.OwnedCardIds.Count} Karten, {Save.OwnedMutationIds.Count} Gene.");
@@ -63,6 +66,22 @@ namespace GhettoBeasts.Core
             SaveSystem.Delete();
             LoadState(SaveData.CreateDefault());
             Persist();
+            ApplyPhoneSettings();
+        }
+
+        public Combat.CombatModifiers CombatMods => new()
+        {
+            SuspicionGainScale = Save.SuspicionGainScale,
+            RefFlatrate = Save.RefUnlocked,
+            RefFlatrateCleanCost = ContactsService.RefFlatrateClean
+        };
+
+        public void ApplyPhoneSettings()
+        {
+            var p = Save.Phone ?? new PhoneSettings();
+            Save.Phone = p;
+            Engine.MaxFps = p.TargetFps <= 0 ? 0 : p.TargetFps;
+            Audio.AudioBus.ApplyVolumes(p.MasterVolume, p.MusicVolume, p.SfxVolume);
         }
 
         public void GoTo(string scenePath)
@@ -75,7 +94,7 @@ namespace GhettoBeasts.Core
 
         public void EnterCombat(string? returnScene = null, string? forcedOpponent = null)
         {
-            ReturnScenePath = returnScene ?? HubScene;
+            ReturnScenePath = returnScene ?? MainDistrictScene;
             PendingOpponentId = forcedOpponent;
             GoTo(CombatScene);
         }
