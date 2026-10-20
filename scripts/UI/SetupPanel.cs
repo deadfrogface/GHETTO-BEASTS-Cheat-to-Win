@@ -104,6 +104,18 @@ namespace GhettoBeasts.UI
             recordLabel = UiKit.Label("", 12, Palette.TextDim);
             box.AddChild(recordLabel);
 
+            var dual = new CheckButton
+            {
+                Text = "2v2 Stub (Partner-Assist)",
+                ButtonPressed = Game.Save.PreferDoubleBattle
+            };
+            dual.Toggled += on =>
+            {
+                Game.Save.PreferDoubleBattle = on;
+                Game.Persist();
+            };
+            box.AddChild(dual);
+
             errorLabel = UiKit.Label("", 13, Palette.Danger);
             errorLabel.AutowrapMode = TextServer.AutowrapMode.WordSmart;
             errorLabel.Visible = false;

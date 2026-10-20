@@ -16,9 +16,21 @@ namespace GhettoBeasts.District
         private bool joystickActive;
         private float cameraYaw;
         private bool inputLocked;
+        private float minX = -11f;
+        private float maxX = 11f;
+        private float minZ = -12f;
+        private float maxZ = 12f;
 
         public Node3D Model => model;
         public float CameraYaw => cameraYaw;
+
+        public void SetPlayBounds(Rect2 bounds)
+        {
+            minX = bounds.Position.X;
+            minZ = bounds.Position.Y;
+            maxX = bounds.Position.X + bounds.Size.X;
+            maxZ = bounds.Position.Y + bounds.Size.Y;
+        }
 
         public override void _Ready()
         {
@@ -70,8 +82,8 @@ namespace GhettoBeasts.District
             MoveAndSlide();
 
             var p = GlobalPosition;
-            p.X = Mathf.Clamp(p.X, -11f, 11f);
-            p.Z = Mathf.Clamp(p.Z, -12f, 12f);
+            p.X = Mathf.Clamp(p.X, minX, maxX);
+            p.Z = Mathf.Clamp(p.Z, minZ, maxZ);
             p.Y = 0f;
             GlobalPosition = p;
 

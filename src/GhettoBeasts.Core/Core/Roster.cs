@@ -55,6 +55,7 @@ namespace GhettoBeasts.Core
             save.SelectedCardId = save.ActiveFighterId;
 
             SyncLegacyEquipped(save);
+            StreetProgression.EnsureDefaults(save);
             save.Version = SaveData.CurrentVersion;
         }
 

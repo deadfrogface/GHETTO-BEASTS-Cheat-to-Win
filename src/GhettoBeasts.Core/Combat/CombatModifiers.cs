@@ -12,5 +12,14 @@ namespace GhettoBeasts.Combat
         public bool RefFlatrate { get; init; }
 
         public int RefFlatrateCleanCost { get; init; } = 40;
+
+        /// <summary>
+        /// Stub 2v2: each player action also deals a small partner assist hit.
+        /// Full dual-unit AI can replace this later without changing the battle FSM.
+        /// </summary>
+        public bool DoubleBattleStub { get; init; }
+
+        /// <summary>Fraction of the main attack power applied as partner assist (stub 2v2).</summary>
+        public double PartnerAssistScale { get; init; } = 0.28;
     }
 }

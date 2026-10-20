@@ -15,12 +15,23 @@ namespace GhettoBeasts.Core
 
     public sealed class SaveData
     {
-        public const int CurrentVersion = 3;
+        public const int CurrentVersion = 4;
 
         public int Version { get; set; } = CurrentVersion;
         public int DirtyCash { get; set; } = 300;
         public int CleanCash { get; set; } = 100;
         public int Diamonds { get; set; } = 5;
+
+        /// <summary>Street wins counted toward building / block unlocks (separate from arena Wins).</summary>
+        public int StreetWins { get; set; }
+
+        /// <summary>Building / block ids unlocked via <see cref="StreetProgression"/>.</summary>
+        public List<string> UnlockedBuildingIds { get; set; } = new();
+
+        public List<string> CompletedQuestIds { get; set; } = new();
+
+        /// <summary>Prefer stub 2v2 when entering the arena from setup.</summary>
+        public bool PreferDoubleBattle { get; set; }
 
         /// <summary>Card ids the player owns (roster).</summary>
         public List<string> OwnedCardIds { get; set; } = new();
@@ -60,6 +71,7 @@ namespace GhettoBeasts.Core
         {
             var data = new SaveData();
             Roster.EnsureDefaults(data);
+            StreetProgression.EnsureDefaults(data);
             return data;
         }
 
@@ -87,7 +99,10 @@ namespace GhettoBeasts.Core
                 data.Laundry ??= new LaundryJob();
                 data.Phone ??= new PhoneSettings();
                 data.Loadouts ??= new Dictionary<string, BeastLoadout>(StringComparer.Ordinal);
+                data.UnlockedBuildingIds ??= new List<string>();
+                data.CompletedQuestIds ??= new List<string>();
                 Roster.EnsureDefaults(data);
+                StreetProgression.EnsureDefaults(data);
                 return data;
             }
             catch (JsonException ex)

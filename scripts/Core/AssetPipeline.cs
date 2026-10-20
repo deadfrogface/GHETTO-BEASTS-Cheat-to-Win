@@ -19,6 +19,7 @@ namespace GhettoBeasts.Core
         public const string NpcsFolder = ModelsRoot + "/npcs";
         public const string MutationsFolder = ModelsRoot + "/mutations";
         public const string SharedFolder = ModelsRoot + "/shared";
+        public const string PropsFolder = ModelsRoot + "/props";
 
         private static readonly string[] MixamoIdleNames =
         {
@@ -60,6 +61,7 @@ namespace GhettoBeasts.Core
             ScanFolder(NpcsFolder);
             ScanFolder(MutationsFolder);
             ScanFolder(SharedFolder);
+            ScanFolder(PropsFolder);
             ScanFolder(ModelsRoot);
 
             foreach (var id in DatabaseCatalog.Instance.AllCardIds)
@@ -78,7 +80,7 @@ namespace GhettoBeasts.Core
             if (string.IsNullOrWhiteSpace(catalogId)) return null;
             if (modelPaths.TryGetValue(catalogId, out var path)) return path;
 
-            foreach (string folder in new[] { BeastsFolder, NpcsFolder, SharedFolder, ModelsRoot })
+            foreach (string folder in new[] { BeastsFolder, NpcsFolder, SharedFolder, PropsFolder, ModelsRoot })
             foreach (string ext in ModelExtensions)
             {
                 string candidate = $"{folder}/{catalogId}{ext}";
@@ -305,7 +307,7 @@ namespace GhettoBeasts.Core
         private static void EnsureFolderHints()
         {
             // Godot's res:// folders must exist as real directories for DirAccess scans.
-            foreach (string folder in new[] { ModelsRoot, BeastsFolder, NpcsFolder, MutationsFolder, SharedFolder })
+            foreach (string folder in new[] { ModelsRoot, BeastsFolder, NpcsFolder, MutationsFolder, SharedFolder, PropsFolder })
             {
                 string global = ProjectSettings.GlobalizePath(folder);
                 if (!DirAccess.DirExistsAbsolute(global))

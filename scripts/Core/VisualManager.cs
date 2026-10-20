@@ -15,13 +15,24 @@ namespace GhettoBeasts.Core
 
         private static Shader? toonShader;
         private static Shader? outlineShader;
+        private static bool celEnabled = true;
+        private static bool outlineEnabled = true;
+
+        /// <summary>Burner Settings → cel / outline toggles (applied on next EnforceCelShading).</summary>
+        public static void ApplyPhoneVisuals(bool celShading, bool outline)
+        {
+            celEnabled = celShading;
+            outlineEnabled = outline;
+        }
 
         /// <summary>Walks <paramref name="root"/> and replaces every mesh material with a toon material.</summary>
         public static int EnforceCelShading(Node root, float outlineWidth = DefaultOutlineWidth, Color? rimColor = null)
         {
             if (root is null) return 0;
+            if (!celEnabled) return 0;
+            float width = outlineEnabled ? outlineWidth : 0f;
             int count = 0;
-            ApplyRecursive(root, outlineWidth, rimColor ?? Palette.RimAccent, ref count);
+            ApplyRecursive(root, width, rimColor ?? Palette.RimAccent, ref count);
             return count;
         }
 

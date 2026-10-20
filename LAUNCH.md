@@ -11,7 +11,7 @@ Plug-and-play: Projekt klonen → Godot .NET öffnen → Build → F5.
 
 Nach der Godot-.NET-Installation einmal `dotnet --version` in PowerShell prüfen (sollte `8.x` sein).
 
-## 2. Repo klonen
+## 2. Repo klonen / updaten
 
 In PowerShell (Ordner anpassen, falls anders):
 
@@ -21,7 +21,15 @@ git clone https://github.com/deadfrogface/GHETTO-BEASTS-Cheat-to-Win.git ghetto-
 cd ghetto-beasts
 ```
 
-Falls `ghetto-beasts` schon existiert und leer/veraltet ist: Ordner umbenennen oder löschen, dann erneut klonen.
+Bereits geklont? Nur pullen:
+
+```powershell
+cd C:\Users\Lenovo\Documents\ghetto-beasts
+git checkout main
+git pull origin main
+# falls origin anders heißt:
+git pull https://github.com/deadfrogface/GHETTO-BEASTS-Cheat-to-Win.git main
+```
 
 Optional Live-Updates vom Cloud-Agent: `tools\auto-sync.bat` doppelklicken (Fenster offen lassen).
 
@@ -34,26 +42,29 @@ Optional Live-Updates vom Cloud-Agent: `tools\auto-sync.bat` doppelklicken (Fens
 
 Schnellhilfe: `tools\open-in-godot.bat` doppelklicken (öffnet den Projektordner; mit gesetzter `GODOT`-Umgebungsvariable startet es Godot direkt).
 
-## 4. Was du sehen solltest (Playable Slice)
+## 4. Was du sehen solltest (Full Loop)
 
-1. **Main District** – 3D-Cyberpunk-Gasse, Companion-Bestie folgt dir.
-2. **Gebäude** – an neon Pads heranlaufen, **E** → CRISPR / Wash / Darknet / DOPE / WEAP / ARENA.
-3. **Burner Phone** – **ESC** / **TAB**: Käfig (Roster), Darknet-Packs, GPS-Minimapa, Wallet.
-4. **Wildtiere / Cops** – Kontakt → nahtloser Kampf; bei Cop-Sichtkegel → SWAT/Raid-Flow.
-5. **Arena-Setup** – Roster-Karten, Gene, Gegner → Summon → Sabotage / Knast.
-
-Nach Kampf kehrst du in die Gasse zurück. Speichern: Phone → Save & Sync (oder automatisch bei Transitions).
+1. **Main District** – 3D-Cyberpunk-Gasse (+ Back Alley / Dock nach Quests), Companion folgt.
+2. **Gebäude** – Neon-Pads, **E** → CRISPR / Wash / Darknet / DOPE / WEAP / ARENA (manche erst nach Wins).
+3. **Burner Phone** – **ESC** / **TAB** / großer PHONE-Button: Käfig (+ CRISPR-Equip), Darknet-Packs (inkl. Gen-Corrupted), GPS-Live-Map + Quests, Wallet-Timer, Contacts, Settings (Cel/Outline/FPS/Audio/2v2).
+4. **Touch** – linker Stick, rechter LOOK-Pad.
+5. **Wildtiere / Trainer / Cops** → Kampf; Sabotage → SWAT → Knast-Escape → zurück in die Gasse.
+6. **Save** – Phone → Save & Sync (auch auto bei Transitions).
 
 ## 5. Tasten (Kurz)
 
 | Taste | Aktion |
 | --- | --- |
 | **WASD / Stick** | Gasse bewegen (kamera-relativ) |
-| **Q / R** · RMB | Kamera drehen |
+| **LOOK-Pad / Q·R / RMB** | Kamera drehen |
 | **E** | Gebäude betreten |
 | **ESC / TAB** | Burner Phone |
 | **1–5** | Kampf-Aktionen |
 | **F5** | Spiel starten (Editor) → Main District |
 
+## 6. Mobile / Vulkan Mobile
+
+Für Android/iOS-Export: **Project Settings → Rendering → Renderer → Rendering Method = mobile** (Vulkan Mobile). Cel/Outline-Shader sind leichtgewichtig; ETC2/ASTC-Import ist in `project.godot` aktiv.
+
 Bei Problemen: Godot-.NET-Edition prüfen (nicht Standard), erneut **Build**, dann F5.  
-`git pull` (oder `tools\auto-sync.bat`), falls der Cloud-Agent neue Commits gepusht hat.
+`git pull`, falls der Cloud-Agent neue Commits gepusht hat.

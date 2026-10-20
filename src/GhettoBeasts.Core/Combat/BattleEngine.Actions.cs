@@ -205,6 +205,9 @@ namespace GhettoBeasts.Combat
             }
         }
 
+        private void PartnerHit(Combatant attacker, Combatant defender, int power) =>
+            Hit(attacker, defender, power);
+
         /// <returns>True if the hit landed.</returns>
         private bool Hit(Combatant attacker, Combatant defender, int power, HitOptions options = default)
         {

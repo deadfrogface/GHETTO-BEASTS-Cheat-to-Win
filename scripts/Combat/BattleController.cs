@@ -176,9 +176,12 @@ namespace GhettoBeasts.Combat
             Game.Save.LastOpponentId = opponentId;
             Game.Persist();
             Audio.AudioBus.Play("summon");
+            Audio.AudioBus.CrossfadeMusic("combat", 0.8);
 
             ClearBattlefield();
             engine = new BattleEngine(player, enemy, Game.Economy, Game.Random, Game.CombatMods);
+            if (engine.DoubleBattleStub)
+                hud.LogWarning("2v2 Stub aktiv — Partner-Assist jeder Runde.");
             engine.EventRaised += pendingEvents.Enqueue;
             engine.InvalidAction += OnInvalidAction;
             engine.StateChanged += state => GD.Print($"[BattleEngine] → {state}");
@@ -477,7 +480,8 @@ namespace GhettoBeasts.Combat
             {
                 case BattleOutcome.Victory:
                     save.Wins++;
-                    details = $"{engine.Enemy.Name} liegt im Dreck.\n+{ContentCatalog.DirtyCashReward(engine.Enemy.Definition.Rarity)} $ Schmutzgeld kassiert.\nTipp: Im Waschsalon wird daraus sauberes Cash.";
+                    StreetProgression.RegisterWin(save);
+                    details = $"{engine.Enemy.Name} liegt im Dreck.\n+{ContentCatalog.DirtyCashReward(engine.Enemy.Definition.Rarity)} $ Schmutzgeld kassiert.\n{StreetProgression.NextHint(save)}";
                     break;
                 case BattleOutcome.Defeat:
                     save.Losses++;

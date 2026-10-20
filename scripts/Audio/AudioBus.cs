@@ -6,7 +6,7 @@ namespace GhettoBeasts.Audio
     /// <summary>
     /// Project AudioManager (autoload name: AudioBus).
     /// Master / Music / SFX buses, BGM crossfade, optional Spatial3D helpers.
-    /// Prefer licensed/free files under res://assets/audio/; else procedural blips (see OPEN_SOURCE.md).
+    /// Prefer licensed/free files under res://assets/audio/; else procedural loops/blips.
     /// </summary>
     public partial class AudioBus : Node
     {
@@ -19,6 +19,7 @@ namespace GhettoBeasts.Audio
         private AudioStreamPlayer? musicB;
         private bool musicOnA = true;
         private Tween? crossfadeTween;
+        private string currentMusicKey = "district";
 
         private static readonly Dictionary<string, string> FileHints = new()
         {
@@ -30,6 +31,13 @@ namespace GhettoBeasts.Audio
             ["whoosh"] = "res://assets/audio/whoosh.ogg"
         };
 
+        private static readonly Dictionary<string, string> MusicFiles = new()
+        {
+            ["district"] = "res://assets/audio/bgm_district.ogg",
+            ["combat"] = "res://assets/audio/bgm_combat.ogg",
+            ["prison"] = "res://assets/audio/bgm_prison.ogg"
+        };
+
         public override void _EnterTree() => Instance = this;
 
         public override void _Ready()
@@ -39,7 +47,7 @@ namespace GhettoBeasts.Audio
             musicB = new AudioStreamPlayer { Name = "MusicB", VolumeDb = -80f, Bus = "Music" };
             AddChild(musicA);
             AddChild(musicB);
-            TryAssignStream(musicA, "res://assets/audio/bgm_district.ogg");
+            AssignMusic(musicA, "district");
 
             foreach (var key in FileHints.Keys)
             {
@@ -70,22 +78,36 @@ namespace GhettoBeasts.Audio
             player.Play();
         }
 
-        public static void PlayMusic()
+        public static void PlayMusic(string key = "district")
         {
-            if (Instance?.musicA?.Stream is null) return;
-            if (!Instance.musicA.Playing) Instance.musicA.Play();
+            if (Instance is null) return;
+            Instance.currentMusicKey = key;
+            var active = Instance.musicOnA ? Instance.musicA : Instance.musicB;
+            if (active is null) return;
+            AssignMusic(active, key);
+            active.VolumeDb = -12f;
+            if (!active.Playing) active.Play();
         }
 
-        /// <summary>Crossfade to another BGM path (or restart current if missing).</summary>
-        public static void CrossfadeMusic(string path, double duration = 1.2)
+        /// <summary>Crossfade to another BGM key or explicit path.</summary>
+        public static void CrossfadeMusic(string keyOrPath, double duration = 1.2)
         {
             if (Instance is null) return;
             var next = Instance.musicOnA ? Instance.musicB : Instance.musicA;
             var prev = Instance.musicOnA ? Instance.musicA : Instance.musicB;
             if (next is null || prev is null) return;
 
-            if (!TryAssignStream(next, path) && next.Stream is null)
-                next.Stream = MakeBlip("ui");
+            string key = keyOrPath;
+            if (keyOrPath.StartsWith("res://"))
+            {
+                if (!TryAssignStream(next, keyOrPath))
+                    next.Stream = MakeLoop("district");
+            }
+            else
+            {
+                AssignMusic(next, key);
+                Instance.currentMusicKey = key;
+            }
 
             next.VolumeDb = -40f;
             if (!next.Playing) next.Play();
@@ -96,7 +118,7 @@ namespace GhettoBeasts.Audio
             Instance.crossfadeTween.Chain().TweenCallback(Callable.From(() =>
             {
                 prev.Stop();
-                Instance.musicOnA = !Instance.musicOnA;
+                Instance!.musicOnA = !Instance.musicOnA;
             }));
         }
 
@@ -119,6 +141,13 @@ namespace GhettoBeasts.Audio
             player.Play();
             player.Finished += player.QueueFree;
             return player;
+        }
+
+        private static void AssignMusic(AudioStreamPlayer player, string key)
+        {
+            if (MusicFiles.TryGetValue(key, out var path) && TryAssignStream(player, path))
+                return;
+            player.Stream = MakeLoop(key);
         }
 
         private static void EnsureBuses()
@@ -185,6 +214,61 @@ namespace GhettoBeasts.Audio
                 MixRate = sampleRate,
                 Format = AudioStreamWav.FormatEnum.Format16Bits,
                 Stereo = false
+            };
+        }
+
+        /// <summary>Procedural looping pad for district / combat / prison when OGG missing.</summary>
+        private static AudioStreamWav MakeLoop(string key)
+        {
+            int sampleRate = 22050;
+            float duration = 4.0f;
+            int samples = (int)(sampleRate * duration);
+            var data = new byte[samples * 2];
+            float root = key switch
+            {
+                "combat" => 110f,
+                "prison" => 82f,
+                _ => 98f
+            };
+            float[] harmonics = key switch
+            {
+                "combat" => new[] { 1f, 1.5f, 2f, 3f },
+                "prison" => new[] { 1f, 1.25f, 2.5f },
+                _ => new[] { 1f, 1.5f, 2f }
+            };
+
+            for (int i = 0; i < samples; i++)
+            {
+                float t = i / (float)sampleRate;
+                float sample = 0f;
+                foreach (float h in harmonics)
+                {
+                    float amp = 0.12f / h;
+                    sample += Mathf.Sin(root * h * Mathf.Tau * t) * amp;
+                }
+                // Soft pulse / bass drum feel
+                float pulse = Mathf.Sin(t * Mathf.Tau * (key == "combat" ? 2.2f : 1.4f));
+                sample += pulse * 0.04f * Mathf.Sin(root * 0.5f * Mathf.Tau * t);
+                // Crossfade ends for seamless loop
+                float fade = 1f;
+                float edge = 0.08f;
+                if (t < edge) fade = t / edge;
+                else if (t > duration - edge) fade = (duration - t) / edge;
+                sample *= fade * 0.55f;
+                short pcm = (short)Mathf.Clamp((int)(sample * short.MaxValue), short.MinValue, short.MaxValue);
+                data[i * 2] = (byte)(pcm & 0xff);
+                data[i * 2 + 1] = (byte)((pcm >> 8) & 0xff);
+            }
+
+            return new AudioStreamWav
+            {
+                Data = data,
+                MixRate = sampleRate,
+                Format = AudioStreamWav.FormatEnum.Format16Bits,
+                Stereo = false,
+                LoopMode = AudioStreamWav.LoopModeEnum.Forward,
+                LoopBegin = 0,
+                LoopEnd = samples
             };
         }
     }

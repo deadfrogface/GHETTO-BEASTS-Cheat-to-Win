@@ -9,6 +9,8 @@ namespace GhettoBeasts.District
         [Export] public string ScenePath { get; set; } = "";
         [Export] public HotspotKind Kind { get; set; } = HotspotKind.Arena;
         [Export] public Color Accent { get; set; } = Colors.White;
+        [Export] public string UnlockId { get; set; } = "";
+        [Export] public bool IsUnlocked { get; set; } = true;
 
         public bool PlayerInside { get; private set; }
 

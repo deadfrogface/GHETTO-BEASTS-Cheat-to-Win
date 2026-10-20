@@ -73,7 +73,8 @@ namespace GhettoBeasts.Core
         {
             SuspicionGainScale = Save.SuspicionGainScale,
             RefFlatrate = Save.RefUnlocked,
-            RefFlatrateCleanCost = ContactsService.RefFlatrateClean
+            RefFlatrateCleanCost = ContactsService.RefFlatrateClean,
+            DoubleBattleStub = Save.PreferDoubleBattle
         };
 
         public void ApplyPhoneSettings()
@@ -82,6 +83,7 @@ namespace GhettoBeasts.Core
             Save.Phone = p;
             Engine.MaxFps = p.TargetFps <= 0 ? 0 : p.TargetFps;
             Audio.AudioBus.ApplyVolumes(p.MasterVolume, p.MusicVolume, p.SfxVolume);
+            VisualManager.ApplyPhoneVisuals(p.CelShading, p.Outline);
         }
 
         public void GoTo(string scenePath)

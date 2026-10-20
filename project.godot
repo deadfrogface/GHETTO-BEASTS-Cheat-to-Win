@@ -13,7 +13,7 @@ config_version=5
 config/name="Ghetto Beasts: DNA & Corruption"
 config/description="Cel-shaded Cyberpunk-Rundenkampf mit Yu-Gi-Oh-Karten-Summons, CRISPR-Mutationen und Trainer-Sabotage."
 run/main_scene="res://scenes/district/main_district.tscn"
-config/features=PackedStringArray("4.3", "C#", "Forward Plus")
+config/features=PackedStringArray("4.3", "C#", "Mobile", "Forward Plus")
 
 [autoload]
 
@@ -43,4 +43,9 @@ pointing/emulate_touch_from_mouse=true
 
 [rendering]
 
+; Desktop default: Forward+. For Android/iOS exports prefer Vulkan Mobile:
+;   Project → Project Settings → Rendering → Renderer → Rendering Method = mobile
+;   (or set rendering/renderer/rendering_method="mobile" for mobile export presets)
+; Keep MSAA modest on mobile; cel/outline shaders are Mobile-friendly (no heavy PBR).
 anti_aliasing/quality/msaa_3d=2
+textures/vram_compression/import_etc2_astc=true

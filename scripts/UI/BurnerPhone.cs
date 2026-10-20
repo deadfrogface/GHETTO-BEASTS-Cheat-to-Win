@@ -4,6 +4,7 @@ using GhettoBeasts.Data;
 using GhettoBeasts.District;
 using GhettoBeasts.Visuals;
 using Godot;
+using MutationSlot = GhettoBeasts.Data.MutationSlot;
 
 namespace GhettoBeasts.UI
 {
@@ -50,15 +51,16 @@ namespace GhettoBeasts.UI
 
             phoneFrame = new PanelContainer();
             phoneFrame.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.Center);
-            phoneFrame.CustomMinimumSize = new Vector2(340, 600);
+            // Large enough for thumbs on mobile / touch
+            phoneFrame.CustomMinimumSize = new Vector2(380, 640);
             phoneFrame.AddThemeStyleboxOverride("panel", UiKit.Box(
                 new Color(0.08f, 0.09f, 0.12f, 0.97f),
                 Palette.NeonCyan.Darkened(0.25f), 2, 28, 14));
             root.AddChild(phoneFrame);
-            phoneFrame.OffsetLeft = -170;
-            phoneFrame.OffsetTop = -300;
-            phoneFrame.OffsetRight = 170;
-            phoneFrame.OffsetBottom = 300;
+            phoneFrame.OffsetLeft = -190;
+            phoneFrame.OffsetTop = -320;
+            phoneFrame.OffsetRight = 190;
+            phoneFrame.OffsetBottom = 320;
 
             var col = new VBoxContainer();
             col.AddThemeConstantOverride("separation", 8);
@@ -245,14 +247,88 @@ namespace GhettoBeasts.UI
                 };
                 actions.AddChild(pick);
 
-                var crispr = UiKit.CompactButton("CRISPR");
-                crispr.Pressed += () =>
+                var crispr = UiKit.CompactButton("Gene");
+                crispr.CustomMinimumSize = new Vector2(72, 40);
+                crispr.Pressed += () => OpenCageEquip(id);
+                actions.AddChild(crispr);
+
+                var lab = UiKit.CompactButton("Lab→");
+                lab.CustomMinimumSize = new Vector2(64, 40);
+                lab.Pressed += () =>
                 {
                     Close();
                     Game.GoTo(GameManager.LabScene);
                 };
-                actions.AddChild(crispr);
+                actions.AddChild(lab);
             }
+        }
+
+        private void OpenCageEquip(string cardId)
+        {
+            OpenApp($"Käfig · CRISPR · {cardId}");
+            if (!ContentCatalog.TryGetCard(cardId, out var card) || !card.CanMutate)
+            {
+                appBody.AddChild(UiKit.Label("Nur Bestien tragen Gene.", 12, Palette.Danger));
+                return;
+            }
+
+            appBody.AddChild(UiKit.Label("Slot wählen · Gen equippen · Speichern", 11, Palette.TextDim));
+            appBody.AddChild(UiKit.Label(
+                $"Instabilität: {Roster.PreviewInstability(Game.Save, cardId)}%",
+                12, Palette.NeonYellow));
+
+            foreach (MutationSlot slot in System.Enum.GetValues<MutationSlot>())
+            {
+                appBody.AddChild(UiKit.Label($"Slot {slot.DisplayName()}", 12, Palette.NeonCyan));
+                var equipped = Roster.GetEquippedMutationIds(Game.Save, cardId)
+                    .Select(ContentCatalog.GetMutation)
+                    .FirstOrDefault(m => m.Slot == slot);
+
+                var clear = UiKit.CompactButton(equipped is null ? "— leer —" : $"✕ {equipped.Name}");
+                clear.CustomMinimumSize = new Vector2(0, 44);
+                clear.Disabled = equipped is null;
+                clear.Pressed += () =>
+                {
+                    if (CrisprLab.TryEquip(Game.Save, cardId, slot, null, out var err))
+                    {
+                        Game.Persist();
+                        world?.RefreshCompanion();
+                        Audio.AudioBus.Play("ui");
+                        OpenCageEquip(cardId);
+                    }
+                    else statusBar.Text = err;
+                };
+                appBody.AddChild(clear);
+
+                foreach (var gene in ContentCatalog.Mutations.Where(m => m.Slot == slot && Roster.OwnsMutation(Game.Save, m.Id)))
+                {
+                    bool on = equipped?.Id == gene.Id;
+                    var btn = UiKit.CompactButton(on ? $"✔ {gene.Name}" : gene.Name);
+                    btn.CustomMinimumSize = new Vector2(0, 40);
+                    btn.Disabled = on;
+                    string geneId = gene.Id;
+                    btn.Pressed += () =>
+                    {
+                        if (CrisprLab.TryEquip(Game.Save, cardId, slot, geneId, out var err))
+                        {
+                            Game.Persist();
+                            world?.RefreshCompanion();
+                            Audio.AudioBus.Play("pack");
+                            OpenCageEquip(cardId);
+                        }
+                        else
+                        {
+                            statusBar.Text = err;
+                            statusBar.AddThemeColorOverride("font_color", Palette.Danger);
+                        }
+                    };
+                    appBody.AddChild(btn);
+                }
+            }
+
+            var back = UiKit.Button("← Roster");
+            back.Pressed += OpenCage;
+            appBody.AddChild(back);
         }
 
         private static void BuildCagePreview(Node3D root, string cardId)
@@ -365,21 +441,30 @@ namespace GhettoBeasts.UI
 
         private void OpenGps()
         {
-            OpenApp("GPS · District");
-            appBody.AddChild(UiKit.Label("Icons: du · Gebäude · Heat", 11, Palette.TextDim));
+            OpenApp("GPS · Live Map");
+            appBody.AddChild(UiKit.Label("Live: Spieler · Companion · Gebäude · Quests", 11, Palette.TextDim));
 
-            var map = new PanelContainer { CustomMinimumSize = new Vector2(0, 240) };
+            var map = new PanelContainer { CustomMinimumSize = new Vector2(0, 260) };
             map.AddThemeStyleboxOverride("panel", UiKit.Box(new Color(0.05f, 0.07f, 0.1f), Palette.NeonCyan.Darkened(0.4f), 1, 8, 8));
             appBody.AddChild(map);
 
             var draw = new MinimapDraw { World = world };
             draw.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-            draw.CustomMinimumSize = new Vector2(280, 220);
+            draw.CustomMinimumSize = new Vector2(300, 240);
             map.AddChild(draw);
 
-            appBody.AddChild(UiKit.Label("● Arena  ◆ CRISPR  ○ Wash  ▲ Dope  ■ Weap  ★ Darknet", 10, Palette.TextDim));
             appBody.AddChild(UiKit.Label($"Street Heat: {Game.Save.StreetHeat}%", 12,
                 Game.Save.StreetHeat >= 100 ? Palette.Danger : Palette.NeonYellow));
+            appBody.AddChild(UiKit.Label($"Street Wins: {Game.Save.StreetWins}", 12, Palette.NeonCyan));
+
+            appBody.AddChild(UiKit.Label("— Quests —", 13, Palette.NeonPink));
+            foreach (var (quest, done, progress) in StreetProgression.ListQuests(Game.Save))
+            {
+                string mark = done ? "✔" : "○";
+                appBody.AddChild(UiKit.Label(
+                    $"{mark} {quest.Title}  {progress}/{quest.TargetWins}",
+                    11, done ? Palette.NeonGreen : Colors.White));
+            }
         }
 
         private void OpenWallet()
@@ -520,12 +605,34 @@ namespace GhettoBeasts.UI
             Slider($"SFX {p.SfxVolume:0.00}", p.SfxVolume, v => p.SfxVolume = v);
 
             var cel = new CheckButton { Text = "Cel-Shading", ButtonPressed = p.CelShading };
-            cel.Toggled += on => { p.CelShading = on; Game.Persist(); };
+            cel.Toggled += on =>
+            {
+                p.CelShading = on;
+                Game.ApplyPhoneSettings();
+                Game.Persist();
+                Audio.AudioBus.Play("ui");
+            };
             appBody.AddChild(cel);
 
             var outline = new CheckButton { Text = "Outline", ButtonPressed = p.Outline };
-            outline.Toggled += on => { p.Outline = on; Game.Persist(); };
+            outline.Toggled += on =>
+            {
+                p.Outline = on;
+                Game.ApplyPhoneSettings();
+                Game.Persist();
+                Audio.AudioBus.Play("ui");
+            };
             appBody.AddChild(outline);
+
+            var dual = new CheckButton { Text = "2v2 Stub (Partner-Assist)", ButtonPressed = Game.Save.PreferDoubleBattle };
+            dual.Toggled += on =>
+            {
+                Game.Save.PreferDoubleBattle = on;
+                Game.Persist();
+                statusBar.Text = on ? "2v2 Stub ON" : "1v1";
+                Audio.AudioBus.Play("ui");
+            };
+            appBody.AddChild(dual);
 
             appBody.AddChild(UiKit.Label($"FPS Cap: {p.TargetFps}", 11, Palette.TextDim));
             var fps = new HSlider
@@ -571,13 +678,18 @@ namespace GhettoBeasts.UI
             var btn = new Button
             {
                 Text = $"{title}\n{tip}",
-                CustomMinimumSize = new Vector2(140, 68),
+                CustomMinimumSize = new Vector2(160, 84),
                 FocusMode = Control.FocusModeEnum.None
             };
-            btn.AddThemeFontSizeOverride("font_size", 12);
-            btn.AddThemeStyleboxOverride("normal", UiKit.Box(new Color(0.1f, 0.11f, 0.15f, 0.9f), accent.Darkened(0.3f), 1, 14, 8));
-            btn.AddThemeStyleboxOverride("hover", UiKit.Box(new Color(0.14f, 0.16f, 0.2f, 0.95f), accent, 1, 14, 8));
-            btn.Pressed += () => action();
+            btn.AddThemeFontSizeOverride("font_size", 14);
+            btn.AddThemeStyleboxOverride("normal", UiKit.Box(new Color(0.1f, 0.11f, 0.15f, 0.9f), accent.Darkened(0.3f), 1, 14, 10));
+            btn.AddThemeStyleboxOverride("hover", UiKit.Box(new Color(0.14f, 0.16f, 0.2f, 0.95f), accent, 1, 14, 10));
+            btn.AddThemeStyleboxOverride("pressed", UiKit.Box(new Color(0.18f, 0.2f, 0.26f, 0.95f), accent, 2, 14, 10));
+            btn.Pressed += () =>
+            {
+                Audio.AudioBus.Play("ui");
+                action();
+            };
             grid.AddChild(btn);
         }
 
@@ -589,21 +701,42 @@ namespace GhettoBeasts.UI
             {
                 var rect = GetRect();
                 DrawRect(rect, new Color(0.06f, 0.08f, 0.12f));
+
+                float minX = -12f, maxX = 12f, minZ = -14f, maxZ = 14f;
+                if (World?.Refs is { } r)
+                {
+                    minX = r.PlayBounds.Position.X;
+                    minZ = r.PlayBounds.Position.Y;
+                    maxX = minX + r.PlayBounds.Size.X;
+                    maxZ = minZ + r.PlayBounds.Size.Y;
+                }
+
                 Vector2 Map(Vector3 w)
                 {
-                    float u = Mathf.InverseLerp(-11f, 11f, w.X);
-                    float v = Mathf.InverseLerp(-12f, 12f, w.Z);
+                    float u = Mathf.InverseLerp(minX, maxX, w.X);
+                    float v = Mathf.InverseLerp(minZ, maxZ, w.Z);
                     return new Vector2(rect.Position.X + u * rect.Size.X, rect.Position.Y + v * rect.Size.Y);
                 }
 
-                void Spot(Vector3 pos, Color c, float r = 4f) => DrawCircle(Map(pos), r, c);
+                void Spot(Vector3 pos, Color c, float rad = 4f) => DrawCircle(Map(pos), rad, c);
 
-                Spot(new Vector3(0f, 0f, -10f), Palette.NeonPink, 5f);   // Arena
-                Spot(new Vector3(-9f, 0f, -2f), Palette.NeonPurple, 5f); // CRISPR
-                Spot(new Vector3(9f, 0f, -2f), Palette.CleanCash, 5f);   // Wash
-                Spot(new Vector3(-9f, 0f, 6f), Palette.NeonGreen, 5f);   // Dope
-                Spot(new Vector3(9f, 0f, 6f), Palette.Danger, 5f);       // Weap
-                Spot(new Vector3(0f, 0f, 10f), Palette.Diamond, 5f);     // Darknet
+                if (World?.Refs?.Hotspots is { } spots)
+                {
+                    foreach (var hs in spots)
+                    {
+                        bool unlocked = StreetProgression.IsUnlocked(GameManager.Instance.Save, hs.UnlockId);
+                        Spot(hs.Position, unlocked ? hs.Color : Palette.TextDim, unlocked ? 5f : 3.5f);
+                    }
+                }
+                else
+                {
+                    Spot(new Vector3(0f, 0f, -10f), Palette.NeonPink, 5f);
+                    Spot(new Vector3(-9f, 0f, -2f), Palette.NeonPurple, 5f);
+                    Spot(new Vector3(9f, 0f, -2f), Palette.CleanCash, 5f);
+                    Spot(new Vector3(-9f, 0f, 6f), Palette.NeonGreen, 5f);
+                    Spot(new Vector3(9f, 0f, 6f), Palette.Danger, 5f);
+                    Spot(new Vector3(0f, 0f, 10f), Palette.Diamond, 5f);
+                }
 
                 if (World?.PlayerPosition is { } pp)
                     Spot(pp, Palette.NeonYellow, 6f);

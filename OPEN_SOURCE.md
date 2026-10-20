@@ -1,6 +1,6 @@
 # Open-Source References (Godot 4 / C#)
 
-Research notes for Main District / Burner Phone / Companion / Juice / Audio.
+Research notes for Main District / Burner Phone / Companion / Juice / Audio / Mobile.
 Prefer MIT/CC0 addons; when vendoring would fight the C#-only + toon pipeline, we implement a minimal equivalent inspired by common patterns.
 
 | Need | Candidate | License | Decision |
@@ -11,13 +11,21 @@ Prefer MIT/CC0 addons; when vendoring would fight the C#-only + toon pipeline, w
 | Cinematic camera | [Phantom Camera](https://github.com/ramokz/phantom-camera) | MIT | **Not vendored** — `CameraRig` + `CameraJuice` (shake, FOV punch, dramatic action, hit-stop). |
 | Cel / toon shading | Community toon shaders (Godot Shaders) | Varies / CC0 | **In-tree** — `shaders/toon_cel.gdshader` + `outline.gdshader` via `VisualManager`. |
 | Character animations | [Mixamo](https://www.mixamo.com/) | Adobe Mixamo ToS | Optional GLB pipeline (`AssetPipeline`); procedural humanoids until licensed clips land. |
-| Props / SFX kits | [Kenney](https://kenney.nl/) | CC0 | Preferred drop-in for `assets/audio/` + props when available. |
-| Ambient / SFX | [Freesound](https://freesound.org/) | CC0 / CC-BY | Document attribution in `assets/audio/README.md` when files are added. |
-| Fallback SFX | Procedural PCM in `AudioBus.MakeBlip` | Project | Used when OGG/WAV missing so F5 never blocks. |
+| Urban props / kits | [Kenney](https://kenney.nl/) City Kit / Props | CC0 | **Preferred** — drop GLBs into `assets/3d_models/props/`; procedural blocks until pack is vendored. |
+| Sample GLBs | [Khronos glTF-Sample-Models](https://github.com/KhronosGroup/glTF-Sample-Models) | Sample / Apache-style | **Vendored** — `Duck`, `Box`, `Lantern` under `shared/` + `props/` for pipeline smoke tests. |
+| Ambient / SFX | [Freesound](https://freesound.org/) · Kenney Audio | CC0 / CC-BY | Document attribution in `assets/audio/README.md` when files are added. |
+| Fallback SFX / BGM | Procedural PCM in `AudioBus` (`MakeBlip` / `MakeLoop`) | Project | Used when OGG/WAV missing so F5 never blocks; loops crossfade district↔combat. |
+| Touch UI | Godot InputEventScreen* | Engine | `VirtualJoystick` + `TouchLookPad` + large Burner buttons. |
 
 ## Audio buses
 
-`AudioBus` (autoload) creates **Music** and **SFX** child buses under Master, supports volume apply from Burner Settings, BGM crossfade (`CrossfadeMusic`), and `PlaySpatial` (`AudioStreamPlayer3D`).
+`AudioBus` (autoload) creates **Music** and **SFX** child buses under Master, supports volume apply from Burner Settings, BGM crossfade (`CrossfadeMusic`), procedural loop pads, and `PlaySpatial` (`AudioStreamPlayer3D`).
+
+## Mobile / Vulkan Mobile
+
+- Touch: left stick + right LOOK pad; phone app tiles ≥ 160×84.
+- `project.godot`: `Mobile` feature flag, ETC2/ASTC import, emulate-touch-from-mouse.
+- Export tip: set **Rendering → Renderer → mobile** (Vulkan Mobile) for Android/iOS; cel shaders avoid heavy PBR.
 
 ## Why not vendor wholesale
 
@@ -25,4 +33,4 @@ Prefer MIT/CC0 addons; when vendoring would fight the C#-only + toon pipeline, w
 - World meshes must go through **VisualManager / toon shaders**.
 - Diegetic **Burner Phone** apps are game-specific.
 
-Asset Library / GitHub links above remain preferred starting points if a future pass vendors a trimmed MIT addon under `addons/` with a thin C# bridge.
+Asset Library / GitHub links above remain preferred starting points if a future pass vendors a trimmed MIT/CC0 addon under `addons/` with a thin C# bridge.

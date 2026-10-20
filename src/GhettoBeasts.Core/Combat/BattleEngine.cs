@@ -59,6 +59,7 @@ namespace GhettoBeasts.Combat
         private readonly Economy economy;
         private readonly IRandom random;
         private readonly CheatManager cheats;
+        private readonly CombatModifiers modifiers;
 
         private ActionKind pendingAction;
         private CheatType pendingCheat;
@@ -75,8 +76,9 @@ namespace GhettoBeasts.Combat
 
             this.economy = economy ?? throw new ArgumentNullException(nameof(economy));
             this.random = random ?? new SystemRandom();
+            this.modifiers = modifiers ?? CombatModifiers.None;
             Suspicion = new SuspicionMeter();
-            cheats = new CheatManager(economy, Suspicion, this.random, modifiers);
+            cheats = new CheatManager(economy, Suspicion, this.random, this.modifiers);
 
             machine = new StateMachine<BattleState, Trigger>(BattleState.Idle, FiringMode.Queued);
             ConfigureStateMachine();
@@ -97,6 +99,7 @@ namespace GhettoBeasts.Combat
         public bool CanAttack => IsPlayersTurn && machine.CanFire(Trigger.Attack);
         public bool CanUseSkill => IsPlayersTurn && machine.CanFire(Trigger.Skill);
         public bool CheatUsedThisTurn => cheatUsedThisTurn;
+        public bool DoubleBattleStub => modifiers.DoubleBattleStub;
 
         public bool CanCheat(CheatType cheat) => IsPlayersTurn && machine.CanFire(Trigger.Cheat) && cheats.CanAfford(cheat);
 
@@ -208,6 +211,7 @@ namespace GhettoBeasts.Combat
         private void OnResolvePlayerAction()
         {
             ExecuteAction(Player, Enemy, pendingAction);
+            ApplyPartnerAssist(Player, Enemy);
             FireAfterAction(Trigger.ActionResolved);
         }
 
@@ -215,7 +219,18 @@ namespace GhettoBeasts.Combat
         {
             Emit(BattleEventType.Log, $"— Runde {Round}: {Enemy.Name} ist am Zug —");
             ExecuteAction(Enemy, Player, ChooseEnemyAction());
+            ApplyPartnerAssist(Enemy, Player);
             FireAfterAction(Trigger.EnemyActed);
+        }
+
+        /// <summary>Stub 2v2 — partner lands a weaker follow-up hit when the mode is enabled.</summary>
+        private void ApplyPartnerAssist(Combatant lead, Combatant target)
+        {
+            if (!modifiers.DoubleBattleStub || lead.IsDown || target.IsDown) return;
+            int power = Math.Max(20, (int)Math.Round(BasicAttackPower * modifiers.PartnerAssistScale));
+            Emit(BattleEventType.Log, $"2v2-Partner assistiert ({power}% Power)!", lead.Side);
+            // Hit lives on the Actions partial; call via a thin wrapper.
+            PartnerHit(lead, target, power);
         }
 
         private void FireAfterAction(Trigger continueTrigger)

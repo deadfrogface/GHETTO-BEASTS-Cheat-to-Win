@@ -147,9 +147,28 @@ namespace GhettoBeasts.District
             foreach (var child in model.GetChildren())
                 child.QueueFree();
 
+            // Prefer catalog GLB via AssetPipeline when present; else Beast3D procedural toon.
+            var pipe = AssetPipeline.Instance;
+            Node3D? imported = pipe?.InstantiateModel(cardId, Palette.RimAccent, playIdle: true);
+
             if (!ContentCatalog.TryGetCard(cardId, out var def))
             {
-                Shapes.Toon(model, Shapes.Sphere(0.35f), new Vector3(0f, 0.35f, 0f), Palette.NeonCyan);
+                imported ??= pipe?.InstantiateModel("duck_sample", Palette.NeonCyan, playIdle: false);
+                if (imported is not null)
+                {
+                    model.AddChild(imported);
+                    imported.Scale = Vector3.One * 0.35f;
+                }
+                else
+                    Shapes.Toon(model, Shapes.Sphere(0.35f), new Vector3(0f, 0.35f, 0f), Palette.NeonCyan);
+                VisualManager.EnforceCelShading(model);
+                return;
+            }
+
+            if (imported is not null)
+            {
+                model.AddChild(imported);
+                imported.Scale = Vector3.One * Mathf.Max(0.15f, CardLibrary.Get(cardId).ModelScale);
                 VisualManager.EnforceCelShading(model);
                 return;
             }
@@ -162,6 +181,7 @@ namespace GhettoBeasts.District
             beast.Scale = Vector3.One * 0.85f;
             if (beast.GetNodeOrNull<Node3D>("Model") is { } inner)
                 inner.Scale = Vector3.One * Mathf.Max(0.1f, data.ModelScale);
+            VisualManager.EnforceCelShading(model);
         }
     }
 }

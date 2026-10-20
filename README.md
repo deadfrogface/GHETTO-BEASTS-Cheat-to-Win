@@ -1,29 +1,29 @@
 # GHETTO BEASTS: DNA & Corruption
 
-Cel-shaded Cyberpunk-Kreaturenkampf für **Godot 4 (.NET / C#)**: physische 3D-Gasse, Burner-Phone-Menü, Companion-Bestie, CRISPR, Darknet-Gacha, Trainer-Sabotage – bis das SWAT-Team die Arena stürmt.
+Cel-shaded Cyberpunk-Kreaturenkampf für **Godot 4 (.NET / C#)**: physische 3D-Gasse (Multi-Block), Burner-Phone-Apps, Companion, CRISPR, Darknet-Gacha, Trainer-Sabotage – bis das SWAT-Team die Arena stürmt.
 
-## Spielbarer Slice (F5)
+## Full Loop (F5)
 
 ```text
-Main District (3D Alley)
-  → Companion folgt · Wildtiere / Cops
-  → E an Gebäude (CRISPR / Wash / Darknet / DOPE / WEAP / ARENA)
-  → ESC Burner Phone (Käfig / Darknet / GPS / Wallet)
-  → Kampf + Sabotage → Raid → Knast-Escape ODER Sieg → zurück in die Gasse
+Main District (3D Alley + unlockable Back Alley / Dock)
+  → Companion folgt · Wildtiere / Trainer / Cops
+  → E an Gebäude (CRISPR / Wash / Darknet / DOPE* / WEAP* / ARENA)
+  → ESC Burner Phone (Käfig+CRISPR · Darknet · GPS+Quests · Wallet · Contacts · Settings)
+  → Kampf (+ optional 2v2 Stub) · Sabotage → Raid → Knast-Escape → zurück
+  * freischalten durch Street-Wins / Quests
 ```
 
 | Modul | Inhalt |
 | --- | --- |
-| **Main District** | Hauptszene (`scenes/district/main_district.tscn`) – Third-Person-Gasse |
-| **Burner Phone** | ESC/TAB – diegetisches Meta-UI (Roster, Gacha, GPS, Wallet) |
-| **Companion** | Aktive Roster-Bestie folgt dem Spieler |
-| **Gebäude** | `Area3D`-Zonen, zu Fuß + **E** (keine 2D-Hub-Buttons) |
-| **Arena** | Kampf mit Setup, Summon, Sabotage, Raid |
-| **CRISPR / Wash / Shops** | Bestehende Building-Szenen als Interiors |
-| **Audio** | Autoload `AudioBus` – Dateien optional, sonst Blips |
-| **Tests** | xUnit Core inkl. Gacha/Lab/Roster |
+| **Main District** | Hauptszene (`scenes/district/main_district.tscn`) – Multi-Block, Props, Touch |
+| **Burner Phone** | ESC/TAB – Käfig CRISPR-Equip, Gacha inkl. Gen-Corrupted, Live-GPS, Laundry, Bribes, Cel/Audio/2v2 |
+| **Progression** | Street Wins → DOPE / WEAP / Back Alley / Dock Block |
+| **Companion** | Aktive Roster-Bestie (GLB via AssetPipeline oder procedural toon) |
+| **Arena** | 1v1 + 2v2-Partner-Assist-Stub, Sabotage, Raid, Prison |
+| **Audio** | Autoload `AudioBus` – Dateien optional, sonst Blips + Loop-Pads, Crossfade, Spatial |
+| **Tests** | xUnit Core inkl. Progression / Gacha / Lab / Roster |
 
-Open-Source-Referenzen (Controller, Pet-Follow, Pause-UI): **[OPEN_SOURCE.md](OPEN_SOURCE.md)**.
+Open-Source-Referenzen: **[OPEN_SOURCE.md](OPEN_SOURCE.md)**. Windows-Start: **[LAUNCH.md](LAUNCH.md)**.
 
 ---
 
@@ -35,8 +35,6 @@ Open-Source-Referenzen (Controller, Pet-Follow, Pause-UI): **[OPEN_SOURCE.md](OP
 
 ## Direkt in Godot öffnen (Windows)
 
-Details: **[LAUNCH.md](LAUNCH.md)**.
-
 ```powershell
 cd C:\Users\Lenovo\Documents
 git clone https://github.com/deadfrogface/GHETTO-BEASTS-Cheat-to-Win.git ghetto-beasts
@@ -46,7 +44,7 @@ git pull
 
 1. **Godot 4.3+ .NET** → `project.godot` öffnen.
 2. **Build** (Hammer).
-3. **F5** → **Main District** (3D-Gasse). ESC = Burner Phone.
+3. **F5** → **Main District**. ESC = Burner Phone.
 
 Live-Sync: `tools\auto-sync.bat` (pull alle 10 s).
 
@@ -54,8 +52,8 @@ Live-Sync: `tools\auto-sync.bat` (pull alle 10 s).
 
 | Kontext | Input |
 | --- | --- |
-| Gasse | **WASD** / Stick, **Q/R** Kamera, RMB Orbit, **E** Gebäude |
-| Phone | **ESC** / **TAB** – Käfig, Darknet, GPS, Wallet |
+| Gasse | **WASD** / linker Stick, **LOOK**-Pad / **Q/R** / RMB, **E** Gebäude |
+| Phone | **ESC** / **TAB** / PHONE-Button |
 | Kampf | **1** Angriff · **2** Skill · **3** Backstein · **4** Doping · **5** Schiri |
 | Knast | Pfeiltasten graben |
 
@@ -65,30 +63,17 @@ Live-Sync: `tools\auto-sync.bat` (pull alle 10 s).
 dotnet test tests/GhettoBeasts.Core.Tests
 dotnet build GhettoBeasts.sln
 
-# Autobattle (GameManager leitet --autobattle früh in die Arena um):
 godot --path . --headless -- --autobattle
 godot --path . --headless -- --autobattle --card=kupferstecher_pitbull --cheats=none --stay
 ```
 
-## Projektstruktur
+## Mobile
 
-```text
-res://
-├── scenes/district/     # Main District (F5) + legacy district
-├── scenes/combat/       # Arena + Setup + Prison
-├── scenes/buildings/    # CRISPR, Wash, Darknet, DOPE, WEAP
-├── scenes/hub/          # Stub → redirect zur Gasse
-├── scripts/District/    # MainWorld, Player, Companion, WildBeast, Buildings
-├── scripts/UI/          # BurnerPhone, HUD, BuildingShell
-├── src/GhettoBeasts.Core/
-├── tests/
-├── assets/
-└── shaders/             # toon_cel, outline, holo_card, crt
-```
+Touch-Joystick + LOOK-Pad, große Phone-Buttons. Für Exports: **Vulkan Mobile** Renderer (`rendering/renderer/rendering_method=mobile`) — Notes in `project.godot` / `OPEN_SOURCE.md`.
 
 ## Speichern
 
-`user://savegame.json` – Roster, Loadouts, Stabilizer-Stacks, Inventar, Währungen, Bilanz.
+`user://savegame.json` – Roster, Loadouts, Progression, Laundry, Phone-Settings, Währungen.
 
 ## Cursor-Regeln
 
