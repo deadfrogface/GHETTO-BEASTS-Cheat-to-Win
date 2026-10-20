@@ -37,9 +37,13 @@ namespace GhettoBeasts.Combat
                 ? Array.Empty<CheatType>()
                 : List(cheatArg).Select(c => Enum.Parse<CheatType>(c, ignoreCase: true)).ToArray();
 
+            bool defaultCard = !args.ContainsKey("--card");
+            string mutations = args.TryGetValue("--mutations", out var m) ? m
+                : defaultCard ? "piranha_gebiss,klingen_pranken,chitin_panzer" : string.Empty;
+
             return new AutoBattleOptions(
                 Get("--card", "kupferstecher_pitbull"),
-                List(Get("--mutations", "piranha_gebiss,klingen_pranken,chitin_panzer")),
+                List(mutations),
                 Get("--opponent", "kanalratte"),
                 cheats,
                 args.ContainsKey("--fresh"),
