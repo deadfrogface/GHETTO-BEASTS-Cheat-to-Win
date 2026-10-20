@@ -17,18 +17,21 @@ namespace GhettoBeasts.District
 
         private Node3D model = null!;
         private Node3D? player;
+        private Label3D? bang;
         private Vector3 home;
         private Vector3 wanderTarget;
         private float retargetTimer;
         private bool fired;
+        private bool isTrainer;
 
-        public void Setup(string opponentId, Node3D playerNode, Vector3 spawn)
+        public void Setup(string opponentId, Node3D playerNode, Vector3 spawn, bool trainer = false)
         {
             OpponentId = opponentId;
             player = playerNode;
             home = spawn;
             GlobalPosition = spawn;
             wanderTarget = spawn;
+            isTrainer = trainer;
         }
 
         public override void _Ready()
@@ -92,7 +95,10 @@ namespace GhettoBeasts.District
             p.Y = 0f;
             GlobalPosition = p;
 
-            if (player.GlobalPosition.DistanceTo(GlobalPosition) <= AggroRadius)
+            float dist = player.GlobalPosition.DistanceTo(GlobalPosition);
+            if (bang is not null)
+                bang.Visible = dist <= AggroRadius * 1.8f;
+            if (dist <= AggroRadius)
                 Trigger();
         }
 
@@ -125,17 +131,33 @@ namespace GhettoBeasts.District
             if (beast.GetNodeOrNull<Node3D>("Model") is { } inner)
                 inner.Scale = Vector3.One * Mathf.Max(0.1f, data.ModelScale) * 0.9f;
 
-            var marker = new Label3D
+            bang = new Label3D
             {
-                Text = "!",
-                Position = new Vector3(0f, 1.5f, 0f),
+                Text = isTrainer ? "!?" : "!",
+                Position = new Vector3(0f, isTrainer ? 2.1f : 1.5f, 0f),
                 FontSize = 48,
                 Modulate = Palette.Danger,
                 OutlineSize = 4,
                 OutlineModulate = Palette.Outline,
-                Billboard = BaseMaterial3D.BillboardModeEnum.Enabled
+                Billboard = BaseMaterial3D.BillboardModeEnum.Enabled,
+                Visible = false
             };
-            AddChild(marker);
+            AddChild(bang);
+
+            if (isTrainer)
+            {
+                var tag = new Label3D
+                {
+                    Text = "TRAINER",
+                    Position = new Vector3(0f, 1.85f, 0f),
+                    FontSize = 22,
+                    Modulate = Palette.NeonYellow,
+                    OutlineSize = 3,
+                    OutlineModulate = Palette.Outline,
+                    Billboard = BaseMaterial3D.BillboardModeEnum.Enabled
+                };
+                AddChild(tag);
+            }
         }
     }
 }

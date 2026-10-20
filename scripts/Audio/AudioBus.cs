@@ -4,11 +4,14 @@ using Godot;
 namespace GhettoBeasts.Audio
 {
     /// <summary>
-    /// AudioManager: Master / Music / SFX buses, BGM crossfade, optional Spatial3D helpers.
+    /// Project AudioManager (autoload name: AudioBus).
+    /// Master / Music / SFX buses, BGM crossfade, optional Spatial3D helpers.
     /// Prefer licensed/free files under res://assets/audio/; else procedural blips (see OPEN_SOURCE.md).
     /// </summary>
     public partial class AudioBus : Node
     {
+        /// <summary>Alias for call sites that prefer the AudioManager name.</summary>
+        public static AudioBus? AudioManager => Instance;
         public static AudioBus? Instance { get; private set; }
 
         private readonly Dictionary<string, AudioStreamPlayer> players = new();

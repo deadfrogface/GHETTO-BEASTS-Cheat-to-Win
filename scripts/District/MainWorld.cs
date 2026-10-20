@@ -203,27 +203,46 @@ namespace GhettoBeasts.District
 
         private void SpawnWildBeasts()
         {
-            var pool = ContentCatalog.AllCards
-                .Where(c => c.Rarity is Rarity.Common or Rarity.Uncommon)
+            var beastPool = ContentCatalog.AllCards
+                .Where(c => c.Kind == CardKind.Beast && c.Rarity is Rarity.Common or Rarity.Uncommon)
                 .Select(c => c.Id)
                 .ToList();
-            if (pool.Count == 0) pool.Add("kanalratte");
+            if (beastPool.Count == 0) beastPool.Add("kanalratte");
 
-            Vector3[] spots =
+            var trainerPool = ContentCatalog.AllCards
+                .Where(c => c.Kind == CardKind.Npc && c.Rarity is Rarity.Common or Rarity.Uncommon or Rarity.Rare)
+                .Select(c => c.Id)
+                .ToList();
+            if (trainerPool.Count == 0) trainerPool.Add("chantal");
+
+            Vector3[] beastSpots =
             {
                 new(-6f, 0f, -4f),
                 new(6.5f, 0f, 1f),
                 new(-3f, 0f, 7f),
                 new(3.5f, 0f, -7f)
             };
-
-            for (int i = 0; i < spots.Length; i++)
+            for (int i = 0; i < beastSpots.Length; i++)
             {
-                string id = pool[Game.Random.Range(0, pool.Count)];
+                string id = beastPool[Game.Random.Range(0, beastPool.Count)];
                 var wild = new WildBeast { Name = $"Wild_{id}_{i}" };
                 AddChild(wild);
-                wild.Setup(id, player, spots[i]);
+                wild.Setup(id, player, beastSpots[i]);
                 wild.EncounterTriggered += OnWildEncounter;
+            }
+
+            Vector3[] trainerSpots =
+            {
+                new(7f, 0f, -5f),
+                new(-7.5f, 0f, 2.5f)
+            };
+            for (int i = 0; i < trainerSpots.Length; i++)
+            {
+                string id = trainerPool[Game.Random.Range(0, trainerPool.Count)];
+                var trainer = new WildBeast { Name = $"Trainer_{id}_{i}", AggroRadius = 1.75f, WanderSpeed = 1.1f };
+                AddChild(trainer);
+                trainer.Setup(id, player, trainerSpots[i], trainer: true);
+                trainer.EncounterTriggered += OnWildEncounter;
             }
         }
 
