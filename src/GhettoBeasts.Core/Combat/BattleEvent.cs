@@ -4,6 +4,7 @@ namespace GhettoBeasts.Combat
     {
         Log,
         Summon,
+        Attack,
         Damage,
         Heal,
         Miss,

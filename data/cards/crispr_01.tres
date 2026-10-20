@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="BeastData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/Data/BeastData.cs" id="1_data"]
+
+[resource]
+script = ExtResource("1_data")
+CatalogId = "crispr_01"
+Shape = 4
+PrimaryColor = Color(0.35, 0.2, 0.1, 1)
+SecondaryColor = Color(0.5, 0.3, 0.15, 1)
+EyeColor = Color(0.4, 1, 0.2, 1)
+ModelScale = 1.0
+HasTail = false
+HasEars = false

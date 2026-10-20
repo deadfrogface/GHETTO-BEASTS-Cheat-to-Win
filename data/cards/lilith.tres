@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="NpcData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/Data/NpcData.cs" id="1_data"]
+
+[resource]
+script = ExtResource("1_data")
+CatalogId = "lilith"
+Shape = 5
+PrimaryColor = Color(0.25, 0.05, 0.3, 1)
+EyeColor = Color(0.8, 0.2, 1, 1)
+ModelScale = 1.0
+SkinColor = Color(0.9, 0.75, 0.68, 1)
+HasHat = false

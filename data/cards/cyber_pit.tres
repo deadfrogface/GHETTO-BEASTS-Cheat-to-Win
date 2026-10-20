@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="BeastData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/Data/BeastData.cs" id="1_data"]
+
+[resource]
+script = ExtResource("1_data")
+CatalogId = "cyber_pit"
+Shape = 1
+PrimaryColor = Color(0.55, 0.6, 0.68, 1)
+SecondaryColor = Color(0.25, 0.3, 0.4, 1)
+EyeColor = Color(1, 0.05, 0.1, 1)
+ModelScale = 1.05
+HasTail = true
+HasEars = true

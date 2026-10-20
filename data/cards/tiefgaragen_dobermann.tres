@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="BeastData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/Data/BeastData.cs" id="1_data"]
+
+[resource]
+script = ExtResource("1_data")
+CatalogId = "tiefgaragen_dobermann"
+Shape = 1
+PrimaryColor = Color(0.12, 0.1, 0.12, 1)
+SecondaryColor = Color(0.6, 0.35, 0.18, 1)
+EyeColor = Color(1, 0.1, 0.2, 1)
+ModelScale = 0.95
+HasTail = true
+HasEars = true

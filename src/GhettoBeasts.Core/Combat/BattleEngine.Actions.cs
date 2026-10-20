@@ -103,7 +103,7 @@ namespace GhettoBeasts.Combat
                 UseAbility(actor, opponent);
             else
             {
-                Emit(BattleEventType.Log, $"{actor.Name} greift an!", actor.Side);
+                Emit(new BattleEvent(BattleEventType.Attack, $"{actor.Name} greift an!", actor.Side));
                 Hit(actor, opponent, BasicAttackPower);
             }
         }

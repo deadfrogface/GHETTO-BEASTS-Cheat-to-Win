@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="NpcData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/Data/NpcData.cs" id="1_data"]
+
+[resource]
+script = ExtResource("1_data")
+CatalogId = "hinterhof_crackhead"
+Shape = 5
+PrimaryColor = Color(0.35, 0.38, 0.3, 1)
+EyeColor = Color(0.9, 0.9, 0.2, 1)
+ModelScale = 0.95
+SkinColor = Color(0.8, 0.7, 0.6, 1)
+HasHat = false
