@@ -49,7 +49,7 @@ namespace GhettoBeasts.Data
                     PrimaryColor = primary,
                     SecondaryColor = secondary,
                     EyeColor = eyes,
-                    ModelScale = card.Rarity >= Rarity.Epic ? 1.1f : 1f,
+                    ModelScale = ScaleFor(card.Rarity, CardKind.Npc),
                     HasHat = card.Rarity >= Rarity.Rare
                 };
             }
@@ -61,11 +61,22 @@ namespace GhettoBeasts.Data
                 PrimaryColor = primary,
                 SecondaryColor = secondary,
                 EyeColor = eyes,
-                ModelScale = card.Rarity >= Rarity.Legendary ? 1.05f : 0.95f,
+                ModelScale = ScaleFor(card.Rarity, CardKind.Beast),
                 HasEars = archetype is ContentCatalog.BodyArchetype.Rodent or ContentCatalog.BodyArchetype.Quadruped,
                 HasTail = archetype is not ContentCatalog.BodyArchetype.Primate and not ContentCatalog.BodyArchetype.Insect
             };
         }
+
+        private static float ScaleFor(Rarity rarity, CardKind kind) => rarity switch
+        {
+            Rarity.Boss => 1.38f,
+            Rarity.GenCorrupted => 1.3f,
+            Rarity.Legendary => 1.2f,
+            Rarity.Epic => 1.12f,
+            Rarity.Rare => 1.06f,
+            Rarity.Uncommon => 1f,
+            _ => kind == CardKind.Beast ? 0.92f : 0.98f
+        };
 
         private static BodyShape ToBodyShape(ContentCatalog.BodyArchetype archetype) => archetype switch
         {

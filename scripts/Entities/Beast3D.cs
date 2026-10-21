@@ -258,6 +258,44 @@ namespace GhettoBeasts.Entities
 
             if (definition.IsCyber) AddCyberParts();
             foreach (var mutation in mutations) AddMutationParts(mutation, paws);
+            AddRarityFlair(definition.Rarity);
+        }
+
+        /// <summary>Readable silhouette upgrades for Epic+ so street tiers feel heavier without GLBs.</summary>
+        private void AddRarityFlair(Rarity rarity)
+        {
+            if (rarity < Rarity.Epic) return;
+
+            Color glow = Palette.ForRarity(rarity);
+            float energy = rarity switch
+            {
+                Rarity.Boss => 2.4f,
+                Rarity.GenCorrupted => 2.8f,
+                Rarity.Legendary => 1.8f,
+                _ => 1.2f
+            };
+
+            // Ground ring — reads at distance in the alley.
+            Part(Shapes.Cylinder(0.52f, 0.58f, 0.035f), new Vector3(0f, 0.04f, 0f),
+                MaterialFactory.Emissive(new Color(glow.R, glow.G, glow.B, 0.85f), energy * 0.55f));
+
+            if (rarity >= Rarity.Legendary)
+            {
+                Part(Shapes.Cone(0.07f, 0.32f), headLocal + new Vector3(-0.14f, 0.3f, -0.02f),
+                    MaterialFactory.Emissive(glow, energy), new Vector3(-18f, 0f, 18f));
+                Part(Shapes.Cone(0.07f, 0.32f), headLocal + new Vector3(0.14f, 0.3f, -0.02f),
+                    MaterialFactory.Emissive(glow, energy), new Vector3(-18f, 0f, -18f));
+            }
+
+            if (rarity is Rarity.Boss or Rarity.GenCorrupted)
+            {
+                Shapes.Toon(model, Shapes.Sphere(0.2f), new Vector3(-0.48f, headLocal.Y * 0.55f, 0f),
+                    glow.Darkened(0.25f), scale: new Vector3(1.25f, 0.45f, 0.85f));
+                Shapes.Toon(model, Shapes.Sphere(0.2f), new Vector3(0.48f, headLocal.Y * 0.55f, 0f),
+                    glow.Darkened(0.25f), scale: new Vector3(1.25f, 0.45f, 0.85f));
+                Part(Shapes.Sphere(0.09f), headLocal + new Vector3(0f, 0.28f, 0.05f),
+                    MaterialFactory.Emissive(glow, energy + 0.6f));
+            }
         }
 
         private Vector3[] BuildQuadruped(Color primary, Color secondary, Color eyes, bool ears, bool tail)
