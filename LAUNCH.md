@@ -21,17 +21,19 @@ git clone https://github.com/deadfrogface/GHETTO-BEASTS-Cheat-to-Win.git ghetto-
 cd ghetto-beasts
 ```
 
-Bereits geklont? Nur pullen:
+Bereits geklont? Auf den neuesten Stand bringen:
 
 ```powershell
 cd C:\Users\Lenovo\Documents\ghetto-beasts
 git checkout main
 git pull origin main
-# falls origin anders heißt:
+# falls der Remote anders heißt:
 git pull https://github.com/deadfrogface/GHETTO-BEASTS-Cheat-to-Win.git main
 ```
 
-Optional Live-Updates vom Cloud-Agent: `tools\auto-sync.bat` doppelklicken (Fenster offen lassen).
+Danach in Godot **Build** (Hammer), dann **F5**.
+
+Optional Live-Updates vom Cloud-Agent: `tools\auto-sync.bat` doppelklicken (Fenster offen lassen — zieht `main` alle 10 s).
 
 ## 3. In Godot öffnen
 
