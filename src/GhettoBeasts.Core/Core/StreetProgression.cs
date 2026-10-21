@@ -1,10 +1,21 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using GhettoBeasts.Data;
 
 namespace GhettoBeasts.Core
 {
-    /// <summary>Simple street progression: win fights → unlock buildings / back alley block.</summary>
+    /// <summary>Street campaign tier derived from win count (aligns with quest unlock thresholds).</summary>
+    public enum StreetTier
+    {
+        Rookie = 0,
+        DopeRun = 1,
+        Armed = 2,
+        BackAlley = 3,
+        Dock = 4
+    }
+
+    /// <summary>Street progression: win fights → unlock buildings / blocks → harder encounter tiers.</summary>
     public static class StreetProgression
     {
         public const string Arena = "arena";
@@ -30,6 +41,16 @@ namespace GhettoBeasts.Core
             new("q_back", "Hintergasse öffnen", "Gewinne 5 Kämpfe — neuer Block.", 5, BackAlley),
             new("q_dock", "Dock-Block", "Gewinne 8 Kämpfe — Trainer & Beute.", 8, DockBlock)
         };
+
+        /// <summary>Milestone NPC bosses tied to unlocked street tiers (hero catalog ids).</summary>
+        public static readonly IReadOnlyDictionary<StreetTier, string> MilestoneBossByTier =
+            new Dictionary<StreetTier, string>
+            {
+                [StreetTier.DopeRun] = "ede",
+                [StreetTier.Armed] = "dr_mutation",
+                [StreetTier.BackAlley] = "lilith",
+                [StreetTier.Dock] = "el_capo"
+            };
 
         public static void EnsureDefaults(SaveData save)
         {
@@ -84,6 +105,103 @@ namespace GhettoBeasts.Core
             var next = ListQuests(save).FirstOrDefault(x => !x.Done);
             if (next.Quest is null) return "Alle Blöcke offen. Crush the street.";
             return $"{next.Quest.Title}: {next.Progress}/{next.Quest.TargetWins} — {next.Quest.Hint}";
+        }
+
+        public static StreetTier GetStreetTier(SaveData save) => GetStreetTier(save.StreetWins);
+
+        public static StreetTier GetStreetTier(int streetWins) => streetWins switch
+        {
+            >= 8 => StreetTier.Dock,
+            >= 5 => StreetTier.BackAlley,
+            >= 3 => StreetTier.Armed,
+            >= 2 => StreetTier.DopeRun,
+            _ => StreetTier.Rookie
+        };
+
+        public static string TierLabel(StreetTier tier) => tier switch
+        {
+            StreetTier.Rookie => "Tier 0 · Rookie Street",
+            StreetTier.DopeRun => "Tier 1 · Dope Run",
+            StreetTier.Armed => "Tier 2 · Armed Block",
+            StreetTier.BackAlley => "Tier 3 · Back Alley",
+            StreetTier.Dock => "Tier 4 · Dock Lords",
+            _ => "Tier ?"
+        };
+
+        public static string StatusLine(SaveData save) =>
+            $"{TierLabel(GetStreetTier(save))} · {NextHint(save)}";
+
+        /// <summary>Inclusive rarity band for wild beast spawns at this tier.</summary>
+        public static (Rarity Min, Rarity Max) WildRarityBand(StreetTier tier) => tier switch
+        {
+            StreetTier.Rookie => (Rarity.Common, Rarity.Uncommon),
+            StreetTier.DopeRun => (Rarity.Common, Rarity.Rare),
+            StreetTier.Armed => (Rarity.Uncommon, Rarity.Rare),
+            StreetTier.BackAlley => (Rarity.Uncommon, Rarity.Epic),
+            StreetTier.Dock => (Rarity.Rare, Rarity.Legendary),
+            _ => (Rarity.Common, Rarity.Uncommon)
+        };
+
+        /// <summary>Inclusive rarity band for street trainer spawns at this tier.</summary>
+        public static (Rarity Min, Rarity Max) TrainerRarityBand(StreetTier tier) => tier switch
+        {
+            StreetTier.Rookie => (Rarity.Common, Rarity.Rare),
+            StreetTier.DopeRun => (Rarity.Common, Rarity.Rare),
+            StreetTier.Armed => (Rarity.Uncommon, Rarity.Epic),
+            StreetTier.BackAlley => (Rarity.Rare, Rarity.Legendary),
+            StreetTier.Dock => (Rarity.Epic, Rarity.Boss),
+            _ => (Rarity.Common, Rarity.Rare)
+        };
+
+        /// <summary>
+        /// Highest milestone boss unlocked by street wins (null on Rookie).
+        /// Spawned on one trainer pad so the campaign has a clear apex fight.
+        /// </summary>
+        public static string? MilestoneBossId(SaveData save)
+        {
+            EnsureDefaults(save);
+            var tier = GetStreetTier(save);
+            string? best = null;
+            foreach (var kv in MilestoneBossByTier.OrderBy(k => (int)k.Key))
+            {
+                if ((int)tier >= (int)kv.Key)
+                    best = kv.Value;
+            }
+            return best;
+        }
+
+        public static List<string> BuildEncounterPool(CardKind kind, Rarity min, Rarity max, string fallbackId)
+        {
+            if (min > max) (min, max) = (max, min);
+            var ids = ContentCatalog.AllCards
+                .Where(c =>
+                    c.Kind == kind &&
+                    c.Rarity != Rarity.GenCorrupted &&
+                    c.Rarity >= min &&
+                    c.Rarity <= max)
+                .Select(c => c.Id)
+                .ToList();
+            if (ids.Count == 0)
+                ids.Add(fallbackId);
+            return ids;
+        }
+
+        public static List<string> BuildWildPool(SaveData save)
+        {
+            var (min, max) = WildRarityBand(GetStreetTier(save));
+            return BuildEncounterPool(CardKind.Beast, min, max, "kanalratte");
+        }
+
+        public static List<string> BuildTrainerPool(SaveData save)
+        {
+            var (min, max) = TrainerRarityBand(GetStreetTier(save));
+            return BuildEncounterPool(CardKind.Npc, min, max, "chantal");
+        }
+
+        public static string PickFromPool(IReadOnlyList<string> pool, IRandom random)
+        {
+            if (pool is null || pool.Count == 0) return "kanalratte";
+            return pool[random.Range(0, pool.Count)];
         }
     }
 }

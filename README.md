@@ -17,7 +17,7 @@ Main District (3D Alley + unlockable Back Alley / Dock)
 | --- | --- |
 | **Main District** | Hauptszene (`scenes/district/main_district.tscn`) – Multi-Block, Props, Touch |
 | **Burner Phone** | ESC/TAB – Käfig CRISPR-Equip, Gacha inkl. Gen-Corrupted, Live-GPS, Laundry, Bribes, Cel/Audio/2v2 |
-| **Progression** | Street Wins → DOPE / WEAP / Back Alley / Dock Block |
+| **Progression** | Street Wins → Tier 0–4 (rarity bands + milestone bosses) · DOPE / WEAP / Back Alley / Dock |
 | **Companion** | Aktive Roster-Bestie (GLB via AssetPipeline oder procedural toon) |
 | **Arena** | 1v1 + 2v2-Partner-Assist-Stub, Sabotage, Raid, Prison |
 | **Audio** | Autoload `AudioBus` – Dateien optional, sonst Blips + Loop-Pads, Crossfade, Spatial |

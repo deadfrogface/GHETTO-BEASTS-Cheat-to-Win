@@ -1,3 +1,4 @@
+using GhettoBeasts.Data;
 using Xunit;
 
 namespace GhettoBeasts.Core.Tests;
@@ -70,5 +71,84 @@ public class StreetProgressionTests
         Assert.True(StreetProgression.IsUnlocked(loaded, StreetProgression.BackAlley));
         Assert.True(loaded.PreferDoubleBattle);
         Assert.Equal(SaveData.CurrentVersion, loaded.Version);
+    }
+
+    [Theory]
+    [InlineData(0, StreetTier.Rookie)]
+    [InlineData(1, StreetTier.Rookie)]
+    [InlineData(2, StreetTier.DopeRun)]
+    [InlineData(3, StreetTier.Armed)]
+    [InlineData(5, StreetTier.BackAlley)]
+    [InlineData(8, StreetTier.Dock)]
+    [InlineData(99, StreetTier.Dock)]
+    public void Street_tier_follows_quest_thresholds(int wins, StreetTier expected)
+    {
+        Assert.Equal(expected, StreetProgression.GetStreetTier(wins));
+    }
+
+    [Fact]
+    public void Wild_pool_escalates_rarity_with_tier()
+    {
+        var rookie = SaveData.CreateDefault();
+        var dock = SaveData.CreateDefault();
+        dock.StreetWins = 8;
+        StreetProgression.SyncUnlocksFromWins(dock);
+
+        var rookiePool = StreetProgression.BuildWildPool(rookie);
+        var dockPool = StreetProgression.BuildWildPool(dock);
+        Assert.NotEmpty(rookiePool);
+        Assert.NotEmpty(dockPool);
+
+        Assert.All(rookiePool, id =>
+        {
+            var card = ContentCatalog.AllCards.First(c => c.Id == id);
+            Assert.True(card.Rarity <= Rarity.Uncommon);
+            Assert.Equal(CardKind.Beast, card.Kind);
+        });
+
+        Assert.Contains(dockPool, id =>
+        {
+            var card = ContentCatalog.AllCards.First(c => c.Id == id);
+            return card.Rarity >= Rarity.Rare;
+        });
+        Assert.DoesNotContain(dockPool, id =>
+        {
+            var card = ContentCatalog.AllCards.First(c => c.Id == id);
+            return card.Rarity < Rarity.Rare;
+        });
+    }
+
+    [Fact]
+    public void Milestone_boss_unlocks_with_street_wins()
+    {
+        var save = SaveData.CreateDefault();
+        Assert.Null(StreetProgression.MilestoneBossId(save));
+
+        save.StreetWins = 2;
+        StreetProgression.SyncUnlocksFromWins(save);
+        Assert.Equal("ede", StreetProgression.MilestoneBossId(save));
+
+        save.StreetWins = 3;
+        StreetProgression.SyncUnlocksFromWins(save);
+        Assert.Equal("dr_mutation", StreetProgression.MilestoneBossId(save));
+
+        save.StreetWins = 5;
+        StreetProgression.SyncUnlocksFromWins(save);
+        Assert.Equal("lilith", StreetProgression.MilestoneBossId(save));
+
+        save.StreetWins = 8;
+        StreetProgression.SyncUnlocksFromWins(save);
+        Assert.Equal("el_capo", StreetProgression.MilestoneBossId(save));
+    }
+
+    [Fact]
+    public void Status_line_includes_tier_label()
+    {
+        var save = SaveData.CreateDefault();
+        save.StreetWins = 5;
+        StreetProgression.SyncUnlocksFromWins(save);
+        string line = StreetProgression.StatusLine(save);
+        Assert.Contains("Tier 3", line);
+        Assert.Contains("Back Alley", line);
     }
 }

@@ -455,7 +455,12 @@ namespace GhettoBeasts.UI
 
             appBody.AddChild(UiKit.Label($"Street Heat: {Game.Save.StreetHeat}%", 12,
                 Game.Save.StreetHeat >= 100 ? Palette.Danger : Palette.NeonYellow));
-            appBody.AddChild(UiKit.Label($"Street Wins: {Game.Save.StreetWins}", 12, Palette.NeonCyan));
+            appBody.AddChild(UiKit.Label(
+                $"{StreetProgression.TierLabel(StreetProgression.GetStreetTier(Game.Save))} · Wins {Game.Save.StreetWins}",
+                12, Palette.NeonCyan));
+            string? boss = StreetProgression.MilestoneBossId(Game.Save);
+            if (boss is not null)
+                appBody.AddChild(UiKit.Label($"Milestone Boss: {boss}", 11, Palette.NeonPink));
 
             appBody.AddChild(UiKit.Label("— Quests —", 13, Palette.NeonPink));
             foreach (var (quest, done, progress) in StreetProgression.ListQuests(Game.Save))

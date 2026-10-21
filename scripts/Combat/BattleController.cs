@@ -511,7 +511,7 @@ namespace GhettoBeasts.Combat
                 case BattleOutcome.Victory:
                     save.Wins++;
                     StreetProgression.RegisterWin(save);
-                    details = $"{engine.Enemy.Name} liegt im Dreck.\n+{ContentCatalog.DirtyCashReward(engine.Enemy.Definition.Rarity)} $ Schmutzgeld kassiert.\n{StreetProgression.NextHint(save)}";
+                    details = $"{engine.Enemy.Name} liegt im Dreck.\n+{ContentCatalog.DirtyCashReward(engine.Enemy.Definition.Rarity)} $ Schmutzgeld kassiert.\n{StreetProgression.StatusLine(save)}";
                     break;
                 case BattleOutcome.Defeat:
                     save.Losses++;

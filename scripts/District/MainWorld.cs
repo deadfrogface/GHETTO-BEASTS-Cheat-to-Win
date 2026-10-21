@@ -151,7 +151,7 @@ namespace GhettoBeasts.District
                 prompt.AddThemeColorOverride("font_color", nearBuilding.Accent);
             }
 
-            questHud.Text = StreetProgression.NextHint(Game.Save);
+            questHud.Text = StreetProgression.StatusLine(Game.Save);
         }
 
         public override void _UnhandledInput(InputEvent @event)
@@ -213,21 +213,15 @@ namespace GhettoBeasts.District
 
         private void SpawnWildBeasts()
         {
-            var beastPool = ContentCatalog.AllCards
-                .Where(c => c.Kind == CardKind.Beast && c.Rarity is Rarity.Common or Rarity.Uncommon)
-                .Select(c => c.Id)
-                .ToList();
-            if (beastPool.Count == 0) beastPool.Add("kanalratte");
-
-            var trainerPool = ContentCatalog.AllCards
-                .Where(c => c.Kind == CardKind.Npc && c.Rarity is Rarity.Common or Rarity.Uncommon or Rarity.Rare)
-                .Select(c => c.Id)
-                .ToList();
-            if (trainerPool.Count == 0) trainerPool.Add("chantal");
+            var beastPool = StreetProgression.BuildWildPool(Game.Save);
+            var trainerPool = StreetProgression.BuildTrainerPool(Game.Save);
+            string? milestoneBoss = StreetProgression.MilestoneBossId(Game.Save);
+            var tier = StreetProgression.GetStreetTier(Game.Save);
+            GD.Print($"[MainWorld] Street {StreetProgression.TierLabel(tier)} · wilds={beastPool.Count} trainers={trainerPool.Count} boss={milestoneBoss ?? "-"}");
 
             for (int i = 0; i < refs.WildSpots.Count; i++)
             {
-                string id = beastPool[Game.Random.Range(0, beastPool.Count)];
+                string id = StreetProgression.PickFromPool(beastPool, Game.Random);
                 var wild = new WildBeast { Name = $"Wild_{id}_{i}" };
                 AddChild(wild);
                 wild.Setup(id, player, refs.WildSpots[i]);
@@ -236,8 +230,17 @@ namespace GhettoBeasts.District
 
             for (int i = 0; i < refs.TrainerSpots.Count; i++)
             {
-                string id = trainerPool[Game.Random.Range(0, trainerPool.Count)];
-                var trainer = new WildBeast { Name = $"Trainer_{id}_{i}", AggroRadius = 1.75f, WanderSpeed = 1.1f };
+                // Last trainer pad hosts the current milestone boss when unlocked.
+                bool bossPad = milestoneBoss is not null && i == refs.TrainerSpots.Count - 1;
+                string id = bossPad
+                    ? milestoneBoss!
+                    : StreetProgression.PickFromPool(trainerPool, Game.Random);
+                var trainer = new WildBeast
+                {
+                    Name = bossPad ? $"Boss_{id}" : $"Trainer_{id}_{i}",
+                    AggroRadius = bossPad ? 2.35f : 1.75f,
+                    WanderSpeed = bossPad ? 0.55f : 1.1f
+                };
                 AddChild(trainer);
                 trainer.Setup(id, player, refs.TrainerSpots[i], trainer: true);
                 trainer.EncounterTriggered += OnWildEncounter;
@@ -265,7 +268,7 @@ namespace GhettoBeasts.District
             top.AddChild(new WalletBar());
             status = UiKit.Label("Begleiter folgt dir. ESC öffnet das Burner Phone.", 12, Palette.TextDim);
             top.AddChild(status);
-            questHud = UiKit.Label(StreetProgression.NextHint(Game.Save), 12, Palette.NeonYellow);
+            questHud = UiKit.Label(StreetProgression.StatusLine(Game.Save), 12, Palette.NeonYellow);
             questHud.AutowrapMode = TextServer.AutowrapMode.WordSmart;
             top.AddChild(questHud);
 
@@ -317,10 +320,9 @@ namespace GhettoBeasts.District
             if (Game.Save.StreetHeat >= 100)
                 SpawnSwatVan(rollIn: true);
 
-            var pool = ContentCatalog.AllCards.Where(c => c.Rarity is Rarity.Common or Rarity.Uncommon or Rarity.Rare).ToList();
-            string opponent = pool.Count > 0
-                ? pool[Game.Random.Range(0, pool.Count)].Id
-                : "kanalratte";
+            // Cop bust uses the same street-tier trainer band (plus milestone when docked).
+            string opponent = StreetProgression.MilestoneBossId(Game.Save)
+                ?? StreetProgression.PickFromPool(StreetProgression.BuildTrainerPool(Game.Save), Game.Random);
 
             GetTree().CreateTimer(0.85).Timeout += () =>
                 Game.EnterCombat(GameManager.MainDistrictScene, opponent);
@@ -344,7 +346,7 @@ namespace GhettoBeasts.District
             if (transitioning) return;
             if (!building.IsUnlocked)
             {
-                status.Text = StreetProgression.NextHint(Game.Save);
+                status.Text = StreetProgression.StatusLine(Game.Save);
                 status.AddThemeColorOverride("font_color", Palette.Danger);
                 Audio.AudioBus.Play("ui");
                 return;
