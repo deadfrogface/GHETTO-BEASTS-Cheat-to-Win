@@ -105,6 +105,7 @@ namespace GhettoBeasts.District
 
             BuildProps(root, backOpen, dockOpen);
             TryDropImportedProps(root);
+            BuildCampaignBillboard(root, StreetProgression.GetStreetTier(save));
 
             var spawn = new Node3D { Name = "PlayerSpawn", Position = new Vector3(0f, 0f, 3f) };
             root.AddChild(spawn);
@@ -202,18 +203,57 @@ namespace GhettoBeasts.District
 
         private static void BuildEnvironment(Node3D root)
         {
-            SceneEnvironmentFactory.Attach(root);
+            // STREET-v2: cooler dusk + stronger neon wash so the pull is obvious at a glance.
+            SceneEnvironmentFactory.Attach(
+                root,
+                background: new Color(0.05f, 0.08f, 0.14f),
+                ambient: new Color(0.32f, 0.38f, 0.55f),
+                fog: new Color(0.12f, 0.18f, 0.28f));
             root.AddChild(new DirectionalLight3D
             {
-                LightColor = new Color(0.82f, 0.8f, 0.9f),
-                LightEnergy = 0.95f,
+                LightColor = new Color(0.7f, 0.78f, 0.95f),
+                LightEnergy = 1.05f,
                 ShadowEnabled = true,
                 RotationDegrees = new Vector3(-48f, 35f, 0f)
             });
-            root.AddChild(new OmniLight3D { LightColor = Palette.NeonPink, LightEnergy = 1.0f, OmniRange = 14f, Position = new Vector3(-4f, 4f, 0f) });
-            root.AddChild(new OmniLight3D { LightColor = Palette.NeonCyan, LightEnergy = 0.9f, OmniRange = 14f, Position = new Vector3(4f, 4f, 2f) });
-            root.AddChild(new OmniLight3D { LightColor = Palette.NeonYellow, LightEnergy = 0.7f, OmniRange = 12f, Position = new Vector3(-20f, 3.5f, 0f) });
-            root.AddChild(new OmniLight3D { LightColor = Palette.Diamond, LightEnergy = 0.7f, OmniRange = 12f, Position = new Vector3(20f, 3.5f, 2f) });
+            root.AddChild(new OmniLight3D { LightColor = Palette.NeonPink, LightEnergy = 1.55f, OmniRange = 16f, Position = new Vector3(-4f, 4f, 0f) });
+            root.AddChild(new OmniLight3D { LightColor = Palette.NeonCyan, LightEnergy = 1.45f, OmniRange = 16f, Position = new Vector3(4f, 4f, 2f) });
+            root.AddChild(new OmniLight3D { LightColor = Palette.NeonYellow, LightEnergy = 1.1f, OmniRange = 14f, Position = new Vector3(-20f, 3.5f, 0f) });
+            root.AddChild(new OmniLight3D { LightColor = Palette.Diamond, LightEnergy = 1.1f, OmniRange = 14f, Position = new Vector3(20f, 3.5f, 2f) });
+            root.AddChild(new OmniLight3D
+            {
+                LightColor = Palette.NeonCyan,
+                LightEnergy = 2.2f,
+                OmniRange = 10f,
+                Position = new Vector3(0f, 5.5f, -11f)
+            });
+        }
+
+        private static void BuildCampaignBillboard(Node3D root, StreetTier tier)
+        {
+            var pivot = new Node3D { Name = "CampaignBillboard", Position = new Vector3(0f, 4.4f, -11.5f) };
+            root.AddChild(pivot);
+
+            var slab = new MeshInstance3D
+            {
+                Mesh = Shapes.Box(6.2f, 1.6f, 0.12f),
+                MaterialOverride = MaterialFactory.Emissive(new Color(0.08f, 0.12f, 0.18f), 0.4f)
+            };
+            pivot.AddChild(slab);
+
+            var title = new Label3D
+            {
+                Text = $"{StreetProgression.CampaignTag}\n{StreetProgression.TierLabel(tier)}",
+                Position = new Vector3(0f, 0.1f, 0.1f),
+                FontSize = 48,
+                PixelSize = 0.012f,
+                Modulate = Palette.NeonCyan,
+                OutlineSize = 16,
+                OutlineModulate = Colors.Black,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            pivot.AddChild(title);
         }
 
         private static void BuildGround(Node3D root, bool backOpen, bool dockOpen)

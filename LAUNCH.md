@@ -33,7 +33,16 @@ git pull https://github.com/deadfrogface/GHETTO-BEASTS-Cheat-to-Win.git main
 
 Danach in Godot **Build** (Hammer), dann **F5**.
 
-Optional Live-Updates vom Cloud-Agent: `tools\auto-sync.bat` doppelklicken (Fenster offen lassen — zieht `main` alle 10 s).
+**Check dass das Update wirklich da ist:**
+
+```powershell
+git log -1 --oneline
+# erwartet etwas mit STREET-v2 / street-tier / campaign
+```
+
+Im Spiel oben links muss stehen: **★ STREET-v2 LIVE** — plus ein cyan Billboard über der Arena. Fehlt das → falscher Ordner oder kein Rebuild.
+
+Optional Live-Updates: `tools\auto-sync.bat` (zieht `main` alle 10 s).
 
 ## 3. In Godot öffnen
 

@@ -151,4 +151,10 @@ public class StreetProgressionTests
         Assert.Contains("Tier 3", line);
         Assert.Contains("Back Alley", line);
     }
+
+    [Fact]
+    public void Campaign_tag_marks_street_v2_build()
+    {
+        Assert.Contains("STREET-v2", StreetProgression.CampaignTag);
+    }
 }

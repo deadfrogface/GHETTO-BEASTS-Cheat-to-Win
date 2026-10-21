@@ -261,10 +261,10 @@ namespace GhettoBeasts.Entities
             AddRarityFlair(definition.Rarity);
         }
 
-        /// <summary>Readable silhouette upgrades for Epic+ so street tiers feel heavier without GLBs.</summary>
+        /// <summary>Readable silhouette upgrades for Rare+ so street fights read heavier without GLBs.</summary>
         private void AddRarityFlair(Rarity rarity)
         {
-            if (rarity < Rarity.Epic) return;
+            if (rarity < Rarity.Rare) return;
 
             Color glow = Palette.ForRarity(rarity);
             float energy = rarity switch
@@ -272,14 +272,15 @@ namespace GhettoBeasts.Entities
                 Rarity.Boss => 2.4f,
                 Rarity.GenCorrupted => 2.8f,
                 Rarity.Legendary => 1.8f,
-                _ => 1.2f
+                Rarity.Epic => 1.4f,
+                _ => 1.15f
             };
 
-            // Ground ring — reads at distance in the alley.
+            // Ground ring — reads at distance in the alley (Rare+).
             Part(Shapes.Cylinder(0.52f, 0.58f, 0.035f), new Vector3(0f, 0.04f, 0f),
                 MaterialFactory.Emissive(new Color(glow.R, glow.G, glow.B, 0.85f), energy * 0.55f));
 
-            if (rarity >= Rarity.Legendary)
+            if (rarity >= Rarity.Epic)
             {
                 Part(Shapes.Cone(0.07f, 0.32f), headLocal + new Vector3(-0.14f, 0.3f, -0.02f),
                     MaterialFactory.Emissive(glow, energy), new Vector3(-18f, 0f, 18f));

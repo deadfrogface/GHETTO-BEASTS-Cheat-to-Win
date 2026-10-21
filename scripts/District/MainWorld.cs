@@ -216,11 +216,15 @@ namespace GhettoBeasts.District
             var trainerPool = StreetProgression.BuildTrainerPool(Game.Save);
             string? milestoneBoss = StreetProgression.MilestoneBossId(Game.Save);
             var tier = StreetProgression.GetStreetTier(Game.Save);
-            GD.Print($"[MainWorld] Street {StreetProgression.TierLabel(tier)} · wilds={beastPool.Count} trainers={trainerPool.Count} boss={milestoneBoss ?? "-"}");
+            // Always park one Rare showcase at the first pad so STREET-v2 is visible at Tier 0.
+            string showcaseId = StreetProgression.PickFromPool(
+                StreetProgression.BuildEncounterPool(CardKind.Beast, Rarity.Rare, Rarity.Rare, "hyaenen_mischling"),
+                Game.Random);
+            GD.Print($"[MainWorld] {StreetProgression.CampaignTag} · {StreetProgression.TierLabel(tier)} · wilds={beastPool.Count} trainers={trainerPool.Count} boss={milestoneBoss ?? "-"} showcase={showcaseId}");
 
             for (int i = 0; i < refs.WildSpots.Count; i++)
             {
-                string id = StreetProgression.PickFromPool(beastPool, Game.Random);
+                string id = i == 0 ? showcaseId : StreetProgression.PickFromPool(beastPool, Game.Random);
                 var wild = new WildBeast { Name = $"Wild_{id}_{i}" };
                 AddChild(wild);
                 wild.Setup(id, player, refs.WildSpots[i]);
@@ -260,14 +264,18 @@ namespace GhettoBeasts.District
             top.OffsetBottom = 140;
             hudRoot.AddChild(top);
 
+            top.AddChild(UiKit.Label($"★ {StreetProgression.CampaignTag}", 22, Palette.NeonCyan));
             string districtTitle = "MAIN DISTRICT";
             if (refs.BackAlleyOpen) districtTitle += " + BACK ALLEY";
             if (refs.DockBlockOpen) districtTitle += " + DOCK";
+            districtTitle += $" · {StreetProgression.TierLabel(StreetProgression.GetStreetTier(Game.Save))}";
             top.AddChild(UiKit.Label(districtTitle, 18, Colors.White));
             top.AddChild(new WalletBar());
-            status = UiKit.Label("Begleiter folgt dir. ESC öffnet das Burner Phone.", 12, Palette.TextDim);
+            status = UiKit.Label(
+                "Update geladen: Rare-Showcase vor der Arena (blaues Leuchtring). ESC = Phone.",
+                12, Palette.NeonYellow);
             top.AddChild(status);
-            questHud = UiKit.Label(StreetProgression.StatusLine(Game.Save), 12, Palette.NeonYellow);
+            questHud = UiKit.Label(StreetProgression.StatusLine(Game.Save), 13, Palette.NeonPink);
             questHud.AutowrapMode = TextServer.AutowrapMode.WordSmart;
             top.AddChild(questHud);
 

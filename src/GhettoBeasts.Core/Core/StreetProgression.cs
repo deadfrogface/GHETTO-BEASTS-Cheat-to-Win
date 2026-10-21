@@ -18,6 +18,9 @@ namespace GhettoBeasts.Core
     /// <summary>Street progression: win fights → unlock buildings / blocks → harder encounter tiers.</summary>
     public static class StreetProgression
     {
+        /// <summary>Bump this when shipping a visible street update (shows on district HUD).</summary>
+        public const string CampaignTag = "STREET-v2 LIVE";
+
         public const string Arena = "arena";
         public const string Crispr = "crispr";
         public const string Wash = "wash";
